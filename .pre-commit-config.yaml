@@ -1,0 +1,52 @@
+# .pre-commit-config.yaml
+# pre-commit: 各種Linter/Formatter/品質チェックを自動実行する設定ファイル
+# 詳細: https://pre-commit.com/
+
+repos:
+  # Pythonコードの自動整形（Black）- ruff-formatに置き換えるため無効化
+  # - repo: https://github.com/psf/black
+  #   rev: 25.1.0
+  #   hooks:
+  #     - id: black
+  #       language_version: python3
+
+  # インポート順自動整形（isort）- ruffに統合したため無効化
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 6.0.1
+  #   hooks:
+  #     - id: isort
+  #       language_version: python3  # 静的解析（flake8）
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+        language_version: python3
+        args: ["--max-line-length=1000", "--extend-ignore=E501,W503,F811,E203"]
+        exclude: ^tests/.*\.py$  # テストファイルを除外
+  # 型チェック（mypy）
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
+    hooks:
+      - id: mypy
+        args: ["--config-file=pyproject.toml"]
+        additional_dependencies: ["types-PyYAML"]
+        files: ^(dodo_core|adapters|commands)/.+\.py$  # コア機能のみをチェック
+  # 高速Linter/Formatter（ruff）
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      - id: ruff
+        language_version: python3
+        args: ["--fix"]  # 自動修正を有効化
+        exclude: ^tests/.*\.py$  # テストファイルを除外
+      - id: ruff-format  # blackを置き換えるフォーマッター
+        exclude: ^tests/.*\.py$  # テストファイルを除外
+
+  # 改行・空白修正
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-added-large-files

@@ -1,0 +1,15 @@
+# すべてのテキストファイルをLFで管理
+* text=auto eol=lf
+
+# シェルスクリプトはLF必須（WindowsでCRLFになると実行エラー）
+*.sh text eol=lf
+
+# PoetryやYAML設定ファイルもLFで統一
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# ソースコードもLFで統一
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf

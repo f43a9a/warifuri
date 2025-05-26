@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    tty: true
+    stdin_open: true
+    environment:
+      - PYTHONPATH=/workspace
+    ports:
+      # アプリケーションのポートを必要に応じて変更してください
+      - "8000:8000"
+    command: bash    # デバッグ用のポートを必要に応じて開放
+    # ports:
+    #   - "5678:5678"  # Python デバッガー用
+
+  # 必要に応じてデータベースなどの追加サービスを定義
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_DB=lcdd
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# 必要に応じて永続ボリュームを定義
+# volumes:
+#   postgres_data:

@@ -1,0 +1,25 @@
+# instruction.yaml
+
+name: <task-name>  # 例: setup-environment
+
+dependencies:
+  - <optional-task-name-1>
+  - <optional-task-name-2>
+
+inputs:
+  - input/<input-file-1>
+  - input/<input-file-2>
+
+outputs:
+  - output/<output-file-1>
+  - output/<output-file-2>
+
+note:
+  - <optional-markdown-or-url>
+  - README.md
+
+description: |
+  このタスクの目的や実施手順を記述します。
+  人間・AI・マシンが同一の構造を読む前提で、
+  実行の流れや入力ファイルの使い方、出力すべき内容を丁寧に記述してください。
+  このフィールドは長文可です。

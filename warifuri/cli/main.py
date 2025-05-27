@@ -62,15 +62,15 @@ def cli(ctx: Context, log_level: Optional[str], workspace: Optional[Path]) -> No
 
 
 # Import and register commands
-cli.add_command(init)  # type: ignore[has-type]
+cli.add_command(init)
 cli.add_command(list_cmd, name="list")
-cli.add_command(run)  # type: ignore[has-type]
+cli.add_command(run)
 cli.add_command(show)
 cli.add_command(validate)
-cli.add_command(graph)  # type: ignore[has-type]
+cli.add_command(graph)
 cli.add_command(mark_done, name="mark-done")
 cli.add_command(template)
-cli.add_command(issue)  # type: ignore[has-type]
+cli.add_command(issue)
 
 
 if __name__ == "__main__":

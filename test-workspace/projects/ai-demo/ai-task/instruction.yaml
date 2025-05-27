@@ -1,0 +1,7 @@
+name: "ai-task"
+description: "Generate a comprehensive project plan for a data analytics pipeline"
+dependencies: []
+inputs: []
+outputs:
+  - "output/response.md"
+note: "Focus on modern tools like Python, Docker, and cloud platforms"

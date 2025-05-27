@@ -8,7 +8,6 @@ from typing import List
 import click
 
 from ..context import Context, pass_context
-from ...core.discovery import discover_all_projects
 from ...core.types import Task
 
 
@@ -32,8 +31,10 @@ def graph(
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
 
-    # Discover projects
-    projects = discover_all_projects(workspace_path)
+    # Use safe discovery that doesn't raise exceptions on circular dependencies
+    from ...core.discovery import discover_all_projects_safe
+
+    projects = discover_all_projects_safe(workspace_path)
 
     if project:
         projects = [p for p in projects if p.name == project]
@@ -42,6 +43,16 @@ def graph(
     all_tasks = []
     for proj in projects:
         all_tasks.extend(proj.tasks)
+
+    # Check for and warn about circular dependencies
+    if all_tasks:
+        from ...utils.validation import detect_circular_dependencies
+
+        cycle = detect_circular_dependencies(all_tasks)
+        if cycle:
+            click.echo(f"⚠️  Warning: Circular dependency detected: {' -> '.join(cycle)}")
+            click.echo("Displaying graph anyway for visualization purposes...")
+            click.echo()
 
     if not all_tasks:
         click.echo("No tasks found.")

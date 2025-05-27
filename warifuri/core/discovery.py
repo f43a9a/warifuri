@@ -88,8 +88,38 @@ def discover_project(workspace_path: Path, project_name: str) -> Project:
     # Check for circular dependencies
     cycle = detect_circular_dependencies(tasks)
     if cycle:
+        # For the graph command, we want to show the graph even with circular dependencies
+        # Just raise the error - the safe discovery function will catch it
         raise CircularDependencyError(f"Circular dependency detected: {' -> '.join(cycle)}")
 
+    return Project(
+        name=project_name,
+        path=project_path,
+        tasks=tasks,
+    )
+
+
+def discover_project_safe(workspace_path: Path, project_name: str) -> Optional[Project]:
+    """Discover a project without raising exceptions on circular dependencies.
+
+    This is useful for graph visualization where we want to show the structure
+    even when there are circular dependencies.
+    """
+    project_path = workspace_path / "projects" / project_name
+    if not project_path.exists():
+        return None
+
+    tasks = []
+    for task_dir in project_path.iterdir():
+        if task_dir.is_dir() and not task_dir.name.startswith("."):
+            try:
+                task = discover_task(project_name, task_dir)
+                tasks.append(task)
+            except FileNotFoundError:
+                # Skip directories without instruction.yaml
+                continue
+
+    # Don't check for circular dependencies - just create the project
     return Project(
         name=project_name,
         path=project_path,
@@ -109,6 +139,23 @@ def discover_all_projects(workspace_path: Path) -> List[Project]:
         except FileNotFoundError:
             # Skip projects without valid tasks
             continue
+
+    return projects
+
+
+def discover_all_projects_safe(workspace_path: Path) -> List[Project]:
+    """Discover all projects without raising exceptions on circular dependencies."""
+    projects: List[Project] = []
+    projects_dir = workspace_path / "projects"
+
+    if not projects_dir.exists():
+        return projects
+
+    for project_dir in projects_dir.iterdir():
+        if project_dir.is_dir() and not project_dir.name.startswith("."):
+            project = discover_project_safe(workspace_path, project_dir.name)
+            if project:
+                projects.append(project)
 
     return projects
 

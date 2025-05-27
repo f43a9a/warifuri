@@ -434,3 +434,147 @@ echo "Debug information" > logs/debug.log
 
         # Verify content
         assert (task / "report.txt").read_text().strip() == "Summary report"
+
+    def test_enhanced_execution_logging(self, workspace_with_sandbox_tests, runner):
+        """Test enhanced execution logging functionality."""
+        projects_dir = workspace_with_sandbox_tests / "projects" / "logging-test"
+
+        # Create task with execution steps
+        task = projects_dir / "logging-task"
+        task.mkdir(parents=True)
+        safe_write_file(task / "instruction.yaml", """name: logging-task
+task_type: machine
+description: Test execution logging
+auto_merge: false
+dependencies: []
+inputs: []
+outputs: [result.txt]
+""")
+        safe_write_file(task / "run.sh", """#!/bin/bash
+echo "Starting execution"
+echo "Step 1: Creating file"
+echo "Hello World" > result.txt
+echo "Step 2: Processing"
+sleep 0.1
+echo "Step 3: Finalizing"
+echo "Execution completed successfully"
+""")
+        (task / "run.sh").chmod(0o755)
+
+        workspace = str(workspace_with_sandbox_tests)
+        result = runner.invoke(cli, [
+            "--workspace", workspace,
+            "run", "--task", "logging-test/logging-task"
+        ])
+
+        assert result.exit_code == 0
+        assert "✅ Task completed" in result.output
+
+        # Check that execution log was created
+        logs_dir = task / "logs"
+        assert logs_dir.exists()
+
+        log_files = list(logs_dir.glob("execution_success_*.log"))
+        assert len(log_files) > 0
+
+        log_content = log_files[0].read_text()
+        assert "Task: logging-test/logging-task" in log_content
+        assert "Status: SUCCESS" in log_content
+        assert "Temporary directory:" in log_content
+        assert "Command: " in log_content
+        assert "Exit code: 0" in log_content
+        assert "STDOUT:" in log_content
+
+    def test_input_validation_failure(self, workspace_with_sandbox_tests, runner):
+        """Test input file validation failure."""
+        projects_dir = workspace_with_sandbox_tests / "projects" / "validation-test"
+
+        # Create task that requires missing input file
+        task = projects_dir / "missing-input"
+        task.mkdir(parents=True)
+        safe_write_file(task / "instruction.yaml", """name: missing-input
+task_type: machine
+description: Test missing input validation
+auto_merge: false
+dependencies: []
+inputs: [missing-file.txt]
+outputs: [result.txt]
+""")
+        safe_write_file(task / "run.sh", """#!/bin/bash
+cat missing-file.txt > result.txt
+""")
+        (task / "run.sh").chmod(0o755)
+
+        workspace = str(workspace_with_sandbox_tests)
+        result = runner.invoke(cli, [
+            "--workspace", workspace,
+            "run", "--task", "validation-test/missing-input"
+        ])
+
+        assert result.exit_code != 0
+        assert "Input validation failed" in result.output
+
+        # Check that failure log was created
+        logs_dir = task / "logs"
+        assert logs_dir.exists()
+
+        log_files = list(logs_dir.glob("failed_*.log"))
+        assert len(log_files) > 0
+
+        log_content = log_files[0].read_text()
+        assert "Missing input file: missing-file.txt" in log_content
+
+    def test_output_validation_failure(self, workspace_with_sandbox_tests, runner):
+        """Test output file validation failure."""
+        projects_dir = workspace_with_sandbox_tests / "projects" / "output-validation"
+
+        # Create task that doesn't create expected output
+        task = projects_dir / "missing-output"
+        task.mkdir(parents=True)
+        safe_write_file(task / "instruction.yaml", """name: missing-output
+task_type: machine
+description: Test missing output validation
+auto_merge: false
+dependencies: []
+inputs: []
+outputs: [expected-output.txt]
+""")
+        safe_write_file(task / "run.sh", """#!/bin/bash
+# Script doesn't create the expected output file
+echo "This script runs but doesn't create the expected output"
+""")
+        (task / "run.sh").chmod(0o755)
+
+        workspace = str(workspace_with_sandbox_tests)
+        result = runner.invoke(cli, [
+            "--workspace", workspace,
+            "run", "--task", "output-validation/missing-output"
+        ])
+
+        assert result.exit_code != 0
+        assert "Expected output files not created" in result.output or "Missing expected output" in result.output
+
+        # Check that failure log was created
+        logs_dir = task / "logs"
+        assert logs_dir.exists()
+
+        log_files = list(logs_dir.glob("failed_*.log"))
+        assert len(log_files) > 0
+
+        log_content = log_files[0].read_text()
+        assert "Missing expected output: expected-output.txt" in log_content
+
+    def test_temp_directory_security(self, workspace_with_sandbox_tests, runner):
+        """Test that temporary directories have secure permissions."""
+        from warifuri.utils.filesystem import create_temp_dir
+
+        temp_dir = create_temp_dir()
+
+        try:
+            # Check permissions are owner-only (0o700)
+            perms = temp_dir.stat().st_mode & 0o777
+            assert perms == 0o700, f"Expected 0o700, got {oct(perms)}"
+        finally:
+            # Clean up
+            import shutil
+            shutil.rmtree(temp_dir, ignore_errors=True)

@@ -62,8 +62,16 @@ def find_instruction_files(workspace_path: Path) -> Iterator[Path]:
 
 
 def create_temp_dir() -> Path:
-    """Create a temporary directory for safe task execution."""
-    return Path(tempfile.mkdtemp(prefix="warifuri_"))
+    """Create a temporary directory for safe task execution with restricted permissions."""
+    import stat
+
+    # Create temporary directory with restricted permissions (owner only)
+    temp_dir = Path(tempfile.mkdtemp(prefix="warifuri_"))
+
+    # Set restrictive permissions (rwx------) for security
+    temp_dir.chmod(stat.S_IRWXU)  # 0o700
+
+    return temp_dir
 
 
 def copy_directory_contents(src: Path, dst: Path) -> None:

@@ -6,7 +6,7 @@ import os
 import subprocess
 import shutil
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from ..core.types import Task, TaskType
 from ..utils.filesystem import (
@@ -35,11 +35,54 @@ def setup_task_environment(task: Task) -> Dict[str, str]:
         "WARIFURI_WORKSPACE_DIR": str(workspace_path.absolute()),
         "WARIFURI_INPUT_DIR": "input",
         "WARIFURI_OUTPUT_DIR": "output",
+        "WARIFURI_TEMP_DIR": ".",  # Current working directory in temp
     }
 
 
+def validate_task_inputs(task: Task, execution_log: List[str]) -> bool:
+    """Validate that all required input files exist."""
+    missing_inputs = []
+
+    for input_file in task.instruction.inputs:
+        input_path = task.path / input_file
+        if not input_path.exists():
+            missing_inputs.append(input_file)
+            execution_log.append(f"ERROR: Missing input file: {input_file}")
+        else:
+            execution_log.append(f"Input file found: {input_file}")
+
+    if missing_inputs:
+        error_msg = f"Missing required input files: {', '.join(missing_inputs)}"
+        execution_log.append(f"VALIDATION FAILED: {error_msg}")
+        return False
+
+    execution_log.append("Input validation: PASSED")
+    return True
+
+
+def validate_task_outputs(task: Task, temp_dir: Path, execution_log: List[str]) -> bool:
+    """Validate that all expected output files were created."""
+    missing_outputs = []
+
+    for output_file in task.instruction.outputs:
+        output_path = temp_dir / output_file
+        if not output_path.exists():
+            missing_outputs.append(output_file)
+            execution_log.append(f"ERROR: Missing expected output: {output_file}")
+        else:
+            execution_log.append(f"Expected output found: {output_file}")
+
+    if missing_outputs:
+        error_msg = f"Missing expected output files: {', '.join(missing_outputs)}"
+        execution_log.append(f"OUTPUT VALIDATION FAILED: {error_msg}")
+        return False
+
+    execution_log.append("Output validation: PASSED")
+    return True
+
+
 def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
-    """Execute machine task in temporary directory."""
+    """Execute machine task in temporary directory with enhanced sandboxing."""
     logger.info(f"Executing machine task: {task.full_name}")
 
     if dry_run:
@@ -48,9 +91,21 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
 
     # Create temporary directory
     temp_dir = create_temp_dir()
+    execution_log = []
+
     try:
+        logger.debug(f"Created temporary directory: {temp_dir}")
+        execution_log.append(f"Temporary directory: {temp_dir}")
+
+        # Validate input files before execution
+        if not validate_task_inputs(task, execution_log):
+            error_msg = "Input validation failed"
+            execution_log.append(f"ERROR: {error_msg}")
+            raise ExecutionError(error_msg)
+
         # Copy task directory to temp
         copy_directory_contents(task.path, temp_dir)
+        execution_log.append("Copied task files to temporary directory")
 
         # Find execution script
         run_script = None
@@ -61,21 +116,30 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
                 break
 
         if not run_script:
-            raise ExecutionError(f"No executable script found in {task.full_name}")
+            error_msg = f"No executable script found in {task.full_name}"
+            execution_log.append(f"ERROR: {error_msg}")
+            raise ExecutionError(error_msg)
+
+        execution_log.append(f"Found executable script: {run_script.name}")
 
         # Setup environment
         env = setup_task_environment(task)
+        execution_log.append(f"Environment variables: {list(env.keys())}")
 
-        # Execute script
+        # Execute script with enhanced bash safety
         if run_script.suffix == ".sh":
             cmd = ["bash", "-euo", "pipefail", str(run_script)]
         elif run_script.suffix == ".py":
             cmd = ["python", str(run_script)]
         else:
-            raise ExecutionError(f"Unsupported script type: {run_script}")
+            error_msg = f"Unsupported script type: {run_script}"
+            execution_log.append(f"ERROR: {error_msg}")
+            raise ExecutionError(error_msg)
 
         logger.debug(f"Executing command: {' '.join(cmd)}")
         logger.debug(f"Working directory: {temp_dir}")
+        execution_log.append(f"Command: {' '.join(cmd)}")
+        execution_log.append(f"Working directory: {temp_dir}")
 
         result = subprocess.run(
             cmd,
@@ -85,13 +149,37 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
             text=True,
         )
 
+        # Log execution results
+        execution_log.append(f"Exit code: {result.returncode}")
+        if result.stdout:
+            execution_log.append(f"STDOUT:\n{result.stdout}")
+        if result.stderr:
+            execution_log.append(f"STDERR:\n{result.stderr}")
+
         if result.returncode != 0:
-            # Log failure
-            log_failure(task, result.stderr, "Machine execution failed")
+            # Log failure with detailed execution log
+            log_failure(task, result.stderr, "Machine execution failed", execution_log)
+            return False
+
+        # Validate outputs were created
+        if not validate_task_outputs(task, temp_dir, execution_log):
+            log_failure(
+                task, "Expected output files not created", "Output validation failed", execution_log
+            )
             return False
 
         # Copy back outputs
-        copy_outputs_back(task, temp_dir)
+        copy_outputs_back(task, temp_dir, execution_log)
+
+        # Validate output files
+        if not validate_task_outputs(task, temp_dir, execution_log):
+            error_msg = "Output validation failed"
+            execution_log.append(f"ERROR: {error_msg}")
+            log_failure(task, error_msg, "Output validation error", execution_log)
+            return False
+
+        # Save execution log
+        save_execution_log(task, execution_log, success=True)
 
         # Create done.md
         create_done_file(task, "Machine task completed successfully")
@@ -101,10 +189,13 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
 
     except Exception as e:
         logger.error(f"Machine task failed: {task.full_name} - {e}")
-        log_failure(task, str(e), "Machine execution error")
+        execution_log.append(f"EXCEPTION: {str(e)}")
+        log_failure(task, str(e), "Machine execution error", execution_log)
         return False
     finally:
         # Clean up temp directory
+        logger.debug(f"Cleaning up temporary directory: {temp_dir}")
+        execution_log.append(f"Cleaned up temporary directory: {temp_dir}")
         shutil.rmtree(temp_dir, ignore_errors=True)
 
 
@@ -232,8 +323,15 @@ def execute_task(
         raise ExecutionError(f"Unknown task type: {task.task_type}")
 
 
-def copy_outputs_back(task: Task, temp_dir: Path) -> None:
-    """Copy output files back to task directory."""
+def copy_outputs_back(
+    task: Task, temp_dir: Path, execution_log: Optional[List[str]] = None
+) -> None:
+    """Copy output files back to task directory with logging."""
+    if execution_log is None:
+        execution_log = []
+
+    copied_files = []
+
     for output_file in task.instruction.outputs:
         src_file = temp_dir / output_file
         dst_file = task.path / output_file
@@ -244,10 +342,76 @@ def copy_outputs_back(task: Task, temp_dir: Path) -> None:
 
             if src_file.is_file():
                 shutil.copy2(src_file, dst_file)
+                copied_files.append(f"File: {output_file}")
             else:
                 shutil.copytree(src_file, dst_file, dirs_exist_ok=True)
+                copied_files.append(f"Directory: {output_file}")
 
             logger.debug(f"Copied output: {output_file}")
+        else:
+            logger.warning(f"Expected output not found: {output_file}")
+            execution_log.append(f"WARNING: Expected output not found: {output_file}")
+
+    if copied_files:
+        execution_log.append(f"Copied outputs: {', '.join(copied_files)}")
+    else:
+        execution_log.append("No outputs to copy back")
+
+
+def save_execution_log(task: Task, execution_log: List[str], success: bool) -> None:
+    """Save detailed execution log to logs directory."""
+    logs_dir = task.path / "logs"
+    logs_dir.mkdir(exist_ok=True)
+
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+    status = "success" if success else "failed"
+    log_file = logs_dir / f"execution_{status}_{timestamp}.log"
+
+    log_content = f"""Task: {task.full_name}
+Type: Machine Task Execution
+Status: {"SUCCESS" if success else "FAILED"}
+Timestamp: {now.isoformat()}
+Commit SHA: {get_git_commit_sha() or "unknown"}
+
+EXECUTION LOG:
+{"=" * 50}
+"""
+
+    for i, log_entry in enumerate(execution_log, 1):
+        log_content += f"{i:3d}. {log_entry}\n"
+
+    safe_write_file(log_file, log_content)
+    logger.debug(f"Saved execution log to {log_file}")
+
+
+def log_failure(
+    task: Task, error_message: str, error_type: str, execution_log: Optional[List[str]] = None
+) -> None:
+    """Log task execution failure with enhanced details."""
+    logs_dir = task.path / "logs"
+    logs_dir.mkdir(exist_ok=True)
+
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+    log_file = logs_dir / f"failed_{timestamp}.log"
+
+    log_content = f"""Task: {task.full_name}
+Type: {error_type}
+Timestamp: {now.isoformat()}
+Commit SHA: {get_git_commit_sha() or "unknown"}
+Error: {error_message}
+
+"""
+
+    if execution_log:
+        log_content += "EXECUTION LOG:\n"
+        log_content += "=" * 50 + "\n"
+        for i, log_entry in enumerate(execution_log, 1):
+            log_content += f"{i:3d}. {log_entry}\n"
+
+    safe_write_file(log_file, log_content)
+    logger.debug(f"Logged failure to {log_file}")
 
 
 def create_done_file(task: Task, message: Optional[str] = None) -> None:
@@ -264,22 +428,3 @@ def create_done_file(task: Task, message: Optional[str] = None) -> None:
     safe_write_file(done_file, content)
 
     logger.debug(f"Created done.md for {task.full_name}")
-
-
-def log_failure(task: Task, error_message: str, error_type: str) -> None:
-    """Log task execution failure."""
-    logs_dir = task.path / "logs"
-    logs_dir.mkdir(exist_ok=True)
-
-    now = datetime.datetime.now()
-    timestamp = now.strftime("%Y%m%d_%H%M%S")
-    log_file = logs_dir / f"failed_{timestamp}.log"
-
-    log_content = f"""Task: {task.full_name}
-Type: {error_type}
-Timestamp: {now.isoformat()}
-Error: {error_message}
-"""
-
-    safe_write_file(log_file, log_content)
-    logger.debug(f"Logged failure to {log_file}")

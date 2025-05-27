@@ -86,4 +86,20 @@ def run(
                 click.echo(f"✅ Task completed: {target_task.full_name}")
             else:
                 click.echo(f"❌ Task failed: {target_task.full_name}", err=True)
+
+                # Show recent error log if available
+                logs_dir = target_task.path / "logs"
+                if logs_dir.exists():
+                    recent_logs = sorted(
+                        logs_dir.glob("failed_*.log"), key=lambda x: x.stat().st_mtime, reverse=True
+                    )
+                    if recent_logs:
+                        log_content = recent_logs[0].read_text()
+                        # Extract error message from log
+                        lines = log_content.split("\n")
+                        for line in lines:
+                            if line.startswith("Error:"):
+                                click.echo(f"Error: {line[6:].strip()}", err=True)
+                                break
+
                 raise click.Abort()

@@ -12,9 +12,9 @@ def load_yaml(file_path: Path) -> Dict[str, Any]:
         with open(file_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
     except yaml.YAMLError as e:
-        raise ValueError(f"Invalid YAML in {file_path}: {e}")
-    except FileNotFoundError:
-        raise FileNotFoundError(f"YAML file not found: {file_path}")
+        raise ValueError(f"Invalid YAML in {file_path}: {e}") from e
+    except FileNotFoundError as e:
+        raise FileNotFoundError(f"YAML file not found: {file_path}") from e
 
 
 def save_yaml(data: Dict[str, Any], file_path: Path) -> None:

@@ -33,23 +33,23 @@ def list_cmd(
     """List tasks in workspace."""
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
-    
+
     # Discover all projects
     projects = discover_all_projects(workspace_path)
-    
+
     # Collect tasks
     all_tasks = []
     for proj in projects:
         if project and proj.name != project:
             continue
         all_tasks.extend(proj.tasks)
-    
+
     # Update task statuses
     find_ready_tasks(projects)
-    
+
     # Filter tasks
     tasks = _filter_tasks(all_tasks, ready, completed)
-    
+
     # Display tasks
     if format == "json":
         _display_json(tasks, fields)
@@ -80,12 +80,16 @@ def _get_task_fields(task: Task, fields: Optional[str]) -> dict:
         "project": task.project,
         "task": task.name,
     }
-    
+
     if fields:
         field_list = [f.strip() for f in fields.split(",")]
         return {k: v for k, v in all_fields.items() if k in field_list}
     else:
-        return {"name": all_fields["name"], "description": all_fields["description"], "status": all_fields["status"]}
+        return {
+            "name": all_fields["name"],
+            "description": all_fields["description"],
+            "status": all_fields["status"],
+        }
 
 
 def _display_plain(tasks: List[Task], fields: Optional[str]) -> None:
@@ -93,7 +97,7 @@ def _display_plain(tasks: List[Task], fields: Optional[str]) -> None:
     if not tasks:
         click.echo("No tasks found.")
         return
-    
+
     for task in tasks:
         task_data = _get_task_fields(task, fields)
         click.echo(f"[{task_data['status'].upper()}] {task_data['name']}")
@@ -116,14 +120,14 @@ def _display_tsv(tasks: List[Task], fields: Optional[str]) -> None:
     """Display tasks in TSV format."""
     if not tasks:
         return
-    
+
     # Get field names from first task
     first_task_data = _get_task_fields(tasks[0], fields)
     headers = list(first_task_data.keys())
-    
+
     # Print header
     click.echo("\t".join(headers))
-    
+
     # Print data
     for task in tasks:
         task_data = _get_task_fields(task, fields)

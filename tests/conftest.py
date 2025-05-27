@@ -13,13 +13,13 @@ from warifuri.utils import ensure_directory, safe_write_file
 def temp_workspace() -> Generator[Path, None, None]:
     """Create temporary workspace for testing."""
     temp_dir = Path(tempfile.mkdtemp(prefix="warifuri_test_"))
-    
+
     try:
         # Create basic workspace structure
         ensure_directory(temp_dir / "projects")
         ensure_directory(temp_dir / "templates")
         ensure_directory(temp_dir / "schemas")
-        
+
         yield temp_dir
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)

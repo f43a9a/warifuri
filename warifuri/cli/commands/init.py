@@ -7,7 +7,7 @@ import click
 
 from ..main import Context, pass_context
 from ...utils import (
-    ensure_directory, 
+    ensure_directory,
     safe_write_file,
     expand_template_directory,
     get_template_variables_from_user,
@@ -28,14 +28,14 @@ def init(
     dry_run: bool,
 ) -> None:
     """Initialize project or task.
-    
+
     TARGET can be:
     - project_name: Create new project
     - project_name/task_name: Create new task
     """
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
-    
+
     if "/" in target:
         # Create task
         project_name, task_name = target.split("/", 1)
@@ -55,40 +55,44 @@ def _create_project(
 ) -> None:
     """Create a new project."""
     project_path = workspace_path / "projects" / project_name
-    
+
     if project_path.exists() and not force:
-        click.echo(f"Error: Project '{project_name}' already exists. Use --force to overwrite.", err=True)
+        click.echo(
+            f"Error: Project '{project_name}' already exists. Use --force to overwrite.", err=True
+        )
         return
-    
+
     if dry_run:
         click.echo(f"Would create project: {project_path}")
         if template:
             click.echo(f"  Using template: {template}")
         return
-    
+
     # Create project directory
     ensure_directory(project_path)
-    
+
     # Handle template expansion
     if template:
         template_path = workspace_path / "templates" / template
         if not template_path.exists():
             click.echo(f"Error: Template '{template}' not found.", err=True)
             return
-        
+
         click.echo(f"Using template: {template}")
-        
+
         # Get template variables from user
         variables = get_template_variables_from_user(project_name)
-        variables['PROJECT_NAME'] = project_name  # Ensure project name is set
-        
+        variables["PROJECT_NAME"] = project_name  # Ensure project name is set
+
         # Expand template
         try:
             expand_template_directory(template_path, project_path, variables)
             click.echo(f"Created project '{project_name}' from template '{template}'")
-            
+
             # List created tasks
-            tasks = [d.name for d in project_path.iterdir() if d.is_dir() and not d.name.startswith('.')]
+            tasks = [
+                d.name for d in project_path.iterdir() if d.is_dir() and not d.name.startswith(".")
+            ]
             if tasks:
                 click.echo("Created tasks:")
                 for task in tasks:
@@ -111,21 +115,24 @@ def _create_task(
 ) -> None:
     """Create a new task."""
     task_path = workspace_path / "projects" / project_name / task_name
-    
+
     if task_path.exists() and not force:
-        click.echo(f"Error: Task '{project_name}/{task_name}' already exists. Use --force to overwrite.", err=True)
+        click.echo(
+            f"Error: Task '{project_name}/{task_name}' already exists. Use --force to overwrite.",
+            err=True,
+        )
         return
-    
+
     if dry_run:
         click.echo(f"Would create task: {task_path}")
-        click.echo(f"  - instruction.yaml")
+        click.echo("  - instruction.yaml")
         if template:
             click.echo(f"  Using template: {template}")
         return
-    
+
     # Create task directory
     ensure_directory(task_path)
-    
+
     # Handle template expansion
     if template:
         # Support template/task format
@@ -141,23 +148,26 @@ def _create_task(
                 if len(task_dirs) == 1:
                     template_task_path = task_dirs[0]
                 else:
-                    click.echo(f"Error: Template '{template}' contains multiple tasks. Specify as 'template/task'.", err=True)
+                    click.echo(
+                        f"Error: Template '{template}' contains multiple tasks. Specify as 'template/task'.",
+                        err=True,
+                    )
                     return
             else:
                 click.echo(f"Error: Template '{template}' not found.", err=True)
                 return
-        
+
         if not template_task_path.exists():
             click.echo(f"Error: Template task '{template}' not found.", err=True)
             return
-        
+
         click.echo(f"Using template: {template}")
-        
+
         # Get template variables from user
         variables = get_template_variables_from_user(task_name)
-        variables['PROJECT_NAME'] = project_name
-        variables['TASK_NAME'] = task_name
-        
+        variables["PROJECT_NAME"] = project_name
+        variables["TASK_NAME"] = task_name
+
         # Expand template task
         try:
             expand_template_directory(template_task_path, task_path, variables)
@@ -176,10 +186,10 @@ inputs: []
 outputs: []
 note: "Please edit this instruction.yaml to complete the task definition"
 """
-        
+
         instruction_path = task_path / "instruction.yaml"
         safe_write_file(instruction_path, instruction_content)
-        
+
         click.echo(f"Created task: {project_name}/{task_name}")
         click.echo(f"  - {instruction_path}")
-        click.echo(f"Please edit instruction.yaml to complete the task definition.")
+        click.echo("Please edit instruction.yaml to complete the task definition.")

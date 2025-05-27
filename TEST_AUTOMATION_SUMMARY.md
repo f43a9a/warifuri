@@ -18,7 +18,7 @@ Successfully implemented comprehensive automated testing for the warifuri CLI to
   - Multi-project discovery
   - Ready task identification
 
-- **Task Execution**: 4 tests  
+- **Task Execution**: 4 tests
   - Machine task execution (dry-run and real)
   - AI task execution (dry-run)
   - Human task execution
@@ -150,7 +150,7 @@ python -m pytest tests/ -q
 
 ### Areas for Future Enhancement
 1. **Performance Testing**: Large workspace handling
-2. **Concurrent Execution**: Multi-user scenarios  
+2. **Concurrent Execution**: Multi-user scenarios
 3. **AI Integration**: Mock AI services for testing
 4. **GitHub Integration**: Mock GitHub API calls
 5. **Template Gallery**: Extended template validation

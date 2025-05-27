@@ -26,7 +26,7 @@ def test_validate_instruction_yaml_valid(sample_task_instruction):
             "note": {"type": "string"},
         },
     }
-    
+
     # Should not raise exception
     validate_instruction_yaml(sample_task_instruction, schema)
 
@@ -41,9 +41,9 @@ def test_validate_instruction_yaml_missing_required():
             "description": {"type": "string"},
         },
     }
-    
+
     invalid_data = {"name": "test"}  # Missing description
-    
+
     with pytest.raises(ValidationError, match="Schema validation failed"):
         validate_instruction_yaml(invalid_data, schema, strict=True)
 
@@ -54,9 +54,9 @@ def test_detect_circular_dependencies_none(temp_workspace):
     task_a = _create_test_task(temp_workspace, "proj", "a", ["proj/b"])
     task_b = _create_test_task(temp_workspace, "proj", "b", ["proj/c"])
     task_c = _create_test_task(temp_workspace, "proj", "c", [])
-    
+
     tasks = [task_a, task_b, task_c]
-    
+
     cycle = detect_circular_dependencies(tasks)
     assert cycle is None
 
@@ -66,9 +66,9 @@ def test_detect_circular_dependencies_simple_cycle(temp_workspace):
     # Create tasks: A -> B -> A
     task_a = _create_test_task(temp_workspace, "proj", "a", ["proj/b"])
     task_b = _create_test_task(temp_workspace, "proj", "b", ["proj/a"])
-    
+
     tasks = [task_a, task_b]
-    
+
     cycle = detect_circular_dependencies(tasks)
     assert cycle is not None
     assert len(cycle) >= 2
@@ -83,10 +83,10 @@ def _create_test_task(workspace: Path, project: str, name: str, deps: list) -> T
         inputs=[],
         outputs=[],
     )
-    
+
     task_path = workspace / "projects" / project / name
     task_path.mkdir(parents=True, exist_ok=True)
-    
+
     return Task(
         project=project,
         name=name,

@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "A minimal CLI for task allocation between humans, AI, and machines"
 authors = ["f43a9a"]
 readme = "README.md"
-packages = [{include = "warifuri"}]
+packages = [{ include = "warifuri" }]
 
 [tool.poetry.scripts]
 warifuri = "warifuri.cli.main:cli"
@@ -23,6 +23,7 @@ jsonschema = ">=4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
+types-jsonschema = "*"
 ruff = "*"
 pytest = "*"
 

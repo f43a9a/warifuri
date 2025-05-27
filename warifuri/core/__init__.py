@@ -10,11 +10,11 @@ from .discovery import (
 from .execution import execute_task, ExecutionError
 from .types import Task, TaskInstruction, TaskStatus, TaskType, Project
 
-__all__ = [
+__all__: list[str] = [
     "Task",
-    "TaskInstruction", 
+    "TaskInstruction",
     "TaskStatus",
-    "TaskType", 
+    "TaskType",
     "Project",
     "discover_all_projects",
     "discover_project",

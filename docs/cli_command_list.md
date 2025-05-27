@@ -181,4 +181,3 @@ warifuri issue --all-tasks vision-ai --label todo --assignee @pm
 | **`warifuri mark-done`**     | 手動完了フラグ作成                  |
 | **`warifuri template list`** | テンプレ一覧                     |
 | **`warifuri issue`** ★       | GitHub Issue 起票（親／子／一括）    |
-

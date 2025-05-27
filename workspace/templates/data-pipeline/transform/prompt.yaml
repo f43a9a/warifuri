@@ -1,13 +1,14 @@
-Please transform the extracted data located at {{INPUT_FILE}} into a clean JSON format.
+prompt: |
+  Please transform the extracted data located at {{INPUT_FILE}} into a clean JSON format.
 
-Project context: {{PROJECT_NAME}}
-Data source: {{SOURCE}}
-Output format expected: Clean, structured JSON
+  Project context: {{PROJECT_NAME}}
+  Data source: {{SOURCE}}
+  Output format expected: Clean, structured JSON
 
-Requirements:
-1. Parse the input data from {{INPUT_FILE}}
-2. Clean and normalize the data
-3. Convert to structured JSON format
-4. Save to transformed_data.json
+  Requirements:
+  1. Parse the input data from {{INPUT_FILE}}
+  2. Clean and normalize the data
+  3. Convert to structured JSON format
+  4. Save to transformed_data.json
 
-The data comes from {{SOURCE}} and needs to be prepared for further processing in the {{PROJECT_NAME}} pipeline.
+  The data comes from {{SOURCE}} and needs to be prepared for further processing in the {{PROJECT_NAME}} pipeline.

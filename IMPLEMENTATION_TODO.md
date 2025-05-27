@@ -5,7 +5,7 @@
 ## 🔍 調査対象ドキュメント
 
 - `docs/requirement.md` - 要件定義書 (v1.2)
-- `docs/design.md` - 設計ドキュメント (v1.2)  
+- `docs/design.md` - 設計ドキュメント (v1.2)
 - `docs/cli_command_list.md` - CLI コマンドリスト
 - `docs/development.md` - 開発方針
 
@@ -42,7 +42,7 @@
 - [ ] **--dry-run** オプション: 生成内容のプレビュー
 
 ### 2. `warifuri list` コマンド - 出力フォーマット
-#### 📋 要求仕様  
+#### 📋 要求仕様
 - **構文**: `warifuri list [--ready|--completed] [--project <n>] [--format <type>] [--fields a,b]`
 
 #### ❌ 実装ギャップ
@@ -56,12 +56,12 @@
 - 引数なし: ready タスクを1件自動実行
 - `--task <proj>`: プロジェクト内 ready を1件実行
 
-#### ❌ 実装ギャップ  
+#### ❌ 実装ギャップ
 - [ ] **自動ready タスク選択**: 引数なしでのready タスク1件自動実行
 - [ ] **プロジェクト内ready選択**: `--task myproject` でプロジェクト内の1件ready選択
 - [ ] **環境変数設定**: Machineタスク実行時の標準環境変数
   - `WARIFURI_PROJECT_NAME`
-  - `WARIFURI_TASK_NAME` 
+  - `WARIFURI_TASK_NAME`
   - `WARIFURI_WORKSPACE_DIR`
   - `WARIFURI_INPUT_DIR`
   - `WARIFURI_OUTPUT_DIR`
@@ -134,7 +134,7 @@
 - [ ] **Git統合**: commit SHA の自動取得・記録
 
 ### 10. 自動マージ機能（auto_merge.yaml）
-#### 📋 要求仕様  
+#### 📋 要求仕様
 - `auto_merge.yaml` 存在時の GitHub Actions 自動マージ
 
 #### ❓ 確認要

@@ -25,16 +25,16 @@ def issue(
     """Create GitHub issues for projects and tasks."""
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
-    
+
     # Validate options
     options_count = sum(bool(x) for x in [project, task, all_tasks])
     if options_count != 1:
         click.echo("Error: Specify exactly one of --project, --task, or --all-tasks.", err=True)
         return
-    
+
     if dry_run:
         click.echo("[DRY RUN] GitHub issue creation simulation:")
-    
+
     if project:
         _create_project_issue(project, assignee, label, dry_run)
     elif task:
@@ -51,7 +51,7 @@ def _create_project_issue(
 ) -> None:
     """Create parent issue for project."""
     title = f"[PROJECT] {project}"
-    
+
     if dry_run:
         click.echo(f"Would create project issue: {title}")
         if assignee:
@@ -74,9 +74,9 @@ def _create_task_issue(
     if "/" not in task:
         click.echo("Error: Task must be in format 'project/task'.", err=True)
         return
-    
+
     title = f"[TASK] {task}"
-    
+
     if dry_run:
         click.echo(f"Would create task issue: {title}")
         if assignee:

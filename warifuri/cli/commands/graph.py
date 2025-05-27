@@ -1,9 +1,12 @@
 """Graph command for visualizing task dependencies."""
 
+from typing import List
+
 import click
 
 from ..main import Context, pass_context
 from ...core.discovery import discover_all_projects
+from ...core.types import Task
 
 
 @click.command()
@@ -25,22 +28,22 @@ def graph(
     """Generate dependency graph visualization."""
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
-    
+
     # Discover projects
     projects = discover_all_projects(workspace_path)
-    
+
     if project:
         projects = [p for p in projects if p.name == project]
-    
+
     # Collect tasks
     all_tasks = []
     for proj in projects:
         all_tasks.extend(proj.tasks)
-    
+
     if not all_tasks:
         click.echo("No tasks found.")
         return
-    
+
     if format == "mermaid":
         _generate_mermaid(all_tasks)
     elif format == "html":
@@ -49,46 +52,48 @@ def graph(
         _generate_ascii(all_tasks)
 
 
-def _generate_ascii(tasks) -> None:
+def _generate_ascii(tasks: List[Task]) -> None:
     """Generate ASCII dependency graph."""
     click.echo("Dependency Graph (ASCII):")
     click.echo()
-    
+
     for task in tasks:
-        status_symbol = "✅" if task.is_completed else ("🔄" if task.status.value == "ready" else "⏸️")
+        status_symbol = (
+            "✅" if task.is_completed else ("🔄" if task.status.value == "ready" else "⏸️")
+        )
         click.echo(f"{status_symbol} {task.full_name}")
-        
+
         for dep in task.instruction.dependencies:
             click.echo(f"  └── depends on: {dep}")
-        
+
         if not task.instruction.dependencies:
             click.echo("  └── no dependencies")
-        
+
         click.echo()
 
 
-def _generate_mermaid(tasks) -> None:
+def _generate_mermaid(tasks: List[Task]) -> None:
     """Generate Mermaid diagram."""
     click.echo("```mermaid")
     click.echo("graph TD")
-    
+
     # Define nodes
     for task in tasks:
         node_id = task.full_name.replace("/", "_").replace("-", "_")
         status = "✅" if task.is_completed else ("🔄" if task.status.value == "ready" else "⏸️")
-        click.echo(f"    {node_id}[\"{status} {task.full_name}\"]")
-    
+        click.echo(f'    {node_id}["{status} {task.full_name}"]')
+
     # Define edges
     for task in tasks:
         node_id = task.full_name.replace("/", "_").replace("-", "_")
         for dep in task.instruction.dependencies:
             dep_id = dep.replace("/", "_").replace("-", "_")
             click.echo(f"    {dep_id} --> {node_id}")
-    
+
     click.echo("```")
 
 
-def _generate_html(tasks, open_browser: bool) -> None:
+def _generate_html(tasks: List[Task], open_browser: bool) -> None:
     """Generate HTML visualization."""
     # TODO: Implement HTML generation with interactive graph
     click.echo("HTML graph generation will be implemented in future version.")

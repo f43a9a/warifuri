@@ -26,21 +26,21 @@ def show(
     """Show task definition and metadata."""
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
-    
+
     if "/" not in task:
         click.echo("Error: Task must be in format 'project/task'.", err=True)
         return
-    
+
     project_name, task_name = task.split("/", 1)
-    
+
     # Discover projects and find task
     projects = discover_all_projects(workspace_path)
     target_task = find_task_by_name(projects, project_name, task_name)
-    
+
     if not target_task:
         click.echo(f"Error: Task '{task}' not found.", err=True)
         return
-    
+
     # Prepare data
     task_data = {
         "name": target_task.name,
@@ -57,7 +57,7 @@ def show(
         "auto_merge": target_task.has_auto_merge,
         "path": str(target_task.path),
     }
-    
+
     # Display data
     if format == "json":
         click.echo(json.dumps(task_data, indent=2, ensure_ascii=False))
@@ -72,28 +72,28 @@ def show(
         click.echo(f"Auto-merge: {'Yes' if task_data['auto_merge'] else 'No'}")
         click.echo(f"Path: {task_data['path']}")
         click.echo()
-        click.echo(f"Description:")
+        click.echo("Description:")
         click.echo(f"  {task_data['description']}")
-        
-        if task_data['dependencies']:
+
+        if task_data["dependencies"] and task_data["dependencies"] is not True:
             click.echo()
             click.echo("Dependencies:")
-            for dep in task_data['dependencies']:
+            for dep in task_data["dependencies"]:
                 click.echo(f"  - {dep}")
-        
-        if task_data['inputs']:
+
+        if task_data["inputs"] and task_data["inputs"] is not True:
             click.echo()
             click.echo("Inputs:")
-            for inp in task_data['inputs']:
+            for inp in task_data["inputs"]:
                 click.echo(f"  - {inp}")
-        
-        if task_data['outputs']:
+
+        if task_data["outputs"] and task_data["outputs"] is not True:
             click.echo()
             click.echo("Outputs:")
-            for out in task_data['outputs']:
+            for out in task_data["outputs"]:
                 click.echo(f"  - {out}")
-        
-        if task_data['note']:
+
+        if task_data["note"]:
             click.echo()
             click.echo("Note:")
             click.echo(f"  {task_data['note']}")

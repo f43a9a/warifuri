@@ -1,6 +1,5 @@
 """File system utilities."""
 
-import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -10,18 +9,18 @@ from typing import Iterator, List, Optional, Union
 def find_workspace_root(start_path: Optional[Union[str, Path]] = None) -> Optional[Path]:
     """Find workspace root directory by looking for workspace/ or projects/ directory."""
     current = Path(start_path) if start_path else Path.cwd()
-    
+
     while current != current.parent:
         # Check for workspace/ directory
         if (current / "workspace").is_dir():
             return current / "workspace"
-        
+
         # Check for projects/ directory (direct workspace)
         if (current / "projects").is_dir():
             return current
-            
+
         current = current.parent
-    
+
     return None
 
 
@@ -30,7 +29,7 @@ def list_projects(workspace_path: Path) -> List[str]:
     projects_dir = workspace_path / "projects"
     if not projects_dir.exists():
         return []
-    
+
     return [
         item.name
         for item in projects_dir.iterdir()
@@ -43,7 +42,7 @@ def list_tasks(workspace_path: Path, project_name: str) -> List[str]:
     project_dir = workspace_path / "projects" / project_name
     if not project_dir.exists():
         return []
-    
+
     return [
         item.name
         for item in project_dir.iterdir()
@@ -56,7 +55,7 @@ def find_instruction_files(workspace_path: Path) -> Iterator[Path]:
     projects_dir = workspace_path / "projects"
     if not projects_dir.exists():
         return
-    
+
     for instruction_file in projects_dir.rglob("instruction.yaml"):
         if instruction_file.is_file():
             yield instruction_file
@@ -71,9 +70,9 @@ def copy_directory_contents(src: Path, dst: Path) -> None:
     """Copy directory contents to destination."""
     if not src.exists():
         raise FileNotFoundError(f"Source directory not found: {src}")
-    
+
     dst.mkdir(parents=True, exist_ok=True)
-    
+
     for item in src.iterdir():
         if item.is_file():
             shutil.copy2(item, dst / item.name)
@@ -96,7 +95,9 @@ def get_git_commit_sha() -> Optional[str]:
     """Get current git commit SHA."""
     try:
         import git
+
         repo = git.Repo(search_parent_directories=True)
-        return repo.head.commit.hexsha
+        sha: str = repo.head.commit.hexsha
+        return sha
     except Exception:
         return None

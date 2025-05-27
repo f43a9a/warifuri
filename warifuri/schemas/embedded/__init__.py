@@ -1,3 +1,3 @@
 """Embedded schemas."""
 
-__all__ = []
+__all__: list[str] = []

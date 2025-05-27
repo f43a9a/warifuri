@@ -2,7 +2,6 @@ name: install-dependencies
 task_type: human
 description: "Install project dependencies"
 auto_merge: false
-dependencies: ["run-tests"]
+dependencies: []
 inputs: []
 outputs: []
-note: "Install all required packages"

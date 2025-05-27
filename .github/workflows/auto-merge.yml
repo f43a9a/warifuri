@@ -1,0 +1,179 @@
+name: Auto-merge warifuri workflows
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to check for auto-merge'
+        required: true
+        type: number
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  validate-warifuri:
+    name: Validate warifuri workspace
+    runs-on: ubuntu-latest
+    outputs:
+      has-auto-merge: ${{ steps.check-auto-merge.outputs.has-auto-merge }}
+      validation-passed: ${{ steps.validate.outputs.passed }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+    
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+    
+    - name: Install warifuri
+      run: poetry install --no-interaction
+    
+    - name: Check for auto_merge.yaml files
+      id: check-auto-merge
+      run: |
+        echo "Checking for auto_merge.yaml files in workspace..."
+        auto_merge_files=$(find workspace/ -name "auto_merge.yaml" -o -name "auto_merge.yml" 2>/dev/null || true)
+        if [ -n "$auto_merge_files" ]; then
+          echo "has-auto-merge=true" >> $GITHUB_OUTPUT
+          echo "Found auto_merge files:"
+          echo "$auto_merge_files"
+        else
+          echo "has-auto-merge=false" >> $GITHUB_OUTPUT
+          echo "No auto_merge.yaml files found"
+        fi
+    
+    - name: Run warifuri validate
+      id: validate
+      run: |
+        echo "Running warifuri validate..."
+        if poetry run warifuri validate --workspace workspace 2>&1 | tee validate_output.txt; then
+          echo "passed=true" >> $GITHUB_OUTPUT
+          echo "✅ warifuri validation passed"
+        else
+          echo "passed=false" >> $GITHUB_OUTPUT
+          echo "❌ warifuri validation failed"
+          echo "Validation output:"
+          cat validate_output.txt
+          exit 1
+        fi
+    
+    - name: Run tests
+      run: |
+        echo "Running test suite..."
+        poetry run pytest tests/ -v --tb=short
+    
+    - name: Check code quality
+      run: |
+        echo "Checking code quality..."
+        poetry run ruff check .
+        poetry run mypy warifuri
+    
+    - name: Upload validation results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: warifuri-validation-results
+        path: |
+          validate_output.txt
+          pytest.log
+
+  auto-merge:
+    name: Auto-merge if conditions are met
+    runs-on: ubuntu-latest
+    needs: validate-warifuri
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.validate-warifuri.outputs.has-auto-merge == 'true' &&
+      needs.validate-warifuri.outputs.validation-passed == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Get PR information
+      id: pr-info
+      run: |
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        echo "pr-title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
+        echo "pr-author=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
+    
+    - name: Add auto-merge label
+      run: |
+        gh pr edit ${{ steps.pr-info.outputs.pr-number }} --add-label "auto-merge"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Add comment explaining auto-merge
+      run: |
+        gh pr comment ${{ steps.pr-info.outputs.pr-number }} --body "🤖 **Auto-merge triggered**
+
+        This PR contains tasks with \`auto_merge.yaml\` files and has passed all validation checks:
+
+        ✅ warifuri workspace validation
+        ✅ Test suite execution
+        ✅ Code quality checks
+
+        The PR will be automatically merged once all required checks pass."
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Enable auto-merge
+      run: |
+        gh pr merge ${{ steps.pr-info.outputs.pr-number }} --auto --squash --delete-branch
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  manual-merge-check:
+    name: Check manual merge eligibility
+    runs-on: ubuntu-latest
+    needs: validate-warifuri
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (needs.validate-warifuri.outputs.has-auto-merge == 'false' && 
+       needs.validate-warifuri.outputs.validation-passed == 'true')
+    
+    steps:
+    - name: Manual merge notification
+      run: |
+        if [ "${{ needs.validate-warifuri.outputs.has-auto-merge }}" = "false" ]; then
+          echo "📋 **Manual review required**"
+          echo ""
+          echo "This PR does not contain auto_merge.yaml files."
+          echo "While validation passed, manual review and merge is required."
+        else
+          echo "🔍 **Manual merge check requested**"
+          echo ""
+          echo "Workflow triggered manually for PR #${{ github.event.inputs.pr_number }}"
+        fi

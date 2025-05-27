@@ -1,0 +1,151 @@
+name: CI - warifuri quality checks
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+
+jobs:
+  quality-checks:
+    name: Quality assurance
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ matrix.python-version }}-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+    
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+    
+    - name: Install warifuri
+      run: poetry install --no-interaction
+    
+    - name: Run ruff linting
+      run: poetry run ruff check .
+    
+    - name: Run mypy type checking
+      run: poetry run mypy warifuri --strict
+    
+    - name: Run test suite
+      run: |
+        poetry run pytest tests/ -v --cov=warifuri --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage reports
+      if: matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction
+    
+    - name: Create test workspace
+      run: |
+        mkdir -p test_workspace/projects
+        echo "Creating test workspace for integration tests..."
+    
+    - name: Test warifuri CLI basic functionality
+      run: |
+        # Test basic commands
+        poetry run warifuri --help
+        poetry run warifuri --version
+        
+        # Test workspace creation
+        cd test_workspace
+        poetry run warifuri init test-project
+        
+        # Test validation
+        poetry run warifuri validate
+        
+        # Test listing
+        poetry run warifuri list --format json
+    
+    - name: Test template functionality
+      run: |
+        cd test_workspace
+        
+        # Test template listing
+        poetry run warifuri template list
+        
+        # Test template creation with dry-run
+        poetry run warifuri init template-test --template data-pipeline --dry-run
+    
+    - name: Test graph generation
+      run: |
+        cd test_workspace
+        
+        # Test graph generation
+        poetry run warifuri graph --format ascii
+        poetry run warifuri graph --format mermaid
+
+  security-checks:
+    name: Security scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Bandit security scan
+      run: |
+        pip install bandit[toml]
+        bandit -r warifuri/ -f json -o bandit-report.json || true
+    
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-scan-results
+        path: bandit-report.json

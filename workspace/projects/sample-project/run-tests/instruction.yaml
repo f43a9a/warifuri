@@ -5,4 +5,3 @@ auto_merge: false
 dependencies: ["install-dependencies"]
 inputs: []
 outputs: []
-note: "Run all unit and integration tests"

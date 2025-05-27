@@ -1,7 +1,6 @@
 """Test validation utilities."""
 
 import pytest
-import json
 from pathlib import Path
 
 from warifuri.utils.validation import (

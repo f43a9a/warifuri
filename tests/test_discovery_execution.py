@@ -1,7 +1,6 @@
 """Test task discovery and execution functionality."""
 
 import pytest
-from pathlib import Path
 from warifuri.core.discovery import (
     discover_task,
     discover_project,
@@ -9,8 +8,8 @@ from warifuri.core.discovery import (
     determine_task_type,
     find_ready_tasks,
 )
-from warifuri.core.execution import execute_task, ExecutionError
-from warifuri.core.types import TaskType, TaskStatus
+from warifuri.core.execution import execute_task
+from warifuri.core.types import TaskType
 from warifuri.utils import safe_write_file
 
 

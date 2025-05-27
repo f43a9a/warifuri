@@ -1,7 +1,6 @@
 """Integration tests for end-to-end functionality."""
 
 import pytest
-from pathlib import Path
 from click.testing import CliRunner
 from warifuri.cli.main import cli
 from warifuri.utils import safe_write_file, ensure_directory

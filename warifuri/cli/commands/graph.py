@@ -1,5 +1,8 @@
 """Graph command for visualizing task dependencies."""
 
+import os
+import subprocess
+import tempfile
 from typing import List
 
 import click
@@ -94,8 +97,214 @@ def _generate_mermaid(tasks: List[Task]) -> None:
 
 
 def _generate_html(tasks: List[Task], open_browser: bool) -> None:
-    """Generate HTML visualization."""
-    # TODO: Implement HTML generation with interactive graph
-    click.echo("HTML graph generation will be implemented in future version.")
+    """Generate HTML visualization with interactive graph."""
+    html_content = _create_html_graph(tasks)
+
+    # Write to temporary file
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
+        f.write(html_content)
+        html_file = f.name
+
+    click.echo(f"HTML graph generated: {html_file}")
+
     if open_browser:
-        click.echo("Browser opening will be implemented with HTML generation.")
+        _open_in_browser(html_file)
+    else:
+        click.echo(f"To view the graph, open: {html_file}")
+
+
+def _create_html_graph(tasks: List[Task]) -> str:
+    """Create HTML content with interactive graph using vis.js."""
+    # Build nodes and edges for vis.js
+    nodes = []
+    edges = []
+
+    for task in tasks:
+        # Node styling based on status
+        if task.is_completed:
+            color = "#28a745"  # Green
+            shape = "box"
+        elif task.status.value == "ready":
+            color = "#007bff"  # Blue
+            shape = "ellipse"
+        else:
+            color = "#6c757d"  # Gray
+            shape = "ellipse"
+
+        nodes.append(
+            {
+                "id": task.full_name,
+                "label": task.full_name,
+                "title": f"Type: {task.task_type.value}\\nStatus: {task.status.value}\\nDescription: {task.instruction.description}",
+                "color": color,
+                "shape": shape,
+            }
+        )
+
+        # Add edges for dependencies
+        for dep in task.instruction.dependencies:
+            edges.append({"from": dep, "to": task.full_name, "arrows": "to"})
+
+    # Convert to JSON strings
+    nodes_json = str(nodes).replace("'", '"').replace("True", "true").replace("False", "false")
+    edges_json = str(edges).replace("'", '"').replace("True", "true").replace("False", "false")
+
+    # Create HTML template with proper escaping
+    html_template = (
+        """<!DOCTYPE html>
+<html>
+<head>
+    <title>Warifuri Task Dependencies</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #mynetworkid {
+            width: 100%;
+            height: 600px;
+            border: 1px solid lightgray;
+            background-color: white;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .legend {
+            margin-top: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Warifuri Task Dependencies</h1>
+        <p>Interactive dependency graph visualization</p>
+    </div>
+
+    <div id="mynetworkid"></div>
+
+    <div class="legend">
+        <h3>Legend:</h3>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #28a745;"></span>
+            Completed Tasks
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #007bff;"></span>
+            Ready Tasks
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #6c757d;"></span>
+            Blocked Tasks
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Create a data object with nodes and edges
+        var nodes = new vis.DataSet("""
+        + nodes_json
+        + """);
+        var edges = new vis.DataSet("""
+        + edges_json
+        + """);
+
+        // Create a network
+        var container = document.getElementById('mynetworkid');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+
+        var options = {
+            layout: {
+                hierarchical: {
+                    direction: "UD",
+                    sortMethod: "directed"
+                }
+            },
+            physics: {
+                enabled: false
+            },
+            nodes: {
+                font: {
+                    size: 14,
+                    color: "white"
+                },
+                margin: 10
+            },
+            edges: {
+                color: "gray",
+                width: 2,
+                smooth: {
+                    type: "cubicBezier",
+                    forceDirection: "vertical",
+                    roundness: 0.4
+                }
+            },
+            interaction: {
+                dragNodes: true,
+                dragView: true,
+                zoomView: true
+            }
+        };
+
+        var network = new vis.Network(container, data, options);
+
+        // Add click event to show task details
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                var nodeId = params.nodes[0];
+                var nodeData = nodes.get(nodeId);
+                alert("Task: " + nodeId + "\\n\\n" + nodeData.title);
+            }
+        });
+    </script>
+</body>
+</html>"""
+    )
+    return html_template
+
+
+def _open_in_browser(file_path: str) -> None:
+    """Open HTML file in default browser."""
+    try:
+        # Try different methods to open browser
+        if os.name == "nt":  # Windows
+            import platform
+
+            if platform.system() == "Windows":
+                # Use os.startfile only on Windows
+                os.startfile(file_path)  # type: ignore[attr-defined]
+        elif os.name == "posix":  # macOS and Linux
+            subprocess.run(["open", file_path], check=False)  # macOS
+            if subprocess.run(["which", "xdg-open"], capture_output=True).returncode == 0:
+                subprocess.run(["xdg-open", file_path], check=False)  # Linux
+
+        # Use environment variable if available
+        browser = os.environ.get("BROWSER")
+        if browser:
+            subprocess.run([browser, file_path], check=False)
+
+        click.echo("🌐 Opening graph in web browser...")
+    except Exception as e:
+        click.echo(f"⚠️  Could not open browser automatically: {e}")
+        click.echo(f"Please open manually: {file_path}")

@@ -1,7 +1,5 @@
 """Test core types and models."""
 
-import pytest
-from pathlib import Path
 
 from warifuri.core.types import TaskInstruction, Task, TaskType, TaskStatus
 

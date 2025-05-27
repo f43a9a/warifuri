@@ -13,9 +13,15 @@ __all__: list[str] = [
     "validate_file_references",
     "expand_template_directory",
     "get_template_variables_from_user",
+    "LLMClient",
+    "LLMError",
+    "load_prompt_config",
+    "save_ai_response",
+    "log_ai_error",
 ]
 
 from .filesystem import ensure_directory, find_workspace_root, safe_write_file
+from .llm import LLMClient, LLMError, load_prompt_config, log_ai_error, save_ai_response
 from .logging import setup_logging
 from .templates import expand_template_directory, get_template_variables_from_user
 from .validation import (

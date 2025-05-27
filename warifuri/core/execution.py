@@ -109,7 +109,7 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
 
 
 def execute_ai_task(task: Task, dry_run: bool = False) -> bool:
-    """Execute AI task using prompt.yaml."""
+    """Execute AI task using LLM API."""
     logger.info(f"Executing AI task: {task.full_name}")
 
     if dry_run:
@@ -117,28 +117,36 @@ def execute_ai_task(task: Task, dry_run: bool = False) -> bool:
         return True
 
     try:
+        from ..utils import LLMClient, load_prompt_config, save_ai_response, log_ai_error
+
         # Load prompt configuration
-        prompt_path = task.path / "prompt.yaml"
-        if not prompt_path.exists():
-            raise ExecutionError(f"prompt.yaml not found in {task.full_name}")
+        prompt_config = load_prompt_config(task.path)
 
-        # For now, create a placeholder response
-        # TODO: Implement actual LLM integration
-        response_content = f"""# AI Task Response
+        # Initialize LLM client
+        llm_client = LLMClient(
+            model=prompt_config.get("model", "gpt-3.5-turbo"),
+            temperature=prompt_config.get("temperature", 0.7),
+        )
 
-Task: {task.full_name}
-Description: {task.instruction.description}
+        # Build prompts
+        system_prompt = prompt_config.get("system_prompt", "You are a helpful AI assistant.")
 
-This is a placeholder response. LLM integration will be implemented in a future version.
-"""
+        # Combine system prompt with task description if no explicit prompt provided
+        if "prompt" in prompt_config:
+            user_prompt = prompt_config["prompt"]
+        else:
+            user_prompt = task.instruction.description
 
-        # Ensure output directory exists
-        output_dir = task.path / "output"
-        output_dir.mkdir(exist_ok=True)
+        # Add context from task instruction
+        if task.instruction.note:
+            user_prompt += f"\n\nAdditional context:\n{task.instruction.note}"
+
+        # Generate response
+        logger.info(f"Generating AI response for {task.full_name}")
+        response = llm_client.generate_response(system_prompt, user_prompt)
 
         # Save response
-        response_file = output_dir / "response.md"
-        safe_write_file(response_file, response_content)
+        save_ai_response(response, task.path)
 
         # Create done.md
         create_done_file(task, "AI task completed successfully")
@@ -147,8 +155,8 @@ This is a placeholder response. LLM integration will be implemented in a future 
         return True
 
     except Exception as e:
-        logger.error(f"AI task failed: {task.full_name} - {e}")
-        log_failure(task, str(e), "AI execution error")
+        logger.error(f"AI task failed: {task.full_name}: {e}")
+        log_ai_error(e, task.path)
         return False
 
 
@@ -166,7 +174,41 @@ def execute_human_task(task: Task, dry_run: bool = False) -> bool:
     return True
 
 
-def execute_task(task: Task, dry_run: bool = False, force: bool = False) -> bool:
+def check_dependencies(task: Task, all_tasks: list) -> bool:
+    """Check if task dependencies are satisfied."""
+    if not task.instruction.dependencies:
+        return True
+
+    # Create lookup for all tasks by full name and short name
+    task_lookup = {t.full_name: t for t in all_tasks}
+    # Also allow matching by task name within the same project
+    for t in all_tasks:
+        if t.project == task.project:
+            task_lookup[t.name] = t
+
+    for dep in task.instruction.dependencies:
+        # Try full name first
+        dep_task = task_lookup.get(dep)
+
+        # If not found and it's a simple name, try project/dep format
+        if not dep_task and "/" not in dep:
+            full_dep_name = f"{task.project}/{dep}"
+            dep_task = task_lookup.get(full_dep_name)
+
+        if not dep_task:
+            logger.warning(f"Dependency '{dep}' not found for task {task.full_name}")
+            return False
+
+        if not dep_task.is_completed:
+            logger.info(f"Dependency '{dep}' not completed for task {task.full_name}")
+            return False
+
+    return True
+
+
+def execute_task(
+    task: Task, dry_run: bool = False, force: bool = False, all_tasks: Optional[list] = None
+) -> bool:
     """Execute task based on its type."""
     # Check if task is already completed
     if task.is_completed and not force:
@@ -174,9 +216,10 @@ def execute_task(task: Task, dry_run: bool = False, force: bool = False) -> bool
         return True
 
     # Check dependencies (unless forced)
-    if not force:
-        # TODO: Implement dependency checking
-        pass
+    if not force and all_tasks:
+        if not check_dependencies(task, all_tasks):
+            logger.error(f"Dependencies not satisfied for task: {task.full_name}")
+            return False
 
     # Execute based on task type
     if task.task_type == TaskType.MACHINE:

@@ -2,7 +2,6 @@
 
 import pytest
 from click.testing import CliRunner
-from pathlib import Path
 from warifuri.cli.main import cli
 from warifuri.utils import safe_write_file, ensure_directory
 

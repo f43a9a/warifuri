@@ -6,7 +6,7 @@ import tempfile
 import shutil
 from typing import Generator
 
-from warifuri.utils import ensure_directory, safe_write_file
+from warifuri.utils import ensure_directory
 
 
 @pytest.fixture

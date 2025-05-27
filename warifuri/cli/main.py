@@ -7,25 +7,31 @@ from typing import Optional
 import click
 
 from ..utils import find_workspace_root, setup_logging
-from .commands.init import init
-from .commands.list import list_cmd
-from .commands.run import run
-from .commands.show import show
-from .commands.validate import validate
-from .commands.graph import graph
-from .commands.mark_done import mark_done
-from .commands.template import template
-from .commands.issue import issue
 
 
-# Global context for CLI
 class Context:
-    def __init__(self) -> None:
-        self.workspace_path: Optional[Path] = None
-        self.logger: Optional[logging.Logger] = None
+    """CLI context for passing shared data."""
+
+    def __init__(
+        self, workspace_path: Optional[Path] = None, logger: Optional[logging.Logger] = None
+    ) -> None:
+        self.workspace_path = workspace_path
+        self.logger = logger or logging.getLogger(__name__)
 
 
 pass_context = click.make_pass_decorator(Context, ensure=True)
+
+
+# Import commands after defining Context to avoid circular imports
+from .commands.init import init  # noqa: E402
+from .commands.list import list_cmd  # noqa: E402
+from .commands.run import run  # noqa: E402
+from .commands.show import show  # noqa: E402
+from .commands.validate import validate  # noqa: E402
+from .commands.graph import graph  # noqa: E402
+from .commands.mark_done import mark_done  # noqa: E402
+from .commands.template import template  # noqa: E402
+from .commands.issue import issue  # noqa: E402
 
 
 @click.group()
@@ -57,13 +63,13 @@ def cli(ctx: Context, log_level: Optional[str], workspace: Optional[Path]) -> No
 
 # Import and register commands
 cli.add_command(init)  # type: ignore[has-type]
-cli.add_command(list_cmd, name="list")  # type: ignore[has-type]
+cli.add_command(list_cmd, name="list")
 cli.add_command(run)  # type: ignore[has-type]
-cli.add_command(show)  # type: ignore[has-type]
-cli.add_command(validate)  # type: ignore[has-type]
+cli.add_command(show)
+cli.add_command(validate)
 cli.add_command(graph)  # type: ignore[has-type]
-cli.add_command(mark_done, name="mark-done")  # type: ignore[has-type]
-cli.add_command(template)  # type: ignore[has-type]
+cli.add_command(mark_done, name="mark-done")
+cli.add_command(template)
 cli.add_command(issue)  # type: ignore[has-type]
 
 

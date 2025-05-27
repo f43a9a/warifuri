@@ -15,14 +15,14 @@ from ...utils import (
 
 
 @click.command()
-@click.argument("target", required=True)
+@click.argument("target", required=False)
 @click.option("--template", help="Template to use for initialization")
 @click.option("--force", is_flag=True, help="Overwrite existing files")
 @click.option("--dry-run", is_flag=True, help="Show what would be created without creating")
 @pass_context
 def init(
     ctx: Context,
-    target: str,
+    target: Optional[str],
     template: Optional[str],
     force: bool,
     dry_run: bool,
@@ -32,9 +32,21 @@ def init(
     TARGET can be:
     - project_name: Create new project
     - project_name/task_name: Create new task
+    - Empty with --template: Expand template to current workspace
     """
     workspace_path = ctx.workspace_path
     assert workspace_path is not None
+
+    # Handle template-only expansion (no target)
+    if not target and template:
+        _expand_template_to_workspace(workspace_path, template, force, dry_run)
+        return
+
+    if not target:
+        click.echo(
+            "Error: TARGET is required unless using --template for workspace expansion.", err=True
+        )
+        return
 
     if "/" in target:
         # Create task
@@ -193,3 +205,51 @@ note: "Please edit this instruction.yaml to complete the task definition"
         click.echo(f"Created task: {project_name}/{task_name}")
         click.echo(f"  - {instruction_path}")
         click.echo("Please edit instruction.yaml to complete the task definition.")
+
+
+def _expand_template_to_workspace(
+    workspace_path: Path,
+    template: str,
+    force: bool,
+    dry_run: bool,
+) -> None:
+    """Expand template directly to workspace."""
+    template_path = workspace_path / "templates" / template
+
+    if not template_path.exists():
+        click.echo(f"Error: Template '{template}' not found.", err=True)
+        return
+
+    if dry_run:
+        click.echo(f"Would expand template '{template}' to workspace: {workspace_path}")
+        # Show what would be created
+        for item in template_path.rglob("*"):
+            if item.is_file():
+                relative_path = item.relative_to(template_path)
+                target_path = workspace_path / relative_path
+                click.echo(f"  Would create: {target_path}")
+        return
+
+    click.echo(f"Expanding template '{template}' to workspace...")
+
+    # Get template variables
+    variables = get_template_variables_from_user(template)
+
+    try:
+        # Expand template directly to workspace
+        expand_template_directory(template_path, workspace_path, variables)
+        click.echo(f"✅ Template '{template}' expanded to workspace")
+
+        # List created projects
+        projects_dir = workspace_path / "projects"
+        if projects_dir.exists():
+            projects = [
+                d.name for d in projects_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
+            ]
+            if projects:
+                click.echo("Available projects:")
+                for project in projects:
+                    click.echo(f"  - {project}")
+
+    except Exception as e:
+        click.echo(f"Error expanding template: {e}", err=True)

@@ -76,7 +76,12 @@ def run(
         if dry_run:
             click.echo("[DRY RUN] Task execution simulation completed.")
         else:
-            success = execute_task(target_task, dry_run=dry_run, force=force)
+            # Collect all tasks for dependency checking
+            all_tasks = []
+            for proj in projects:
+                all_tasks.extend(proj.tasks)
+
+            success = execute_task(target_task, dry_run=dry_run, force=force, all_tasks=all_tasks)
             if success:
                 click.echo(f"✅ Task completed: {target_task.full_name}")
             else:

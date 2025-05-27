@@ -1,7 +1,7 @@
 # 📄 **warifuri CLI コマンドリスト v1.2**
 
 > **制作資料用ドキュメント** — 2025-05-26
-> （全 8 コマンド＋主要オプション／使用例を網羅）
+> （全 9 コマンド＋主要オプション／使用例を網羅）
 
 ---
 
@@ -17,6 +17,7 @@
 | `warifuri graph`         | 可視化    | 依存グラフ（Mermaid／HTML／ASCII） |
 | `warifuri mark-done`     | 手動完了   | `done.md` をワンコマンドで作成      |
 | `warifuri template list` | テンプレ確認 | 登録テンプレと含まれるタスクを一覧         |
+| `warifuri issue`         | Issue連携 | GitHub Issue を作成・管理      |
 
 ---
 
@@ -102,9 +103,6 @@
 | **目的** | 利用可能なテンプレートと含まれるタスクを確認                    |         |
 | **構文** | \`warifuri template list \[--format plain | json]\` |
 | **例**  | `warifuri template list --format json`    |         |
-
-
-了解です。**GitHub Issue 連携コマンドを正式に追加**し、子 Issue をまとめて起票できるフローも含めて仕様をまとめ直しました。
 
 ---
 

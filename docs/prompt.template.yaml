@@ -1,7 +1,71 @@
-model: gpt-4o
-temperature: 0.3
-max_tokens: 2048
-top_p: 1.0
+\
+# AIタスクで使用するプロンプト設定のテンプレートです。
+# このファイルをコピーして、各AIタスクのディレクトリに `prompt.yaml` として配置し、
+# タスク固有の設定に書き換えてください。
+
+# --- LLMモデル設定 ---
+# 使用する言語モデルのIDを指定します。
+# 例: "gpt-4o", "claude-3-opus-20240229", "gemini-1.5-pro-latest"
+model: <YOUR_MODEL_ID_HERE> # 例: "gpt-4o"
+
+# --- 推論パラメータ ---
+# temperature: 出力のランダム性を制御します。0に近いほど決定的、高いほど多様になります。
+# 一般的な範囲: 0.0 - 2.0 (モデルにより異なる場合があります)
+temperature: 0.7 # 例: 0.3
+
+# max_tokens: 生成されるテキストの最大長をトークン数で指定します。
+max_tokens: 2048 # 例: 2048
+
+# top_p: 核サンプリング (nucleus sampling) のパラメータ。
+# 確率の合計が top_p を超える最小のトークンセットからサンプリングします。
+# 一般的な範囲: 0.0 - 1.0
+top_p: 1.0 # 例: 1.0
+
+# --- プロンプト内容 ---
+# system_prompt: AIに対する役割や全体的な指示を与えるシステムメッセージです。
+# このプロンプトは、ユーザープロンプト (instruction.yaml の description など) の前に挿入されます。
 system_prompt: |
-  あなたはプロジェクトのコードレビューAIです。以下の指示に従ってください…
+  あなたは、与えられた指示に基づいて高品質な成果物を生成するAIアシスタントです。
+  以下の点に注意して、タスクを実行してください。
+
+  # 指示の基本方針
+  - ユーザーからの指示 (description) を最優先とし、その内容を正確に理解・実行してください。
+  - 不明瞭な点や矛盾点がある場合は、最も合理的と思われる解釈で進めてください。
+  - 出力形式やスタイルに関する指定があれば、それに厳密に従ってください。
+
+  # あなたの専門性 (タスクに合わせて具体的に記述してください)
+  # 例:
+  # - あなたは熟練のPythonプログラマーです。PEP8に準拠した、効率的で読みやすいコードを生成します。
+  # - あなたはテクニカルライターです。専門用語を避け、平易な言葉で技術的な内容を解説します。
+  # - あなたはデータサイエンティストです。提供されたデータに基づいて、洞察に富んだ分析レポートを作成します。
+  <YOUR_AI_ROLE_AND_EXPERTISE_HERE>
+
+  # 出力に関する追加指示 (必要に応じて記述)
+  # 例:
+  # - 出力はマークダウン形式で記述してください。
+  # - 生成するコードには、詳細なコメントを付与してください。
+  <ADDITIONAL_OUTPUT_INSTRUCTIONS_HERE>
+
+# user_prompt_prefix: (オプション) instruction.yaml の description の前に挿入する固定テキスト。
+# 例: "以下の仕様書をレビューしてください:\n"
+# user_prompt_prefix: |
+#   <YOUR_USER_PROMPT_PREFIX_HERE>
+
+# user_prompt_suffix: (オプション) instruction.yaml の description の後に挿入する固定テキスト。
+# 例: "\n上記について、改善点を3つ提案してください。"
+# user_prompt_suffix: |
+#   <YOUR_USER_PROMPT_SUFFIX_HERE>
+
+# --- その他 ---
+# stop_sequences: (オプション) 生成を停止する文字列のリスト。
+# 例: ["\n```", "---"]
+# stop_sequences:
+#   - "<STOP_SEQUENCE_1>"
+#   - "<STOP_SEQUENCE_2>"
+
+# presence_penalty: (オプション) 新しいトピックについて話すようにモデルをペナルティ付けする度合い。
+# presence_penalty: 0.0
+
+# frequency_penalty: (オプション) テキスト内で既出の単語を繰り返さないようにモデルをペナルティ付けする度合い。
+# frequency_penalty: 0.0
 

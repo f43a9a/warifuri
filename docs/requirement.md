@@ -1,4 +1,4 @@
-# 📑 warifuri 要件定義書 (v1.2)
+# 📑 warifuri 要件定義書 (v1.2)
 
 ## 1. 目的と背景
 
@@ -34,7 +34,7 @@ workspace/
 ## 4. instruction.yaml スキーマ
 
  必須: `name`, `description`
- 任意: `dependencies`, `inputs`, `outputs`, `note`
+ 任意: `dependencies`, `inputs`, `outputs` (主にドキュメント用途だが `validate` で存在チェックも行う。Machineタスク実行後、ここに定義されたファイルは成果物として自動的にコピーバックされる), `note`
  JSON Schema は `schemas/instruction.schema.json` で提供。
 
 ## 5. 担当種別の自動判定
@@ -47,8 +47,8 @@ workspace/
 
 ## 6. 補助ファイル
 
- `done.md`: 空でも可。存在 = 完了。自動実行時は日時・SHA を追記。
- `auto_merge.yaml`: PR 自動マージを許可するフラグ。
+ `done.md`: 空でも可。存在 = 完了。warifuriはファイルの存在のみで完了と判定。Machine/AIタスクが自動生成する場合の推奨追記フォーマットは `YYYY-MM-DD HH:MM:SS SHA: <commit_sha>` の1行テキスト形式。
+ `auto_merge.yaml`: PR 自動マージを許可するフラグ。v1.2時点では空のマーカーファイルとして機能し、ファイルが存在するだけで有効。中身は評価されない。
  `logs/failed_<ts>.log`: Machine 実行失敗時のログ。
 
 ## 7. CLI コマンド一覧
@@ -64,6 +64,12 @@ workspace/
 | `warifuri mark-done`     | 手動で `done.md` 作成 (`<proj>/<task>`, `--message`)                                                                                                             |       |                  |
 | `warifuri template list` | テンプレート + タスク一覧 (`--format`)                                                                                                                                 |       |                  |
 | `warifuri issue`         | GitHub Issue 起票  • `--project <proj>` 親 Issue  • `--task <proj>/<task>` 子 Issue  • `--all-tasks <proj>` 一括子 Issue  共通: `--assignee`, `--label`, `--dry-run` |       |                  |
+
+### 追加 CLI 要件
+
+* **--log-level <LEVEL>**
+  * 指定可能値: DEBUG / INFO / WARNING / ERROR / CRITICAL
+  * 省略時は環境変数 `WARIFURI_LOG_LEVEL`、それも無ければ INFO。
 
 ## 8. GitHub 連携規約
 

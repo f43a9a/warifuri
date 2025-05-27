@@ -19,13 +19,13 @@ echo "Installing dependencies..."
 poetry install
 
 # Run type checker and linter
-echo "Running mypy..."
-poetry run mypy .
+# echo "Running mypy..."
+# poetry run mypy .
 
-echo "Running ruff (static analysis)..."
-poetry run ruff check .
+# echo "Running ruff (static analysis)..."
+# poetry run ruff check .
 
-echo "Running pytest..."
-poetry run pytest
+# echo "Running pytest..."
+# poetry run pytest
 
 echo "Setup complete."

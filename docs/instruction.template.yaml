@@ -1,25 +1,104 @@
-# instruction.yaml
+# instruction.yaml - タスク定義ファイル テンプレート
+# このファイルをコピーして、各タスクのディレクトリに `instruction.yaml` として配置し、
+# タスク固有の内容に書き換えてください。
 
-name: <task-name>  # 例: setup-environment
+# --- 基本情報 ---
+# name: タスクの一意な名前 (プロジェクト内でユニークである必要があります)
+# 半角英数字、ハイフン、アンダースコアが使用可能です。
+name: <project-name>-<module-name>-<action-name> # 例: myapp-auth-setup-db
 
+# type: タスクの種別 (必須)
+#   Machine: スクリプトを実行するタスク
+#   AI:      LLMに指示を出すタスク
+#   Human:   人間が手動で行うタスク
+type: <Machine | AI | Human> # 例: Machine
+
+# --- 依存関係 ---
+# dependencies: このタスクが依存する他のタスク名のリスト (任意)
+#   ここに列挙されたタスクが完了するまで、このタスクの実行は開始されません。
 dependencies:
-  - <optional-task-name-1>
-  - <optional-task-name-2>
+  - <dependent-task-name-1> # 例: myapp-common-download-assets
+  - <dependent-task-name-2> # 例: myapp-core-compile-library
 
+# --- 入出力ファイル ---
+# inputs: このタスクが処理する入力ファイル/ディレクトリのリスト (任意)
+#   - 各項目は、タスクディレクトリ内の `input/` からの相対パスで記述します。
+#   - `warifuri validate` で存在チェックが行われます。
+#   - Machineタスクでは、実行時に `WARIFURI_INPUT_DIR` 環境変数経由で `input/` ディレクトリのパスが渡されます。
 inputs:
-  - input/<input-file-1>
-  - input/<input-file-2>
+  - <file-or-dir-1>         # 例: config.json
+  - <path/to/your/file-2> # 例: datasets/raw_data.csv
+  - <directory-name>/       # 例: images/ (ディレクトリを示す場合は末尾に / を推奨)
 
+# outputs: このタスクが生成する出力ファイル/ディレクトリのリスト (任意)
+#   - 各項目は、タスクディレクトリ内の `output/` からの相対パスで記述します。
+#   - Machineタスクでは、スクリプト完了後、`work/` ディレクトリから `output/` へ自動コピーされる対象となります。
+#     (スクリプト内では `WARIFURI_OUTPUT_DIR` 環境変数で `work/output/` 相当のパスが渡される想定)
 outputs:
-  - output/<output-file-1>
-  - output/<output-file-2>
+  - <generated-file-1>      # 例: result.txt
+  - <path/to/output/dir-2>/ # 例: processed_data/
+  - <report-name>.pdf       # 例: analysis_report.pdf
 
+# --- タスク固有設定 ---
+# script: Machineタスクの場合、実行するスクリプトファイルを指定します (Machineタスクでは必須となることが多い)
+#   - タスクディレクトリからの相対パスで記述します。
+#   - 例: run.sh, main.py, process_data.R
+script: scripts/run_analysis.py # 例: scripts/build.sh (Machineタスクの場合)
+
+# prompt_file: AIタスクの場合、使用するプロンプト定義ファイル (通常 `prompt.yaml`) を指定します (AIタスクでは必須となることが多い)
+#   - タスクディレクトリからの相対パスで記述します。デフォルトは `prompt.yaml` です。
+prompt_file: prompt.yaml # (AIタスクの場合)
+
+# --- 補足情報 ---
+# note: タスクに関する補足情報、参考URL、関連ドキュメントへのリンクなどを記述します (任意)
+#   - Markdown形式のテキストやURLをリスト形式で記述できます。
+#   - タスクディレクトリ内のREADME.mdを参照することも一般的です。
 note:
-  - <optional-markdown-or-url>
-  - README.md
+  - "このタスクは外部API (api.example.com) と連携します。"
+  - "関連ドキュメント: ../../docs/specifications.md" # プロジェクトルートからの相対パスも可
+  - "参考Issue: https://github.com/owner/repo/issues/123"
+  - README.md # タスクディレクトリ内のREADME.mdを指す
 
+# --- タスク詳細 ---
+# description: | (必須)
+#   このタスクの目的、実行手順、期待される成果物などを詳細に記述します。
+#   人間、AI、マシンのいずれが実行する場合でも理解できるように、明確かつ具体的に記述してください。
+#
+#   Machineタスクの場合:
+#     - スクリプトが何をするのか、必要な環境変数、入力ファイルのフォーマット、出力ファイルの仕様などを記述します。
+#   AIタスクの場合:
+#     - AIに何をさせたいのか、どのような入力に基づいてどのような出力を期待するのか、
+#       思考プロセスや評価基準なども含めて具体的に指示します。この内容がAIへの主たる指示となります。
+#   Humanタスクの場合:
+#     - 人間が手動で行うべき作業手順、確認事項、完了条件などを記述します。
 description: |
-  このタスクの目的や実施手順を記述します。
-  人間・AI・マシンが同一の構造を読む前提で、
-  実行の流れや入力ファイルの使い方、出力すべき内容を丁寧に記述してください。
-  このフィールドは長文可です。
+  # 目的
+  ここにタスクの主な目的を記述します。
+  例: 「生データセットを前処理し、機械学習モデルの学習に使用できる形式に変換する。」
+
+  # 実行手順 (Machineタスクの場合はスクリプトの動作概要、Humanタスクの場合は手作業手順)
+  1. (手順1) ...
+  2. (手順2) ...
+     - (詳細手順2.1) ...
+  3. (手順3) ...
+
+  # 入力ファイル (inputsで定義した各ファイル/ディレクトリの説明)
+  - `input/<file-or-dir-1>`: (この入力が何であるか、どのような形式か、どう使われるかを説明)
+  - `input/<path/to/your/file-2>`: (同上)
+
+  # 出力ファイル (outputsで定義した各ファイル/ディレクトリの説明)
+  - `output/<generated-file-1>`: (この出力が何であるか、どのような形式か、何が含まれるかを説明)
+  - `output/<path/to/output/dir-2>/`: (同上)
+
+  # 完了条件 (タスクが「完了」とみなされるための具体的な条件)
+  - (条件1) ...
+  - (条件2) ...
+
+  # AIへの指示 (AIタスクの場合、ここに具体的な指示を記述。prompt.yamlのsystem_promptと合わせて使われる)
+  # 例:
+  # 以下の仕様書をレビューし、改善点を3つ提案してください。
+  # - 提案は具体的で、実行可能なものであること。
+  # - 各提案には、その理由と期待される効果を明記すること。
+
+  # その他特記事項
+  - (このタスクに関する特別な注意点、制約、背景情報などがあれば記述)

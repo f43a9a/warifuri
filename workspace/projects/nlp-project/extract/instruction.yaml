@@ -1,0 +1,9 @@
+name: extract
+task_type: machine
+description: Extract data from database to json
+auto_merge: false
+outputs:
+  - "extracted_data.json"
+inputs: []
+dependencies: []
+note: "Data extraction task for nlp-project"

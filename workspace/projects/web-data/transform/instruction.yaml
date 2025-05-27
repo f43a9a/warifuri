@@ -1,0 +1,11 @@
+name: transform
+task_type: ai
+description: Transform extracted data using AI for web-data
+auto_merge: false
+outputs:
+  - "transformed_data.json"
+inputs:
+  - "../extract/extracted_data.csv"
+dependencies:
+  - "extract"
+note: "AI-powered data transformation for web-data"

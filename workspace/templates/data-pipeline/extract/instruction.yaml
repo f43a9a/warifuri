@@ -1,0 +1,9 @@
+name: extract
+task_type: machine
+description: Extract data from {{SOURCE}} to {{OUTPUT_FORMAT}}
+auto_merge: false
+outputs:
+  - "extracted_data.{{OUTPUT_FORMAT}}"
+inputs: []
+dependencies: []
+note: "Data extraction task for {{PROJECT_NAME}}"

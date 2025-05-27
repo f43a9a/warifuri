@@ -1,0 +1,6 @@
+name: validate_config
+description: "Validate the generated configuration file"
+dependencies: ["demo/setup"]
+inputs: ["../setup/output/config.json"]
+outputs: ["validation_report.md"]
+note: "This task validates the configuration created by the setup task"

@@ -5,7 +5,7 @@ import json
 import click
 import yaml
 
-from ..main import Context, pass_context
+from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects, find_task_by_name
 
 

@@ -2,7 +2,7 @@
 
 import click
 
-from ..main import Context, pass_context
+from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects
 from ...utils import (
     ValidationError,

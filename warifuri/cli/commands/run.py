@@ -4,7 +4,7 @@ from typing import Optional
 
 import click
 
-from ..main import Context, pass_context
+from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects, find_ready_tasks, find_task_by_name
 from ...core.execution import execute_task
 

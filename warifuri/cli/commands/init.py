@@ -5,7 +5,7 @@ from typing import Optional
 
 import click
 
-from ..main import Context, pass_context
+from ..context import Context, pass_context
 from ...utils import (
     ensure_directory,
     safe_write_file,
@@ -93,7 +93,7 @@ def _create_project(
         click.echo(f"Using template: {template}")
 
         # Get template variables from user
-        variables = get_template_variables_from_user(project_name)
+        variables = get_template_variables_from_user(project_name, non_interactive=dry_run or force)
         variables["PROJECT_NAME"] = project_name  # Ensure project name is set
 
         # Expand template
@@ -176,7 +176,7 @@ def _create_task(
         click.echo(f"Using template: {template}")
 
         # Get template variables from user
-        variables = get_template_variables_from_user(task_name)
+        variables = get_template_variables_from_user(task_name, non_interactive=dry_run or force)
         variables["PROJECT_NAME"] = project_name
         variables["TASK_NAME"] = task_name
 
@@ -213,43 +213,53 @@ def _expand_template_to_workspace(
     force: bool,
     dry_run: bool,
 ) -> None:
-    """Expand template directly to workspace."""
+    """Expand template as project(s) to workspace."""
     template_path = workspace_path / "templates" / template
 
     if not template_path.exists():
         click.echo(f"Error: Template '{template}' not found.", err=True)
         return
 
+    # Target should be projects directory
+    projects_dir = workspace_path / "projects"
+    target_path = projects_dir / template
+
+    if target_path.exists() and not force:
+        click.echo(
+            f"Error: Project '{template}' already exists. Use --force to overwrite.", err=True
+        )
+        return
+
     if dry_run:
-        click.echo(f"Would expand template '{template}' to workspace: {workspace_path}")
+        click.echo(f"Would expand template '{template}' as project: {target_path}")
         # Show what would be created
         for item in template_path.rglob("*"):
             if item.is_file():
                 relative_path = item.relative_to(template_path)
-                target_path = workspace_path / relative_path
-                click.echo(f"  Would create: {target_path}")
+                target_file_path = target_path / relative_path
+                click.echo(f"  Would create: {target_file_path}")
         return
 
-    click.echo(f"Expanding template '{template}' to workspace...")
+    click.echo(f"Expanding template '{template}' as project...")
 
     # Get template variables
-    variables = get_template_variables_from_user(template)
+    variables = get_template_variables_from_user(template, non_interactive=dry_run or force)
+    variables["PROJECT_NAME"] = template  # Use template name as project name
 
     try:
-        # Expand template directly to workspace
-        expand_template_directory(template_path, workspace_path, variables)
-        click.echo(f"✅ Template '{template}' expanded to workspace")
+        # Ensure projects directory exists
+        ensure_directory(projects_dir)
 
-        # List created projects
-        projects_dir = workspace_path / "projects"
-        if projects_dir.exists():
-            projects = [
-                d.name for d in projects_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
-            ]
-            if projects:
-                click.echo("Available projects:")
-                for project in projects:
-                    click.echo(f"  - {project}")
+        # Expand template to projects directory as a new project
+        expand_template_directory(template_path, target_path, variables)
+        click.echo(f"✅ Template '{template}' expanded as project '{template}'")
+
+        # List created tasks
+        tasks = [d.name for d in target_path.iterdir() if d.is_dir() and not d.name.startswith(".")]
+        if tasks:
+            click.echo("Created tasks:")
+            for task in tasks:
+                click.echo(f"  - {template}/{task}")
 
     except Exception as e:
         click.echo(f"Error expanding template: {e}", err=True)

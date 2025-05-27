@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import click
 
-from ..main import Context, pass_context
+from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects, find_ready_tasks
 from ...core.types import Task, TaskStatus
 
@@ -100,13 +100,21 @@ def _display_plain(tasks: List[Task], fields: Optional[str]) -> None:
 
     for task in tasks:
         task_data = _get_task_fields(task, fields)
-        click.echo(f"[{task_data['status'].upper()}] {task_data['name']}")
+
+        # Display name with status if available
+        if "status" in task_data:
+            click.echo(f"[{task_data['status'].upper()}] {task_data['name']}")
+        else:
+            click.echo(f"{task_data['name']}")
+
         if "description" in task_data:
             click.echo(f"  {task_data['description']}")
-        if fields and len(task_data) > 2:
-            for key, value in task_data.items():
-                if key not in ["name", "description"]:
-                    click.echo(f"  {key}: {value}")
+
+        # Display other fields
+        displayed_fields = {"name", "description", "status"}
+        for key, value in task_data.items():
+            if key not in displayed_fields:
+                click.echo(f"  {key}: {value}")
         click.echo()
 
 

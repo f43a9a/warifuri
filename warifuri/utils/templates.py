@@ -68,28 +68,35 @@ def expand_template_directory(
                 copy_directory_contents(item.parent, target_path.parent)
 
 
-def get_template_variables_from_user(template_name: str) -> Dict[str, str]:
+def get_template_variables_from_user(
+    template_name: str, non_interactive: bool = False
+) -> Dict[str, str]:
     """Get template variables from user input.
+
+    Args:
+        template_name: Name of the template
+        non_interactive: If True, use default values without prompting user
 
     This is a simple implementation - could be enhanced with
     a template configuration file that defines required variables.
     """
     variables = {}
 
-    # Common variables
+    # Common variables with defaults
     common_vars = {
-        "PROJECT_NAME": f"Enter project name (default: {template_name}): ",
-        "SOURCE": "Enter data source: ",
-        "OUTPUT_FORMAT": "Enter output format (default: json): ",
-        "INPUT_FILE": "Enter input file path: ",
+        "PROJECT_NAME": (f"Enter project name (default: {template_name}): ", template_name),
+        "SOURCE": ("Enter data source: ", "source_data"),
+        "OUTPUT_FORMAT": ("Enter output format (default: json): ", "json"),
+        "INPUT_FILE": ("Enter input file path: ", "input.txt"),
     }
 
-    for var, prompt in common_vars.items():
-        value = input(prompt).strip()
-        if not value and var == "PROJECT_NAME":
-            value = template_name
-        elif not value and var == "OUTPUT_FORMAT":
-            value = "json"
+    for var, (prompt, default) in common_vars.items():
+        if non_interactive:
+            value = default
+        else:
+            value = input(prompt).strip()
+            if not value:
+                value = default
         variables[var] = value
 
     return variables

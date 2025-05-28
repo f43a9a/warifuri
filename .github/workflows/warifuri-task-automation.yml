@@ -1,0 +1,282 @@
+name: Warifuri Task Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_name:
+        description: 'Task to execute (format: project/task)'
+        required: true
+        type: string
+      auto_merge:
+        description: 'Enable auto-merge for the created PR'
+        required: false
+        type: boolean
+        default: false
+      branch_prefix:
+        description: 'Branch name prefix'
+        required: false
+        type: string
+        default: 'warifuri-task'
+
+  schedule:
+    # Run ready machine tasks every hour during business hours (UTC)
+    - cron: '0 9-17 * * 1-5'
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+jobs:
+  discover-ready-tasks:
+    name: Discover ready tasks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    outputs:
+      ready-tasks: ${{ steps.find-tasks.outputs.ready-tasks }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Find ready machine tasks
+      id: find-tasks
+      run: |
+        echo "Finding ready machine tasks..."
+        # Get list of ready machine tasks
+        ready_tasks=$(poetry run warifuri list --ready --format json | jq -r '.[] | select(.task_type == "machine") | "\(.project)/\(.name)"')
+
+        if [ -n "$ready_tasks" ]; then
+          # Convert to JSON array for matrix strategy
+          tasks_json=$(echo "$ready_tasks" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "ready-tasks=$tasks_json" >> $GITHUB_OUTPUT
+          echo "Found ready machine tasks:"
+          echo "$ready_tasks"
+        else
+          echo "ready-tasks=[]" >> $GITHUB_OUTPUT
+          echo "No ready machine tasks found"
+        fi
+
+  execute-task:
+    name: Execute warifuri task
+    runs-on: ubuntu-latest
+    needs: [discover-ready-tasks]
+    if: |
+      always() && (
+        github.event_name == 'workflow_dispatch' ||
+        (needs.discover-ready-tasks.outputs.ready-tasks != '[]' && needs.discover-ready-tasks.outputs.ready-tasks != '')
+      )
+    strategy:
+      matrix:
+        task: ${{ github.event_name == 'workflow_dispatch' && fromJson(format('["{0}"]', github.event.inputs.task_name)) || fromJson(needs.discover-ready-tasks.outputs.ready-tasks) }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
+    - name: Validate task exists
+      run: |
+        echo "Validating task: ${{ matrix.task }}"
+        if ! poetry run warifuri show --task "${{ matrix.task }}"; then
+          echo "❌ Task '${{ matrix.task }}' not found"
+          exit 1
+        fi
+
+    - name: Set branch name
+      id: branch
+      run: |
+        task_clean=$(echo "${{ matrix.task }}" | tr '/' '-')
+        timestamp=$(date +%Y%m%d-%H%M%S)
+        branch_prefix="${{ github.event.inputs.branch_prefix || 'warifuri-task' }}"
+        branch_name="${branch_prefix}/${task_clean}-${timestamp}"
+        echo "name=$branch_name" >> $GITHUB_OUTPUT
+        echo "task-clean=$task_clean" >> $GITHUB_OUTPUT
+
+    - name: Create branch
+      run: |
+        git config user.name "warifuri-bot"
+        git config user.email "warifuri-bot@users.noreply.github.com"
+        git checkout -b "${{ steps.branch.outputs.name }}"
+
+    - name: Execute warifuri task
+      id: execute
+      run: |
+        echo "Executing task: ${{ matrix.task }}"
+
+        # Run the task
+        if poetry run warifuri run --task "${{ matrix.task }}"; then
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo "✅ Task execution completed successfully"
+        else
+          echo "success=false" >> $GITHUB_OUTPUT
+          echo "❌ Task execution failed"
+          exit 1
+        fi
+
+    - name: Check for changes
+      id: changes
+      run: |
+        git add .
+        if git diff --cached --quiet; then
+          echo "has-changes=false" >> $GITHUB_OUTPUT
+          echo "No changes detected after task execution"
+        else
+          echo "has-changes=true" >> $GITHUB_OUTPUT
+          echo "Changes detected after task execution"
+          git status --porcelain
+        fi
+
+    - name: Commit changes
+      if: steps.changes.outputs.has-changes == 'true'
+      run: |
+        git commit -m "feat: complete warifuri task ${{ matrix.task }}
+
+        - Executed via GitHub Actions workflow
+        - Task type: machine automation
+        - Generated by: warifuri-task-automation.yml
+
+        warifuri-task: ${{ matrix.task }}"
+
+    - name: Push branch
+      if: steps.changes.outputs.has-changes == 'true'
+      run: |
+        git push origin "${{ steps.branch.outputs.name }}"
+
+    - name: Create pull request
+      if: steps.changes.outputs.has-changes == 'true'
+      id: create-pr
+      run: |
+        # Check if task has auto_merge configuration
+        auto_merge_file=""
+        project_dir="workspace/projects/$(echo "${{ matrix.task }}" | cut -d'/' -f1)"
+        task_dir="$project_dir/$(echo "${{ matrix.task }}" | cut -d'/' -f2)"
+
+        for file in "$task_dir/auto_merge.yaml" "$task_dir/auto_merge.yml" "$project_dir/auto_merge.yaml" "$project_dir/auto_merge.yml"; do
+          if [ -f "$file" ]; then
+            auto_merge_file="$file"
+            break
+          fi
+        done
+
+        # Prepare PR body
+        pr_body="## 🤖 Automated Task Completion
+
+        **Task**: \`${{ matrix.task }}\`
+        **Execution**: GitHub Actions Workflow
+        **Branch**: \`${{ steps.branch.outputs.name }}\`
+
+        ### 📋 Task Details
+
+        \`\`\`bash
+        warifuri show --task ${{ matrix.task }}
+        \`\`\`
+
+        ### 🔄 Changes Made
+
+        This PR contains the automated execution results of the warifuri task.
+
+        ### 🚀 Next Steps
+
+        - [ ] Review the generated output
+        - [ ] Verify task completion criteria
+        - [ ] Check for any manual follow-up requirements"
+
+        # Add auto-merge info if configured
+        if [ -n "$auto_merge_file" ]; then
+          pr_body="$pr_body
+
+        ### 🔧 Auto-merge Configuration
+
+        This task has auto-merge enabled via \`$auto_merge_file\`.
+        The PR will be automatically merged after validation."
+        fi
+
+        # Create PR
+        pr_url=$(gh pr create \
+          --title "Complete warifuri task: ${{ matrix.task }}" \
+          --body "$pr_body" \
+          --label "warifuri,automation" \
+          --head "${{ steps.branch.outputs.name }}" \
+          --base "main")
+
+        echo "pr-url=$pr_url" >> $GITHUB_OUTPUT
+        echo "auto-merge-available=$([[ -n "$auto_merge_file" ]] && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Add auto-merge label
+      if: |
+        steps.changes.outputs.has-changes == 'true' &&
+        (steps.create-pr.outputs.auto-merge-available == 'true' || github.event.inputs.auto_merge == 'true')
+      run: |
+        pr_number=$(echo "${{ steps.create-pr.outputs.pr-url }}" | grep -o '[0-9]\+$')
+        gh pr edit "$pr_number" --add-label "auto-merge"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update task status
+      if: steps.changes.outputs.has-changes == 'true'
+      run: |
+        echo "Marking task as completed..."
+        poetry run warifuri mark-done "${{ matrix.task }}" --message "Completed via GitHub Actions automation"
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "## 📊 Task Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Task**: ${{ matrix.task }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Success**: ${{ steps.execute.outputs.success }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Changes**: ${{ steps.changes.outputs.has-changes }}" >> $GITHUB_STEP_SUMMARY
+
+        if [ "${{ steps.changes.outputs.has-changes }}" = "true" ]; then
+          echo "**PR Created**: ${{ steps.create-pr.outputs.pr-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Auto-merge**: ${{ steps.create-pr.outputs.auto-merge-available }}" >> $GITHUB_STEP_SUMMARY
+        fi
+
+  notify-completion:
+    name: Notify completion
+    runs-on: ubuntu-latest
+    needs: [execute-task]
+    if: always() && needs.execute-task.result != 'skipped'
+
+    steps:
+    - name: Workflow completion notification
+      run: |
+        echo "🎉 Warifuri task automation workflow completed"
+        echo ""
+        echo "Results:"
+        echo "- Tasks processed: ${{ strategy.job-total }}"
+        echo "- Successful executions: ${{ strategy.job-index + 1 }}"
+
+        if [ "${{ needs.execute-task.result }}" = "success" ]; then
+          echo "✅ All tasks completed successfully"
+        else
+          echo "⚠️ Some tasks may have failed - check individual job logs"
+        fi

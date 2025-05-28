@@ -1,6 +1,7 @@
 """CLI context for passing shared data."""
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -15,6 +16,7 @@ class Context:
     ) -> None:
         self.workspace_path = workspace_path
         self.logger = logger or logging.getLogger(__name__)
+        self.timestamp = datetime.now().isoformat()
 
 
 pass_context = click.make_pass_decorator(Context, ensure=True)

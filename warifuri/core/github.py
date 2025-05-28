@@ -48,11 +48,150 @@ def check_github_cli() -> bool:
 
         # Check if authenticated
         result = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
-        # Check both stdout and stderr for login status
-        output = result.stdout + result.stderr
-        return "Logged in to github.com" in output
+        return result.returncode == 0
 
     except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def create_branch(branch_name: str) -> bool:
+    """Create and checkout a new git branch."""
+    try:
+        # Check if branch already exists
+        result = subprocess.run(
+            ["git", "branch", "--list", branch_name], capture_output=True, text=True
+        )
+
+        if result.stdout.strip():
+            logger.info(f"Branch {branch_name} already exists, switching to it")
+            subprocess.run(["git", "checkout", branch_name], check=True)
+        else:
+            logger.info(f"Creating new branch: {branch_name}")
+            subprocess.run(["git", "checkout", "-b", branch_name], check=True)
+
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to create/checkout branch {branch_name}: {e}")
+        return False
+
+
+def commit_changes(message: str, files: Optional[List[str]] = None) -> bool:
+    """Commit changes to the current branch."""
+    try:
+        # Add files
+        if files:
+            for file_path in files:
+                subprocess.run(["git", "add", file_path], check=True)
+        else:
+            subprocess.run(["git", "add", "."], check=True)
+
+        # Check if there are changes to commit
+        result = subprocess.run(["git", "diff", "--cached", "--exit-code"], capture_output=True)
+
+        if result.returncode == 0:
+            logger.info("No changes to commit")
+            return True
+
+        # Commit changes
+        subprocess.run(["git", "commit", "-m", message], check=True)
+        logger.info(f"Committed changes: {message}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to commit changes: {e}")
+        return False
+
+
+def push_branch(branch_name: str) -> bool:
+    """Push branch to remote repository."""
+    try:
+        subprocess.run(["git", "push", "-u", "origin", branch_name], check=True)
+        logger.info(f"Pushed branch: {branch_name}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to push branch {branch_name}: {e}")
+        return False
+
+
+def create_pull_request(
+    title: str, body: str, base_branch: str = "main", draft: bool = False, auto_merge: bool = False
+) -> Optional[str]:
+    """Create a pull request using GitHub CLI."""
+    try:
+        cmd = ["gh", "pr", "create", "--title", title, "--body", body, "--base", base_branch]
+
+        if draft:
+            cmd.append("--draft")
+
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        pr_url = result.stdout.strip()
+
+        logger.info(f"Created pull request: {pr_url}")
+
+        # Enable auto-merge if requested
+        if auto_merge and not draft:
+            enable_auto_merge(pr_url)
+
+        return pr_url
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to create pull request: {e}")
+        if e.stderr:
+            logger.error(f"Error details: {e.stderr}")
+        return None
+
+
+def enable_auto_merge(pr_url: str, merge_method: str = "squash") -> bool:
+    """Enable auto-merge for a pull request."""
+    try:
+        cmd = ["gh", "pr", "merge", pr_url, "--auto", f"--{merge_method}"]
+
+        subprocess.run(cmd, check=True)
+        logger.info(f"Enabled auto-merge for PR: {pr_url}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to enable auto-merge: {e}")
+        return False
+
+
+def merge_pull_request(pr_url: str, merge_method: str = "squash") -> bool:
+    """Merge a pull request immediately."""
+    try:
+        cmd = ["gh", "pr", "merge", pr_url, f"--{merge_method}", "--delete-branch"]
+
+        subprocess.run(cmd, check=True)
+        logger.info(f"Merged pull request: {pr_url}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to merge pull request: {e}")
+        return False
+
+
+def get_current_branch() -> Optional[str]:
+    """Get the current git branch name."""
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--show-current"], capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+
+    except subprocess.CalledProcessError:
+        return None
+
+
+def is_working_directory_clean() -> bool:
+    """Check if the working directory has uncommitted changes."""
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+        )
+        return len(result.stdout.strip()) == 0
+
+    except subprocess.CalledProcessError:
         return False
 
 

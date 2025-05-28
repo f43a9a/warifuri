@@ -19,6 +19,7 @@ from .commands.graph import graph  # noqa: E402
 from .commands.mark_done import mark_done  # noqa: E402
 from .commands.template import template  # noqa: E402
 from .commands.issue import issue  # noqa: E402
+from .commands.automation import automation  # noqa: E402
 
 
 @click.group()
@@ -58,6 +59,7 @@ cli.add_command(graph)
 cli.add_command(mark_done, name="mark-done")
 cli.add_command(template)
 cli.add_command(issue)
+cli.add_command(automation)
 
 
 if __name__ == "__main__":

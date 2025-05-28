@@ -3,12 +3,11 @@
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from warifuri.cli.commands.mark_done import mark_done
 from warifuri.cli.context import Context
-from warifuri.core.types import Task, Project, TaskInstruction, TaskStatus, TaskType
+from warifuri.core.types import Task
 
 
 class TestMarkDoneCommand:
@@ -134,7 +133,7 @@ class TestMarkDoneCommand:
 
         with patch("warifuri.cli.commands.mark_done.discover_all_projects") as mock_discover:
             with patch("warifuri.cli.commands.mark_done.find_task_by_name") as mock_find:
-                with patch("warifuri.cli.commands.mark_done.create_done_file") as mock_create:
+                with patch("warifuri.cli.commands.mark_done.create_done_file"):
                     mock_discover.return_value = []
                     mock_find.return_value = mock_task
 

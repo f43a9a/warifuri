@@ -2,10 +2,8 @@
 
 import os
 import subprocess
-from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
 
 from warifuri.core.github import (
     get_github_repo,
@@ -291,7 +289,7 @@ class TestCreatePullRequest:
         mock_result.stdout = "https://github.com/user/repo/pull/123\n"
         mock_run.return_value = mock_result
 
-        url = create_pull_request(
+        create_pull_request(
             title="Test PR",
             body="Test body",
             draft=True

@@ -1,7 +1,7 @@
 """List command for displaying tasks."""
 
 import json
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 import click
 
@@ -69,7 +69,7 @@ def _filter_tasks(tasks: List[Task], ready: bool, completed: bool) -> List[Task]
         return tasks
 
 
-def _get_task_fields(task: Task, fields: Optional[str]) -> dict:
+def _get_task_fields(task: Task, fields: Optional[str]) -> Dict[str, Any]:
     """Get task data for specified fields."""
     all_fields = {
         "name": task.full_name,

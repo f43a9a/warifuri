@@ -47,7 +47,7 @@ def validate_instruction_yaml(
         if strict:
             raise ValidationError(f"Schema validation failed: {e.message}") from e
         # In non-strict mode, only fail on critical errors
-        if e.validator in ("required", "type"):
+        if isinstance(e.validator, str) and e.validator in ("required", "type"):
             raise ValidationError(f"Critical validation error: {e.message}") from e
 
 

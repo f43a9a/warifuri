@@ -6,6 +6,7 @@ import click
 
 from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects, find_task_by_name
+from ...core.types import Project
 from ...core.github import (
     check_github_cli,
     create_issue_safe,
@@ -79,7 +80,7 @@ def issue(
 
 
 def _create_project_issue(
-    projects: List,
+    projects: List[Project],
     project: str,
     assignee: Optional[str],
     labels: List[str],
@@ -146,7 +147,7 @@ def _create_project_issue(
 
 
 def _create_task_issue(
-    projects: List,
+    projects: List[Project],
     task: str,
     assignee: Optional[str],
     labels: List[str],
@@ -184,7 +185,7 @@ def _create_task_issue(
 
 
 def _create_all_tasks_issues(
-    projects: List,
+    projects: List[Project],
     project: str,
     assignee: Optional[str],
     labels: List[str],

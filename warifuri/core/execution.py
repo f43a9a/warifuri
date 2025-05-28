@@ -265,7 +265,7 @@ def execute_human_task(task: Task, dry_run: bool = False) -> bool:
     return True
 
 
-def check_dependencies(task: Task, all_tasks: list) -> bool:
+def check_dependencies(task: Task, all_tasks: List[Task]) -> bool:
     """Check if task dependencies are satisfied."""
     if not task.instruction.dependencies:
         return True
@@ -298,7 +298,7 @@ def check_dependencies(task: Task, all_tasks: list) -> bool:
 
 
 def execute_task(
-    task: Task, dry_run: bool = False, force: bool = False, all_tasks: Optional[list] = None
+    task: Task, dry_run: bool = False, force: bool = False, all_tasks: Optional[List[Task]] = None
 ) -> bool:
     """Execute task based on its type."""
     # Check if task is already completed

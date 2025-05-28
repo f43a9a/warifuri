@@ -26,6 +26,7 @@ mypy = "*"
 types-jsonschema = "*"
 ruff = "*"
 pytest = "*"
+types-pyyaml = "^6.0.12.20250516"
 
 [tool.mypy]
 python_version = "3.11"

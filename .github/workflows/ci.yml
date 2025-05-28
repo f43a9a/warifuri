@@ -49,8 +49,8 @@ jobs:
     - name: Install warifuri
       run: poetry install --no-interaction
 
-    - name: Run ruff linting
-      run: poetry run ruff check .
+    - name: Run ruff linting with autofix
+      run: poetry run ruff check . --fix
 
     - name: Run mypy type checking
       run: poetry run mypy warifuri --strict

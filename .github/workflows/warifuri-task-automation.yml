@@ -272,8 +272,8 @@ jobs:
         echo "🎉 Warifuri task automation workflow completed"
         echo ""
         echo "Results:"
-        echo "- Tasks processed: ${{ strategy.job-total }}"
-        echo "- Successful executions: ${{ strategy.job-index + 1 }}"
+        echo "- Workflow status: ${{ needs.execute-task.result }}"
+        echo "- Execution completed"
 
         if [ "${{ needs.execute-task.result }}" = "success" ]; then
           echo "✅ All tasks completed successfully"

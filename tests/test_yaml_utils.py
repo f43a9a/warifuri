@@ -4,7 +4,6 @@ from pathlib import Path
 from unittest.mock import mock_open, patch, Mock
 
 import pytest
-import yaml
 
 from warifuri.utils.yaml_utils import load_yaml, save_yaml
 

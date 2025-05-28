@@ -2,7 +2,6 @@
 
 import pytest
 from click.testing import CliRunner
-from unittest.mock import patch
 
 from warifuri.cli.main import cli
 from warifuri.utils import safe_write_file

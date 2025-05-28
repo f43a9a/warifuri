@@ -1,10 +1,8 @@
 """Tests for filesystem utilities."""
 
-import os
 import stat
-import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 

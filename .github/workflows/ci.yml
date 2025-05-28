@@ -55,11 +55,11 @@ jobs:
       run: poetry run ruff check . --fix
 
     - name: Run mypy type checking
-      run: poetry run mypy warifuri --strict
+      run: poetry run mypy src/warifuri --strict
 
     - name: Run test suite
       run: |
-        poetry run pytest tests/ -v --cov=warifuri --cov-report=xml --cov-report=term
+        poetry run pytest tests/ -v --cov=src/warifuri --cov-report=xml --cov-report=term
 
     - name: Upload coverage reports
       if: matrix.python-version == '3.11'
@@ -143,7 +143,7 @@ jobs:
     - name: Run Bandit security scan
       run: |
         pip install bandit[toml]
-        bandit -r warifuri/ -f json -o bandit-report.json || true
+        bandit -r src/warifuri/ -f json -o bandit-report.json || true
 
     - name: Debug artifact path
       run: ls -la bandit-report.json || echo "File not found."

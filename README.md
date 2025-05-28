@@ -1,20 +1,5 @@
 # 🔄 warifuri
 
-**A production-ready CLI for intelligent task allocation between humans, AI, and machines**
-
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Tests](https://img.shields.io/badge/tests-246%20passing-green.svg)](https://github.com/f43a9a/warifuri/actions)
-[![Coverage](https://img.shields.io/badge/coverage-77%25-yellowgreen.svg)](https://github.com/f43a9a/warifuri)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://f43a9a.github.io/warifuri/)
-
-> **Status**: ✅ Production Ready (99% feature complete)
-> **Latest Test Results**: 246/246 tests passed (100% success rate)
-> **Documentation**: [f43a9a.github.io/warifuri](https://f43a9a.github.io/warifuri/)
-
----
-
 ## 🎯 What is warifuri?
 
 warifuri revolutionizes project management by enabling seamless **task allocation and execution** across different actors in GitHub repositories:
@@ -480,38 +465,3 @@ To enable documentation hosting for your fork:
 - [Data Pipeline Template](templates/data-pipeline/) - ETL workflow example
 - [Web Development Template](templates/web-app/) - Frontend/backend deployment
 - [ML Model Training](templates/ml-pipeline/) - Machine learning workflow
-
----
-
-## 🤝 Support & Community
-
-### Getting Help
-- 📧 **Issues**: [GitHub Issues](https://github.com/your-org/warifuri/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-org/warifuri/discussions)
-- 📖 **Documentation**: [Complete docs](docs/)
-
-### Contributing
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🎯 Roadmap
-
-### v1.1 (Next Release)
-- 🧠 **AI Task Execution**: Full LLM integration
-- 🔄 **GitHub Actions**: Complete workflow automation
-- 📋 **Template Gallery**: Expanded template library
-- ⚡ **Performance**: Parallel task execution
-
-### v2.0 (Future)
-- 🌐 **Web Interface**: Browser-based project management
-- 📊 **Analytics**: Advanced project metrics and insights
-- 🔌 **Plugin System**: Extensible architecture
-- 🏢 **Enterprise Features**: RBAC, audit trails, compliance
-
----
-
-**Ready to streamline your project workflows? Get started with warifuri today!** 🚀

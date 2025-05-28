@@ -140,17 +140,55 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Install dependencies
+      run: poetry install --no-interaction
+
     - name: Run Bandit security scan
       run: |
-        pip install bandit[toml]
-        bandit -r src/warifuri/ -f json -o bandit-report.json || true
+        poetry run bandit -r src/warifuri/ -f json -o bandit-report.json || true
+        poetry run bandit -r src/warifuri/ -f txt -o bandit-report.txt || true
 
-    - name: Debug artifact path
-      run: ls -la bandit-report.json || echo "File not found."
+    - name: Run Safety vulnerability check
+      run: |
+        poetry run safety check --json --output safety-report.json || true
+        poetry run safety check --output safety-report.txt || true
 
-    - name: Upload security scan results
+    - name: Run Semgrep static analysis
+      run: |
+        pip install semgrep
+        semgrep --config=auto --json --output=semgrep-report.json src/ || true
+        semgrep --config=auto --output=semgrep-report.txt src/ || true
+
+    - name: Check for secrets with detect-secrets
+      run: |
+        pip install detect-secrets
+        detect-secrets scan --all-files --baseline .secrets.baseline || true
+        detect-secrets audit .secrets.baseline || true
+
+    - name: Debug artifact paths
+      run: |
+        ls -la *-report.* || echo "No report files found."
+        ls -la .secrets.baseline || echo "No secrets baseline found."
+
+    - name: Upload comprehensive security scan results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: security-scan-results
-        path: bandit-report.json
+        path: |
+          bandit-report.*
+          safety-report.*
+          semgrep-report.*
+          .secrets.baseline

@@ -1,8 +1,4 @@
-name: validate-setup
-task_type: human
-description: "Task description here"
-auto_merge: false
+name: "validate-setup"
+type: "machine"
+description: "Set up validation testing environment"
 dependencies: []
-inputs: []
-outputs: []
-note: "Please edit this instruction.yaml to complete the task definition"

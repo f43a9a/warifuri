@@ -1,0 +1,14 @@
+prompt: |
+  Please transform the extracted data located at input.txt into a clean JSON format.
+
+  Project context: e2e-test-pipeline
+  Data source: testyou
+  Output format expected: Clean, structured JSON
+
+  Requirements:
+  1. Parse the input data from input.txt
+  2. Clean and normalize the data
+  3. Convert to structured JSON format
+  4. Save to transformed_data.json
+
+  The data comes from testyou and needs to be prepared for further processing in the e2e-test-pipeline pipeline.

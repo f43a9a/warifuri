@@ -50,10 +50,19 @@ def validate(
 
                 # Validate instruction.yaml against schema
                 try:
+                    # Normalize dependencies for schema validation
+                    normalized_dependencies = []
+                    for dep in task.instruction.dependencies:
+                        # If dependency doesn't contain '/', assume it's within same project
+                        if "/" not in dep:
+                            normalized_dependencies.append(f"{project.name}/{dep}")
+                        else:
+                            normalized_dependencies.append(dep)
+
                     instruction_data = {
                         "name": task.instruction.name,
                         "description": task.instruction.description,
-                        "dependencies": task.instruction.dependencies,
+                        "dependencies": normalized_dependencies,
                         "inputs": task.instruction.inputs,
                         "outputs": task.instruction.outputs,
                     }

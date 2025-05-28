@@ -1,0 +1,11 @@
+name: transform
+task_type: ai
+description: Transform extracted data using AI for e2e-test-pipeline
+auto_merge: false
+outputs:
+  - "transformed_data.json"
+inputs:
+  - "../extract/extracted_data.json"
+dependencies:
+  - "extract"
+note: "AI-powered data transformation for e2e-test-pipeline"

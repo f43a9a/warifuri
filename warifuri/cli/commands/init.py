@@ -19,6 +19,7 @@ from ...utils import (
 @click.option("--template", help="Template to use for initialization")
 @click.option("--force", is_flag=True, help="Overwrite existing files")
 @click.option("--dry-run", is_flag=True, help="Show what would be created without creating")
+@click.option("--non-interactive", is_flag=True, help="Use default values without prompting")
 @pass_context
 def init(
     ctx: Context,
@@ -26,6 +27,7 @@ def init(
     template: Optional[str],
     force: bool,
     dry_run: bool,
+    non_interactive: bool,
 ) -> None:
     """Initialize project or task.
 
@@ -39,7 +41,7 @@ def init(
 
     # Handle template-only expansion (no target)
     if not target and template:
-        _expand_template_to_workspace(workspace_path, template, force, dry_run)
+        _expand_template_to_workspace(workspace_path, template, force, dry_run, non_interactive)
         return
 
     if not target:
@@ -51,11 +53,13 @@ def init(
     if "/" in target:
         # Create task
         project_name, task_name = target.split("/", 1)
-        _create_task(workspace_path, project_name, task_name, template, force, dry_run)
+        _create_task(
+            workspace_path, project_name, task_name, template, force, dry_run, non_interactive
+        )
     else:
         # Create project
         project_name = target
-        _create_project(workspace_path, project_name, template, force, dry_run)
+        _create_project(workspace_path, project_name, template, force, dry_run, non_interactive)
 
 
 def _create_project(
@@ -64,6 +68,7 @@ def _create_project(
     template: Optional[str],
     force: bool,
     dry_run: bool,
+    non_interactive: bool,
 ) -> None:
     """Create a new project."""
     project_path = workspace_path / "projects" / project_name
@@ -93,7 +98,9 @@ def _create_project(
         click.echo(f"Using template: {template}")
 
         # Get template variables from user
-        variables = get_template_variables_from_user(project_name, non_interactive=dry_run or force)
+        variables = get_template_variables_from_user(
+            project_name, non_interactive=dry_run or force or non_interactive
+        )
         variables["PROJECT_NAME"] = project_name  # Ensure project name is set
 
         # Expand template
@@ -124,6 +131,7 @@ def _create_task(
     template: Optional[str],
     force: bool,
     dry_run: bool,
+    non_interactive: bool,
 ) -> None:
     """Create a new task."""
     task_path = workspace_path / "projects" / project_name / task_name
@@ -176,7 +184,9 @@ def _create_task(
         click.echo(f"Using template: {template}")
 
         # Get template variables from user
-        variables = get_template_variables_from_user(task_name, non_interactive=dry_run or force)
+        variables = get_template_variables_from_user(
+            task_name, non_interactive=dry_run or force or non_interactive
+        )
         variables["PROJECT_NAME"] = project_name
         variables["TASK_NAME"] = task_name
 
@@ -212,6 +222,7 @@ def _expand_template_to_workspace(
     template: str,
     force: bool,
     dry_run: bool,
+    non_interactive: bool,
 ) -> None:
     """Expand template as project(s) to workspace."""
     template_path = workspace_path / "templates" / template
@@ -243,7 +254,9 @@ def _expand_template_to_workspace(
     click.echo(f"Expanding template '{template}' as project...")
 
     # Get template variables
-    variables = get_template_variables_from_user(template, non_interactive=dry_run or force)
+    variables = get_template_variables_from_user(
+        template, non_interactive=dry_run or force or non_interactive
+    )
     variables["PROJECT_NAME"] = template  # Use template name as project name
 
     try:

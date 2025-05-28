@@ -1,13 +1,18 @@
 """Issue command for GitHub integration."""
 
-import json
-import subprocess
 from typing import List, Optional
 
 import click
 
 from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects, find_task_by_name
+from ...core.github import (
+    check_github_cli,
+    create_issue_safe,
+    ensure_labels_exist,
+    get_github_repo,
+    format_task_issue_body,
+)
 
 
 @click.command()
@@ -32,9 +37,17 @@ def issue(
     assert workspace_path is not None
 
     # Check if GitHub CLI is available
-    if not _check_gh_cli():
-        click.echo("Error: GitHub CLI (gh) is not installed or not available in PATH.", err=True)
+    if not check_github_cli():
+        click.echo("Error: GitHub CLI (gh) is not installed or not authenticated.", err=True)
         click.echo("Please install GitHub CLI: https://cli.github.com/", err=True)
+        click.echo("And authenticate: gh auth login", err=True)
+        return
+
+    # Get GitHub repository
+    repo = get_github_repo()
+    if not repo:
+        click.echo("Error: Could not detect GitHub repository.", err=True)
+        click.echo("Make sure you're in a Git repository with a GitHub remote.", err=True)
         return
 
     # Validate options
@@ -43,97 +56,34 @@ def issue(
         click.echo("Error: Specify exactly one of --project, --task, or --all-tasks.", err=True)
         return
 
-    # Discover projects for task lookups
-    projects = discover_all_projects(workspace_path)
+    # Discover projects for task lookups - handle circular dependencies gracefully
+    try:
+        projects = discover_all_projects(workspace_path)
+    except Exception as e:
+        click.echo(f"Warning: Error during project discovery: {e}", err=True)
+        click.echo("Attempting to continue with limited functionality...", err=True)
+        projects = []
 
     if dry_run:
         click.echo("[DRY RUN] GitHub issue creation simulation:")
 
+    # Parse labels if provided
+    labels = label.split(",") if label else []
+
     if project:
-        _create_project_issue(projects, project, assignee, label, dry_run)
+        _create_project_issue(projects, project, assignee, labels, repo, dry_run)
     elif task:
-        _create_task_issue(projects, task, assignee, label, dry_run)
+        _create_task_issue(projects, task, assignee, labels, repo, dry_run)
     elif all_tasks:
-        _create_all_tasks_issues(projects, all_tasks, assignee, label, dry_run)
-
-
-def _check_gh_cli() -> bool:
-    """Check if GitHub CLI is available."""
-    try:
-        result = subprocess.run(["gh", "--version"], capture_output=True, text=True, timeout=5)
-        return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError):
-        return False
-
-
-def _check_existing_issue(title: str) -> bool:
-    """Check if an issue with similar title already exists."""
-    try:
-        result = subprocess.run(
-            ["gh", "issue", "list", "--search", f'"{title}" in:title', "--json", "title"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if result.returncode == 0:
-            issues = json.loads(result.stdout)
-            return len(issues) > 0
-        return False
-    except (subprocess.SubprocessError, json.JSONDecodeError):
-        return False
-
-
-def _create_github_issue(
-    title: str,
-    body: str,
-    assignee: Optional[str] = None,
-    labels: Optional[str] = None,
-    dry_run: bool = False,
-) -> bool:
-    """Create GitHub issue using gh CLI."""
-    if dry_run:
-        click.echo(f"Would create issue: {title}")
-        if assignee:
-            click.echo(f"  Assignee: {assignee}")
-        if labels:
-            click.echo(f"  Labels: {labels}")
-        click.echo(f"  Body: {body[:100]}...")
-        return True
-
-    # Check for duplicates
-    if _check_existing_issue(title):
-        click.echo(f"⚠️  Issue with similar title already exists: {title}")
-        return False
-
-    cmd = ["gh", "issue", "create", "--title", title, "--body", body]
-
-    if assignee:
-        cmd.extend(["--assignee", assignee])
-
-    if labels:
-        cmd.extend(["--label", labels])
-
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        if result.returncode == 0:
-            click.echo(f"✅ Created issue: {title}")
-            issue_url = result.stdout.strip()
-            click.echo(f"   {issue_url}")
-            return True
-        else:
-            click.echo(f"❌ Failed to create issue: {title}")
-            click.echo(f"   Error: {result.stderr}")
-            return False
-    except subprocess.SubprocessError as e:
-        click.echo(f"❌ GitHub CLI error: {e}")
-        return False
+        _create_all_tasks_issues(projects, all_tasks, assignee, labels, repo, dry_run)
 
 
 def _create_project_issue(
     projects: List,
     project: str,
     assignee: Optional[str],
-    label: Optional[str],
+    labels: List[str],
+    repo: str,
     dry_run: bool,
 ) -> None:
     """Create parent issue for project."""
@@ -183,14 +133,24 @@ def _create_project_issue(
 
     body = "\n".join(body_lines)
 
-    _create_github_issue(title, body, assignee, label, dry_run)
+    # Ensure labels exist before creating issue
+    if labels and not dry_run:
+        ensure_labels_exist(repo, labels)
+
+    success, url = create_issue_safe(
+        title=title, body=body, labels=labels, assignee=assignee or "", repo=repo, dry_run=dry_run
+    )
+
+    if not dry_run and not success:
+        click.echo(f"❌ Failed to create project issue for '{project}'", err=True)
 
 
 def _create_task_issue(
     projects: List,
     task: str,
     assignee: Optional[str],
-    label: Optional[str],
+    labels: List[str],
+    repo: str,
     dry_run: bool,
 ) -> None:
     """Create child issue for specific task."""
@@ -208,60 +168,27 @@ def _create_task_issue(
 
     title = f"[TASK] {task}"
 
-    # Build issue body
-    body_lines = [
-        f"# Task: {task}",
-        "",
-        "## Description",
-        target_task.instruction.description,
-        "",
-        f"**Type**: {target_task.task_type.value}",
-        f"**Status**: {target_task.status.value}",
-        f"**Completed**: {'Yes' if target_task.is_completed else 'No'}",
-        "",
-    ]
+    # Use the new GitHub module for body formatting
+    body = format_task_issue_body(target_task, repo)
 
-    if target_task.instruction.dependencies:
-        body_lines.extend(["## Dependencies", ""])
-        for dep in target_task.instruction.dependencies:
-            body_lines.append(f"- {dep}")
-        body_lines.append("")
+    # Ensure labels exist before creating issue
+    if labels and not dry_run:
+        ensure_labels_exist(repo, labels)
 
-    if target_task.instruction.inputs:
-        body_lines.extend(["## Inputs", ""])
-        for inp in target_task.instruction.inputs:
-            body_lines.append(f"- `{inp}`")
-        body_lines.append("")
-
-    if target_task.instruction.outputs:
-        body_lines.extend(["## Outputs", ""])
-        for out in target_task.instruction.outputs:
-            body_lines.append(f"- `{out}`")
-        body_lines.append("")
-
-    if target_task.instruction.note:
-        body_lines.extend(["## Notes", target_task.instruction.note, ""])
-
-    body_lines.extend(
-        [
-            "## Usage",
-            f"Use `warifuri run --task {task}` to execute this task.",
-            "",
-            "---",
-            "*Created by warifuri CLI*",
-        ]
+    success, url = create_issue_safe(
+        title=title, body=body, labels=labels, assignee=assignee or "", repo=repo, dry_run=dry_run
     )
 
-    body = "\n".join(body_lines)
-
-    _create_github_issue(title, body, assignee, label, dry_run)
+    if not dry_run and not success:
+        click.echo(f"❌ Failed to create task issue for '{task}'", err=True)
 
 
 def _create_all_tasks_issues(
     projects: List,
     project: str,
     assignee: Optional[str],
-    label: Optional[str],
+    labels: List[str],
+    repo: str,
     dry_run: bool,
 ) -> None:
     """Create child issues for all tasks in project."""
@@ -282,12 +209,33 @@ def _create_all_tasks_issues(
 
     click.echo(f"Creating issues for {len(target_project.tasks)} tasks in project '{project}'...")
 
+    # Ensure labels exist before creating issues
+    if labels and not dry_run:
+        ensure_labels_exist(repo, labels)
+
     success_count = 0
     for task in target_project.tasks:
         task_full_name = f"{project}/{task.name}"
-        _create_task_issue(projects, task_full_name, assignee, label, dry_run)
-        if not dry_run:
+
+        # For all-tasks, we call create_issue_safe directly to avoid recursion
+        title = f"[TASK] {task_full_name}"
+        body = format_task_issue_body(task, repo)
+
+        success, url = create_issue_safe(
+            title=title,
+            body=body,
+            labels=labels,
+            assignee=assignee or "",
+            repo=repo,
+            dry_run=dry_run,
+        )
+
+        if success or dry_run:
             success_count += 1
 
-    if not dry_run:
-        click.echo(f"✅ Created {success_count} task issues for project '{project}'")
+    if dry_run:
+        click.echo(f"Would create {success_count} task issues for project '{project}'")
+    else:
+        click.echo(
+            f"✅ Successfully created {success_count}/{len(target_project.tasks)} task issues for project '{project}'"
+        )

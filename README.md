@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-> **Status**: ✅ Production Ready (99% feature complete)  
+> **Status**: ✅ Production Ready (99% feature complete)
 > **Latest Test Results**: 35/35 acceptance tests passed (100% success rate)
 
 ---
@@ -16,7 +16,7 @@
 warifuri revolutionizes project management by enabling seamless **task allocation and execution** across different actors in GitHub repositories:
 
 - 🤖 **Machine tasks**: Automated scripts with sandboxed execution
-- 🧠 **AI tasks**: LLM-powered intelligent automation  
+- 🧠 **AI tasks**: LLM-powered intelligent automation
 - 👥 **Human tasks**: Manual intervention and review workflows
 
 ### Key Principles
@@ -54,7 +54,7 @@ warifuri init data-pipeline
 
 # 3. Create workflow tasks
 warifuri init data-pipeline/extract-data
-warifuri init data-pipeline/transform-data  
+warifuri init data-pipeline/transform-data
 warifuri init data-pipeline/validate-results
 
 # 4. Set up dependencies (edit instruction.yaml files)
@@ -88,7 +88,7 @@ workspace/
 │       ├── task-1/
 │       │   ├── instruction.yaml # Task definition (required)
 │       │   ├── run.sh          # Machine task script (optional)
-│       │   ├── prompt.yaml     # AI task prompt (optional)  
+│       │   ├── prompt.yaml     # AI task prompt (optional)
 │       │   ├── done.md         # Completion marker (auto-generated)
 │       │   ├── auto_merge.yaml # Auto-merge flag (optional)
 │       │   └── logs/           # Execution logs (auto-generated)
@@ -155,7 +155,7 @@ For detailed setup instructions, see [`docs/github_actions_guide.md`](docs/githu
 # Create new project
 warifuri init my-project
 
-# Create task within project  
+# Create task within project
 warifuri init my-project/setup-database
 
 # Template-based creation

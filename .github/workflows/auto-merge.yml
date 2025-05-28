@@ -23,40 +23,40 @@ jobs:
     outputs:
       has-auto-merge: ${{ steps.check-auto-merge.outputs.has-auto-merge }}
       validation-passed: ${{ steps.validate.outputs.passed }}
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
         version: latest
         virtualenvs-create: true
         virtualenvs-in-project: true
-    
+
     - name: Load cached venv
       id: cached-poetry-dependencies
       uses: actions/cache@v3
       with:
         path: .venv
         key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-    
+
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
-    
+
     - name: Install warifuri
       run: poetry install --no-interaction
-    
+
     - name: Check for auto_merge.yaml files
       id: check-auto-merge
       run: |
@@ -70,7 +70,7 @@ jobs:
           echo "has-auto-merge=false" >> $GITHUB_OUTPUT
           echo "No auto_merge.yaml files found"
         fi
-    
+
     - name: Run warifuri validate
       id: validate
       run: |
@@ -85,18 +85,18 @@ jobs:
           cat validate_output.txt
           exit 1
         fi
-    
+
     - name: Run tests
       run: |
         echo "Running test suite..."
         poetry run pytest tests/ -v --tb=short
-    
+
     - name: Check code quality
       run: |
         echo "Checking code quality..."
         poetry run ruff check .
         poetry run mypy warifuri
-    
+
     - name: Upload validation results
       if: always()
       uses: actions/upload-artifact@v3
@@ -114,13 +114,13 @@ jobs:
       github.event_name == 'pull_request' &&
       needs.validate-warifuri.outputs.has-auto-merge == 'true' &&
       needs.validate-warifuri.outputs.validation-passed == 'true'
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Get PR information
       id: pr-info
       run: |
@@ -128,13 +128,13 @@ jobs:
         echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
         echo "pr-title=${{ github.event.pull_request.title }}" >> $GITHUB_OUTPUT
         echo "pr-author=${{ github.event.pull_request.user.login }}" >> $GITHUB_OUTPUT
-    
+
     - name: Add auto-merge label
       run: |
         gh pr edit ${{ steps.pr-info.outputs.pr-number }} --add-label "auto-merge"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Add comment explaining auto-merge
       run: |
         gh pr comment ${{ steps.pr-info.outputs.pr-number }} --body "🤖 **Auto-merge triggered**
@@ -148,7 +148,7 @@ jobs:
         The PR will be automatically merged once all required checks pass."
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
     - name: Enable auto-merge
       run: |
         gh pr merge ${{ steps.pr-info.outputs.pr-number }} --auto --squash --delete-branch
@@ -161,9 +161,9 @@ jobs:
     needs: validate-warifuri
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (needs.validate-warifuri.outputs.has-auto-merge == 'false' && 
+      (needs.validate-warifuri.outputs.has-auto-merge == 'false' &&
        needs.validate-warifuri.outputs.validation-passed == 'true')
-    
+
     steps:
     - name: Manual merge notification
       run: |

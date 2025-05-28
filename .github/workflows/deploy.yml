@@ -31,31 +31,31 @@ jobs:
     name: Deploy warifuri tasks
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-    
+
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
         version: latest
         virtualenvs-create: true
         virtualenvs-in-project: true
-    
+
     - name: Install dependencies
       run: poetry install --no-interaction
-    
+
     - name: Validate workspace
       run: |
         echo "🔍 Validating warifuri workspace..."
         poetry run warifuri validate --workspace workspace
-    
+
     - name: List ready tasks
       id: list-tasks
       run: |
@@ -65,49 +65,49 @@ jobs:
         else
           FILTER_ARGS=""
         fi
-        
+
         READY_TASKS=$(poetry run warifuri list --ready $FILTER_ARGS --format json)
         echo "ready-tasks<<EOF" >> $GITHUB_OUTPUT
         echo "$READY_TASKS" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
-        
+
         TASK_COUNT=$(echo "$READY_TASKS" | jq length)
         echo "task-count=$TASK_COUNT" >> $GITHUB_OUTPUT
         echo "Found $TASK_COUNT ready tasks"
-    
+
     - name: Execute machine tasks
       if: steps.list-tasks.outputs.task-count > 0
       run: |
         echo "🤖 Executing machine tasks..."
-        
+
         DRY_RUN_FLAG=""
         if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
           DRY_RUN_FLAG="--dry-run"
           echo "🧪 Running in DRY RUN mode"
         fi
-        
+
         # Get machine tasks only
         MACHINE_TASKS=$(echo '${{ steps.list-tasks.outputs.ready-tasks }}' | jq -r '.[] | select(.type == "machine") | .name')
-        
+
         for task in $MACHINE_TASKS; do
           echo "Executing machine task: $task"
           poetry run warifuri run --task "$task" $DRY_RUN_FLAG
         done
-    
+
     - name: Execute AI tasks
       if: steps.list-tasks.outputs.task-count > 0
       run: |
         echo "🧠 Executing AI tasks..."
-        
+
         DRY_RUN_FLAG=""
         if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
           DRY_RUN_FLAG="--dry-run"
           echo "🧪 Running in DRY RUN mode"
         fi
-        
+
         # Get AI tasks only
         AI_TASKS=$(echo '${{ steps.list-tasks.outputs.ready-tasks }}' | jq -r '.[] | select(.type == "ai") | .name')
-        
+
         for task in $AI_TASKS; do
           echo "Executing AI task: $task"
           poetry run warifuri run --task "$task" $DRY_RUN_FLAG
@@ -116,28 +116,28 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-    
+
     - name: Generate deployment report
       if: always()
       run: |
         echo "📊 Generating deployment report..."
-        
+
         # Create deployment report
         cat > deployment_report.md << EOF
         # Warifuri Deployment Report
-        
+
         **Environment**: ${{ github.event.inputs.environment }}
         **Date**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
         **Dry Run**: ${{ github.event.inputs.dry_run }}
         **Project Filter**: ${{ github.event.inputs.project_filter || 'None' }}
-        
+
         ## Task Execution Summary
-        
+
         **Total Ready Tasks**: ${{ steps.list-tasks.outputs.task-count }}
-        
+
         ### Executed Tasks
         EOF
-        
+
         # Add executed task details
         if [ -f "logs/deployment.log" ]; then
           echo "Deployment log found, adding details..."
@@ -146,10 +146,10 @@ jobs:
           cat logs/deployment.log >> deployment_report.md
           echo '```' >> deployment_report.md
         fi
-        
+
         echo "Deployment report generated"
         cat deployment_report.md
-    
+
     - name: Upload deployment artifacts
       uses: actions/upload-artifact@v3
       if: always()
@@ -166,7 +166,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: deploy-warifuri-tasks
     if: always()
-    
+
     steps:
     - name: Notify success
       if: needs.deploy-warifuri-tasks.result == 'success'
@@ -174,7 +174,7 @@ jobs:
         echo "✅ Deployment completed successfully"
         echo "Environment: ${{ github.event.inputs.environment }}"
         echo "Dry Run: ${{ github.event.inputs.dry_run }}"
-    
+
     - name: Notify failure
       if: needs.deploy-warifuri-tasks.result == 'failure'
       run: |

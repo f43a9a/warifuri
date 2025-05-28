@@ -33,9 +33,11 @@ We take security seriously. If you discover a security vulnerability, please fol
 
 ### 📧 Alternative Contact
 
-If you cannot use GitHub's security reporting, email us at:
-- **Primary**: security@warifuri.example.com (replace with actual email)
-- **Backup**: f43a9a@example.com (replace with actual email)
+If you cannot use GitHub's security reporting, you can contact us through:
+- **GitHub Issues**: For non-sensitive security discussions, use the security issue template
+- **GitHub Discussions**: For security-related questions and best practices
+
+For sensitive vulnerabilities, please use only GitHub's private security advisory feature.
 
 ### 📋 What to Include
 

@@ -80,7 +80,7 @@ jobs:
 
     - name: Run full test suite
       run: |
-        poetry run pytest tests/ -v --cov=warifuri
+        poetry run pytest tests/ -v --cov=src/warifuri
 
     - name: Build package
       run: |
@@ -93,7 +93,7 @@ jobs:
         warifuri --version
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: package-dist
         path: dist/
@@ -110,7 +110,7 @@ jobs:
         fetch-depth: 0
 
     - name: Download build artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: package-dist
         path: dist/
@@ -150,39 +150,6 @@ jobs:
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  publish-pypi:
-    name: Publish to PyPI
-    runs-on: ubuntu-latest
-    needs: [prepare-release, build-and-test, create-release]
-    environment: release
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: latest
-
-    - name: Download build artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: package-dist
-        path: dist/
-
-    - name: Publish to PyPI
-      run: |
-        poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
-        poetry publish --no-build
-      env:
-        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
 
   update-documentation:
     name: Update documentation

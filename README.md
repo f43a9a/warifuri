@@ -7,9 +7,11 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Tests](https://img.shields.io/badge/tests-246%20passing-green.svg)](https://github.com/f43a9a/warifuri/actions)
 [![Coverage](https://img.shields.io/badge/coverage-77%25-yellowgreen.svg)](https://github.com/f43a9a/warifuri)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue.svg)](https://f43a9a.github.io/warifuri/)
 
 > **Status**: ✅ Production Ready (99% feature complete)
-> **Latest Test Results**: 35/35 acceptance tests passed (100% success rate)
+> **Latest Test Results**: 246/246 tests passed (100% success rate)
+> **Documentation**: [f43a9a.github.io/warifuri](https://f43a9a.github.io/warifuri/)
 
 ---
 

@@ -1,9 +1,0 @@
-name: extract
-task_type: machine
-description: Extract data from website to csv
-auto_merge: false
-outputs:
-  - "extracted_data.csv"
-inputs: []
-dependencies: []
-note: "Data extraction task for web-data"

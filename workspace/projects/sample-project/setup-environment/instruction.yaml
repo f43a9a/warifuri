@@ -1,8 +1,0 @@
-name: setup-environment
-task_type: human
-description: "Task description here"
-auto_merge: false
-dependencies: []
-inputs: []
-outputs: []
-note: "Please edit this instruction.yaml to complete the task definition"

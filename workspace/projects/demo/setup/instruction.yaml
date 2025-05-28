@@ -1,6 +1,0 @@
-name: setup
-description: "Initial project setup and configuration"
-dependencies: []
-inputs: []
-outputs: ["config.json"]
-note: "This task sets up the basic project configuration"

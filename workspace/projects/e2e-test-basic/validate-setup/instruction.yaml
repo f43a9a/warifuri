@@ -1,4 +1,0 @@
-name: "validate-setup"
-type: "machine"
-description: "Set up validation testing environment"
-dependencies: []

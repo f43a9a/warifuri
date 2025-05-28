@@ -5,10 +5,30 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "warifuri"
 version = "0.1.0"
-description = "A minimal CLI for task allocation between humans, AI, and machines"
-authors = ["f43a9a"]
+description = "A powerful CLI tool for task-driven workflow automation with dependency resolution, GitHub integration, and multi-format output support"
+authors = ["warifuri team <contact@warifuri.dev>"]
+license = "MIT"
 readme = "README.md"
-packages = [{ include = "warifuri" }]
+homepage = "https://github.com/f43a9a/warifuri"
+repository = "https://github.com/f43a9a/warifuri"
+documentation = "https://warifuri.readthedocs.io/"
+keywords = ["cli", "automation", "workflow", "task-management", "dependency-resolution"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+packages = [{ include = "warifuri", from = "src" }]
 
 [tool.poetry.scripts]
 warifuri = "warifuri.cli.main:cli"
@@ -28,6 +48,9 @@ ruff = "*"
 pytest = "*"
 pytest-cov = "*"
 types-pyyaml = "^6.0.12.20250516"
+sphinx = "^8.2.3"
+sphinx-autodoc-typehints = "^3.2.0"
+sphinx-rtd-theme = "^3.0.2"
 
 [tool.mypy]
 python_version = "3.11"
@@ -64,6 +87,6 @@ ignore = ["E203", "E501", "C901"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_functions = ["test_*"]
-addopts = "--color=yes"
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

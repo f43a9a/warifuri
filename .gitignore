@@ -47,16 +47,6 @@ scripts/*mypy*.py
 # Temporary development tools - needs refactoring for UNIX philosophy compliance
 simple_dev_tool/
 
-# Test files with type annotation issues - focus on core functionality
-tests/core/test_prompt_manager.py
-tests/core/test_template_manager.py
-tests/core/test_project_manager.py
-tests/core/test_task.py
-tests/core/test_dependency_resolver.py
-tests/core/test_runner.py
-tests/test_unix.py
-tests/test_dodo.py
-
 # Cache directories
 __pycache__/
 .mypy_cache/
@@ -72,3 +62,14 @@ __pycache__/
 
 # Legacy files (archived)
 old/
+
+# Docker - keep directory but ignore runtime files
+docker/*.log
+docker/data/
+docker/volumes/
+!docker/docker-compose.yml
+!docker/Dockerfile
+!docker/README.md
+
+# Internal development docs - not for public release
+docs/internal/

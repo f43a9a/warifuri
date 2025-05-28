@@ -326,13 +326,12 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         """Test actual AI task execution with mocked LLM client."""
         # Mock the LLM client and its methods
         mock_llm_client = MagicMock()
-        mock_llm_client.generate.return_value = "mocked response"
+        mock_llm_client.generate_response.return_value = "mocked response"
 
-        with patch("warifuri.core.execution.LLMClient", return_value=mock_llm_client):
-            result = await execute_task(simple_ai_task, dry_run=False)
-
-        assert result is True
-        mock_llm_client.generate.assert_called_once()
+        with patch("warifuri.utils.llm.LLMClient", return_value=mock_llm_client):
+            result = execute_task(simple_ai_task, dry_run=False)
+            assert result is True
+        mock_llm_client.generate_response.assert_called_once()
 
         result = execute_task(simple_ai_task, dry_run=False)
         assert result is True

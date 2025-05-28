@@ -5,6 +5,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Tests](https://img.shields.io/badge/tests-246%20passing-green.svg)](https://github.com/f43a9a/warifuri/actions)
+[![Coverage](https://img.shields.io/badge/coverage-77%25-yellowgreen.svg)](https://github.com/f43a9a/warifuri)
 
 > **Status**: ✅ Production Ready (99% feature complete)
 > **Latest Test Results**: 35/35 acceptance tests passed (100% success rate)
@@ -34,13 +36,17 @@ warifuri revolutionizes project management by enabling seamless **task allocatio
 ### Installation
 
 ```bash
-# Install from source (current method)
-git clone https://github.com/your-org/warifuri
+# Install from GitHub (recommended)
+pip install git+https://github.com/f43a9a/warifuri.git
+
+# Install from GitHub release (download wheel)
+# Download warifuri-0.1.0-py3-none-any.whl from GitHub Releases
+pip install warifuri-0.1.0-py3-none-any.whl
+
+# Install from source (development)
+git clone https://github.com/f43a9a/warifuri.git
 cd warifuri
 poetry install
-
-# Alternative: Install in development mode
-pip install -e .
 ```
 
 ### Your First Workflow

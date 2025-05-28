@@ -1,9 +1,0 @@
-name: extract
-task_type: machine
-description: Extract data from testyou to json
-auto_merge: false
-outputs:
-  - "extracted_data.json"
-inputs: []
-dependencies: []
-note: "Data extraction task for e2e-test-pipeline"

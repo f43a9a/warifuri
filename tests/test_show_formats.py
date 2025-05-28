@@ -3,7 +3,6 @@
 import json
 import yaml
 import pytest
-from pathlib import Path
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli

@@ -1,15 +1,13 @@
 """Test machine task sandboxing and isolation features."""
 
 import pytest
-import os
-import stat
 from pathlib import Path
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli
 from warifuri.core.execution import execute_machine_task
 from warifuri.core.discovery import discover_task
-from warifuri.utils import safe_write_file, ensure_directory
+from warifuri.utils import safe_write_file
 
 
 class TestMachineSandboxing:

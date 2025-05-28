@@ -1,11 +1,9 @@
 """Integration tests for AI task execution with realistic scenarios."""
 
-import os
 import pytest
 from unittest.mock import patch, MagicMock
-from pathlib import Path
 
-from warifuri.core.discovery import discover_task, discover_all_projects, find_ready_tasks
+from warifuri.core.discovery import discover_all_projects, find_ready_tasks
 from warifuri.core.execution import execute_task
 from warifuri.utils import safe_write_file
 

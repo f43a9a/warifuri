@@ -334,7 +334,7 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         assert result is True
         mock_llm_client.generate.assert_called_once()
 
-        result = execute_task(task, dry_run=False)
+        result = execute_task(simple_ai_task, dry_run=False)
         assert result is True
 
 
@@ -534,7 +534,7 @@ user_prompt: "Process {nonexistent.txt}"
         mock_llm_class.return_value = mock_client
 
         # Should handle missing input gracefully
-        result = execute_task(task, dry_run=False)
+        execute_task(task, dry_run=False)
         # Should succeed even with missing input (depends on implementation)
 
     @patch('warifuri.utils.llm.LLMClient')
@@ -561,7 +561,7 @@ outputs: [output.txt]
         mock_llm_class.return_value = mock_client
 
         # Should handle empty config gracefully
-        result = execute_task(task, dry_run=False)
+        execute_task(task, dry_run=False)
         # Exact behavior depends on implementation
 
 

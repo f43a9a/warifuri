@@ -1,7 +1,6 @@
 """Test template functionality in CLI commands."""
 
 import pytest
-from pathlib import Path
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli

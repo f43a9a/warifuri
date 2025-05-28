@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-import jsonschema  # type: ignore[import-untyped]
+import jsonschema
 
 from ..core.types import Task
 

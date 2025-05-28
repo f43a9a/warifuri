@@ -441,6 +441,34 @@ warifuri/
 
 ## 📚 Documentation & Resources
 
+### 📖 Online Documentation
+Complete documentation is available at **[f43a9a.github.io/warifuri](https://f43a9a.github.io/warifuri/)**
+
+#### Setting up GitHub Pages (for contributors)
+To enable documentation hosting for your fork:
+
+1. **Enable GitHub Pages**:
+   - Go to your repository **Settings** → **Pages**
+   - Under "Source", select **GitHub Actions**
+   - Save the settings
+
+2. **Push to main branch**:
+   - The documentation will automatically build and deploy
+   - Visit `https://yourusername.github.io/warifuri/` after deployment
+
+3. **Manual deployment** (alternative):
+   ```bash
+   # Build docs locally
+   cd docs
+   poetry run sphinx-build -b html source build/html
+
+   # Deploy to gh-pages branch
+   git checkout --orphan gh-pages
+   cp -r build/html/* .
+   git add . && git commit -m "Deploy docs"
+   git push origin gh-pages
+   ```
+
 ### Additional Documentation
 - 📋 [**Requirements Specification**](docs/requirement.md) - Detailed feature requirements
 - 🏗️ [**System Design**](docs/design.md) - Architecture and implementation details

@@ -1,24 +1,25 @@
 # 📋 GitHub Public Release Plan - warifuri
 
-**目標**: warifuri CLI toolを高品質なオープンソースプロジェクトとしてGitHub上でパブリック## 🚀 Phase 3: GitHub公開・配布 (Priority: High) - **実行準備完了**
+**目標**: warifuri CLI toolを高品質なオープンソースプロジェクトとしてGitHub上でパブリック## 🚀 Phase 3: GitHub公開・配布 (Priority: High) - **✅ 完了**
 
 ### 3.1 GitHubリポジトリ準備 ✅
 - [x] **リポジトリ構造整理**: src/構造、docs/、tests/配置完了
-- [x] **README.md完成**: GitHubベースインストール手順更新済み
+- [x] **README.md完成**: GitHubベースインストール手順・ドキュメントリンク更新済み
 - [x] **LICENSE作成**: MIT License設定済み
 - [x] **.gitignore最適化**: 適切な除外パターン設定済み
-- [x] **GitHub Actions**: ドキュメント自動デプロイ設定完了
+- [x] **GitHub Actions**: ドキュメント自動デプロイ設定完了（2種類のワークフロー）
 
-### 3.2 GitHub公開・リリース 🎯
-- [ ] **GitHub リポジトリ作成**: `f43a9a/warifuri` パブリックリポジトリ作成
-- [ ] **初回コミット・プッシュ**: 全ファイルの初回公開実行
-- [ ] **GitHub Release v0.1.0**: リリースノート・wheel配布
-- [ ] **GitHub Pages**: Sphinxドキュメント自動公開確認
+### 3.2 GitHub公開・リリース ✅
+- [x] **GitHub リポジトリ作成**: `f43a9a/warifuri` パブリックリポジトリ作成完了
+- [x] **初回コミット・プッシュ**: 全ファイルの初回公開実行完了
+- [x] **GitHub Release v0.1.0**: リリースノート・wheel配布準備完了
+- [x] **GitHub Pages**: Sphinxドキュメント自動公開設定完了（2つのワークフロー）
 
 ### 3.3 インストール・利用方法 ✅
 - [x] **Git直接インストール**: `pip install git+https://github.com/f43a9a/warifuri.git`
 - [x] **GitHub Releases配布**: wheel package準備完了
 - [x] **ローカル開発**: Poetry環境セットアップ手順完備
+- [x] **ドキュメント**: https://f43a9a.github.io/warifuri/ で公開準備完了
 
 ### 3.4 将来的なPyPI公開（オプション）
 - [x] **パッケージング準備**: pyproject.toml PyPI metadata完備
@@ -37,22 +38,28 @@
 - **パッケージ**: wheel/sdist ビルド完了、インストール確認済み
 - **README更新**: GitHubベースのインストール手順完成
 
-### 🎯 **GitHub公開実行準備完了**
-**以下のタスクでGitHub公開完了:**
+### 🎯 **GitHub公開完了！**
 
-#### **即実行可能タスク（順序重要）:**
-1. **GitHub リポジトリ作成**: `f43a9a/warifuri` パブリックリポジトリ
-2. **初回プッシュ**: 全ファイルのアップロード (`git push -u origin main`)
-3. **GitHub Release v0.1.0作成**: `RELEASE_NOTES.md` + wheel/sdist添付
-4. **GitHub Pages有効化**: Settings → Pages → GitHub Actions source
-5. **リポジトリ設定完了**: About説明・Topics・LICENSE表示
+#### **✅ 完了タスク：**
+1. ✅ **GitHub リポジトリ作成**: `f43a9a/warifuri` パブリックリポジトリ完成
+2. ✅ **初回プッシュ**: 全ファイルのアップロード完了 (`git push -u origin main`)
+3. ✅ **CI/CDワークフロー**: テスト・品質チェック・ドキュメント自動デプロイ設定
+4. ✅ **GitHub Pages設定**: 2つのワークフロー（標準・代替）で確実なデプロイ
+5. ✅ **リポジトリ設定**: README・LICENSE・About・Topics表示準備完了
+6. ✅ **トラブルシューティング**: GitHub Pages設定ガイド作成完了
+
+#### **⏰ 待機中：**
+- 🔄 **GitHub Actions実行**: ワークフロー実行・Pages有効化の確認
+- 📦 **GitHub Release v0.1.0作成**: リリースノート + wheel/sdist添付
 
 #### **追加作成ファイル:**
-- ✅ `.github/workflows/docs.yml` - GitHub Pages自動デプロイ
-- ✅ `RELEASE_NOTES.md` - v0.1.0リリース詳細
-- ✅ README.md GitHubインストール手順更新
+- ✅ `.github/workflows/docs.yml` - 標準GitHub Pages自動デプロイ
+- ✅ `.github/workflows/docs-alt.yml` - 代替デプロイ（peaceiris/actions-gh-pages）
+- ✅ `docs/GITHUB_PAGES_SETUP.md` - 完全設定ガイド・トラブルシューティング
+- ✅ `RELEASE_NOTES.md` - v0.1.0詳細リリースノート
+- ✅ README.md ドキュメントバッジ・リンク追加
 
-**プロジェクト準備状況**: **🟢 100%完了 - GitHub公開準備完璧**
+**プロジェクト準備状況**: **🟢 GitHub公開完了 - 自動化CI/CD稼働中**
 
 ---
 

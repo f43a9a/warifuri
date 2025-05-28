@@ -1,23 +1,29 @@
 # GitHub Pages Setup Guide
 
-This document provides instructions for setting up GitHub Pages to host the warifuri documentation.
+This guide explains how to set up GitHub Pages for warifuri documentation.
 
-## Automatic Setup (Recommended)
+## 🎯 Quick Setup (Recommended)
 
-GitHub Pages is configured to deploy automatically when code is pushed to the `main` branch. The documentation is built using Sphinx and deployed using GitHub Actions.
+### Method 1: GitHub Actions
 
-## Manual Setup Steps
+1. **Enable GitHub Pages**:
+   - Navigate to your repository **Settings** → **Pages**
+   - Under "Source", select **GitHub Actions**
+   - Click **Save**
 
-If automatic deployment doesn't work, follow these manual steps:
+2. **Verify Deployment**:
+   - The `.github/workflows/docs.yml` workflow automatically:
+     - Builds Sphinx documentation on every push to `main`
+     - Deploys to both `gh-pages` branch and GitHub Pages
+   - Check **Actions** tab to monitor deployment status
 
-### 1. Enable GitHub Pages
+3. **Access Documentation**:
+   - Primary: `https://yourusername.github.io/warifuri/`
+   - Fallback: Content available in `gh-pages` branch
 
-1. Go to your repository on GitHub
-2. Click on **Settings** tab
-3. Scroll down to **Pages** section
-4. Under **Source**, select:
-   - **Deploy from a branch**
-   - Branch: `gh-pages`
+### Method 2: Manual gh-pages Branch (Fallback)
+
+If GitHub Actions deployment encounters issues:
    - Folder: `/ (root)`
 5. Click **Save**
 

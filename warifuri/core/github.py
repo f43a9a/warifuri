@@ -94,7 +94,25 @@ def commit_changes(message: str, files: Optional[List[str]] = None) -> bool:
             return True
 
         # Commit changes
-        subprocess.run(["git", "commit", "-m", message], check=True)
+        commit_result = subprocess.run(
+            ["git", "commit", "-m", message], capture_output=True, text=True
+        )
+
+        if commit_result.returncode != 0:
+            # Pre-commit hooks may have modified files, try adding and committing again
+            logger.info("Pre-commit hooks modified files, adding changes and retrying commit")
+            subprocess.run(["git", "add", "."], check=True)
+
+            # Check again if there are changes after hook modifications
+            result = subprocess.run(["git", "diff", "--cached", "--exit-code"], capture_output=True)
+
+            if result.returncode == 0:
+                logger.info("No changes to commit after pre-commit hook modifications")
+                return True
+
+            # Try commit again
+            subprocess.run(["git", "commit", "-m", message], check=True)
+
         logger.info(f"Committed changes: {message}")
         return True
 

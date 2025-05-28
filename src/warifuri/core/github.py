@@ -22,6 +22,17 @@ def sanitize_github_url(url: str) -> Optional[str]:
 
     url = url.strip()
 
+    # Handle SSH URLs (git@github.com:owner/repo.git)
+    if url.startswith("git@github.com:"):
+        ssh_match = re.match(r"^git@github\.com:([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", url)
+        if ssh_match:
+            owner, repo = ssh_match.groups()
+            # Strip .git suffix if present
+            if repo.endswith('.git'):
+                repo = repo[:-4]
+            return f"{owner}/{repo}"
+        return None
+
     # Parse URL to validate it
     try:
         parsed = urlparse(url)
@@ -30,23 +41,23 @@ def sanitize_github_url(url: str) -> Optional[str]:
         if parsed.hostname not in ("github.com", "www.github.com"):
             return None
 
-        # Validate the path format
-        if parsed.scheme not in ("https", "http", "git", "ssh"):
+        # Validate the scheme
+        if parsed.scheme not in ("https", "http"):
             return None
 
         # Remove fragment and query parameters for security
         clean_path = parsed.path.rstrip("/")
 
         # Validate GitHub repo path format (owner/repo)
-        if parsed.scheme in ("https", "http"):
-            path_match = re.match(r"^/([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", clean_path)
-        else:  # git/ssh
-            path_match = re.match(r"^([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", clean_path)
+        path_match = re.match(r"^/([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", clean_path)
 
         if not path_match:
             return None
 
         owner, repo = path_match.groups()
+        # Strip .git suffix if present
+        if repo.endswith('.git'):
+            repo = repo[:-4]
         return f"{owner}/{repo}"
 
     except Exception:

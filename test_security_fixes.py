@@ -21,8 +21,10 @@ def test_url_sanitization():
     # Valid URLs
     valid_cases = [
         ("https://github.com/owner/repo", "owner/repo"),
-        ("https://github.com/owner/repo.git", "owner/repo.git"),
+        ("https://github.com/owner/repo.git", "owner/repo"),
         ("https://github.com/owner/repo/", "owner/repo"),
+        ("git@github.com:owner/repo.git", "owner/repo"),
+        ("git@github.com:owner/repo", "owner/repo"),
     ]
 
     for url, expected in valid_cases:

@@ -2,8 +2,10 @@
 
 import os
 import subprocess
+from pathlib import Path
 from unittest.mock import Mock, patch
 
+import pytest
 
 from warifuri.core.github import (
     get_github_repo,
@@ -51,12 +53,14 @@ class TestGetGithubRepo:
         repo = get_github_repo()
         assert repo == "user/repo"
 
+    @patch("warifuri.core.github.os.environ.get")
     @patch("warifuri.core.github.subprocess.run")
-    def test_get_github_repo_non_github_url(self, mock_run: Mock) -> None:
+    def test_get_github_repo_non_github_url(self, mock_run: Mock, mock_env: Mock) -> None:
         """Test with non-GitHub URL."""
         mock_result = Mock()
         mock_result.stdout = "https://gitlab.com/user/repo.git\n"
         mock_run.return_value = mock_result
+        mock_env.return_value = None  # No GITHUB_REPOSITORY environment variable
 
         repo = get_github_repo()
         assert repo is None

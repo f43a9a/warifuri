@@ -297,6 +297,8 @@ def _create_html_graph(tasks: List[Task]) -> str:
 
 def _open_in_browser(file_path: str) -> None:
     """Open HTML file in default browser."""
+    browser_opened = False
+
     try:
         # Try different methods to open browser
         if os.name == "nt":  # Windows
@@ -305,17 +307,33 @@ def _open_in_browser(file_path: str) -> None:
             if platform.system() == "Windows":
                 # Use os.startfile only on Windows
                 os.startfile(file_path)  # type: ignore[attr-defined]
+                browser_opened = True
         elif os.name == "posix":  # macOS and Linux
-            subprocess.run(["open", file_path], check=False)  # macOS
-            if subprocess.run(["which", "xdg-open"], capture_output=True).returncode == 0:
-                subprocess.run(["xdg-open", file_path], check=False)  # Linux
+            # Try macOS open command
+            if subprocess.run(["which", "open"], capture_output=True, check=False).returncode == 0:
+                subprocess.run(["open", file_path], check=False)
+                browser_opened = True
+            # Try Linux xdg-open
+            elif (
+                subprocess.run(["which", "xdg-open"], capture_output=True, check=False).returncode
+                == 0
+            ):
+                subprocess.run(["xdg-open", file_path], check=False)
+                browser_opened = True
 
         # Use environment variable if available
         browser = os.environ.get("BROWSER")
-        if browser:
+        if browser and not browser_opened:
             subprocess.run([browser, file_path], check=False)
+            browser_opened = True
 
-        click.echo("🌐 Opening graph in web browser...")
     except Exception as e:
         click.echo(f"⚠️  Could not open browser automatically: {e}")
+        click.echo(f"Please open manually: {file_path}")
+        return
+
+    if browser_opened:
+        click.echo("🌐 Opening graph in web browser...")
+    else:
+        click.echo("⚠️  Could not open browser automatically: No suitable browser command found")
         click.echo(f"Please open manually: {file_path}")

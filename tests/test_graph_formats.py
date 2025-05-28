@@ -2,6 +2,7 @@
 
 import pytest
 from click.testing import CliRunner
+from unittest.mock import patch
 
 from warifuri.cli.main import cli
 from warifuri.utils import safe_write_file
@@ -128,8 +129,9 @@ outputs: [final.txt]
         assert result.exit_code == 0
         assert "HTML graph generated:" in result.output
         # Should attempt to open browser or show appropriate message
+        # The improved _open_in_browser function now always outputs one of these messages
         assert ("Could not open browser automatically" in result.output or
-                "Opening browser" in result.output or
+                "Opening graph in web browser" in result.output or
                 "Please open manually:" in result.output)
 
     def test_graph_project_filter(self, runner, workspace_with_dependencies):

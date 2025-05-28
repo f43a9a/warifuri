@@ -2,11 +2,20 @@
 
 from pathlib import Path
 from typing import Optional
+import importlib.metadata
 
 import click
 
 from .context import Context, pass_context
 from ..utils import find_workspace_root, setup_logging
+
+
+def get_version() -> str:
+    """Get version from package metadata."""
+    try:
+        return importlib.metadata.version("warifuri")
+    except importlib.metadata.PackageNotFoundError:
+        return "0.1.0"  # fallback version
 
 
 # Import commands after defining Context to avoid circular imports
@@ -33,6 +42,7 @@ from .commands.automation import automation  # noqa: E402
     type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
     help="Workspace directory path",
 )
+@click.version_option(version=get_version(), prog_name="warifuri")
 @pass_context
 def cli(ctx: Context, log_level: Optional[str], workspace: Optional[Path]) -> None:
     """warifuri - A minimal CLI for task allocation."""

@@ -130,3 +130,10 @@ note: Setup task
         ])
         assert result.exit_code == 0
         assert "[DRY RUN]" in result.output or "Would execute" in result.output
+
+    def test_cli_version(self, runner):
+        """Test CLI version command."""
+        result = runner.invoke(cli, ["--version"])
+        assert result.exit_code == 0
+        assert "warifuri, version" in result.output
+        assert "0.1.0" in result.output

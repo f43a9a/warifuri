@@ -21,8 +21,7 @@ def validate(
     strict: bool,
 ) -> None:
     """Validate workspace configuration and dependencies."""
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     click.echo("Validating workspace...")
 

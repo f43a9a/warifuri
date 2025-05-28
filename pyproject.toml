@@ -50,6 +50,7 @@ pytest-cov = "*"
 types-pyyaml = "^6.0.12.20250516"
 bandit = "^1.8.3"
 safety = "^3.5.1"
+bleach = "^6.1.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^8.2.3"
@@ -79,6 +80,17 @@ exclude = [
 [[tool.mypy.overrides]]
 module = ["git.*", "flask.*", "requests.*", "pytest.*"]
 ignore_missing_imports = true
+
+[tool.bandit]
+# Skip these test patterns as they are expected in CLI tools
+skips = ["B101", "B404", "B603", "B607", "B606"]
+# B404: subprocess module usage (acceptable for CLI tool)
+# B603: subprocess without shell=True (acceptable with controlled inputs)
+# B607: partial executable path (acceptable for system tools like git/gh)
+# B606: process without shell (preferred for security)
+# B101: assert usage (replaced with proper exceptions where critical)
+
+exclude_dirs = ["tests", ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "htmlcov", "dist", ".venv"]
 
 [tool.ruff]
 target-version = "py311"

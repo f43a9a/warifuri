@@ -18,5 +18,11 @@ class Context:
         self.logger = logger or logging.getLogger(__name__)
         self.timestamp = datetime.now().isoformat()
 
+    def ensure_workspace_path(self) -> Path:
+        """Ensure workspace path is available, raising ClickException if not."""
+        if self.workspace_path is None:
+            raise click.ClickException("Workspace path is not set. Please run from a valid workspace.")
+        return self.workspace_path
+
 
 pass_context = click.make_pass_decorator(Context, ensure=True)

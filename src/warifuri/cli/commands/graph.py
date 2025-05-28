@@ -28,8 +28,7 @@ def graph(
     web: bool,
 ) -> None:
     """Generate dependency graph visualization."""
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     # Use safe discovery that doesn't raise exceptions on circular dependencies
     from ...core.discovery import discover_all_projects_safe

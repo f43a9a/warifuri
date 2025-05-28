@@ -1,0 +1,11 @@
+[bandit]
+# Skip these test patterns as they are expected in CLI tools
+# B404: Consider possible security implications associated with subprocess module
+# B603: subprocess call - check for execution of untrusted input
+# B607: Starting a process with a partial executable path
+# B606: Starting a process without a shell
+# B101: Use of assert detected (used for runtime checks in CLI tool)
+skips = B101,B404,B603,B607,B606
+
+# Exclude these directories from scanning
+exclude_dirs = tests,.git,.mypy_cache,.pytest_cache,.ruff_cache,htmlcov,dist,.venv

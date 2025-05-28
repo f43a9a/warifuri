@@ -20,8 +20,7 @@ def mark_done(
 
     TASK_NAME should be in format 'project/task'.
     """
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     if "/" not in task_name:
         click.echo("Error: Task name must be in format 'project/task'.", err=True)

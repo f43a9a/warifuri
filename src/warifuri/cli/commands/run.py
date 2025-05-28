@@ -26,8 +26,7 @@ def run(
     With --task PROJECT: Run one ready task from the project.
     With --task PROJECT/TASK: Run the specific task.
     """
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     # Discover all projects
     projects = discover_all_projects(workspace_path)

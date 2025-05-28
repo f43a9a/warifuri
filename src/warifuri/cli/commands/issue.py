@@ -34,8 +34,7 @@ def issue(
     dry_run: bool,
 ) -> None:
     """Create GitHub issues for projects and tasks."""
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     # Check if GitHub CLI is available
     if not check_github_cli():

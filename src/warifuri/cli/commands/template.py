@@ -25,8 +25,7 @@ def list_templates(
     format: str,
 ) -> None:
     """List available templates."""
-    workspace_path = ctx.workspace_path
-    assert workspace_path is not None
+    workspace_path = ctx.ensure_workspace_path()
 
     templates_dir = workspace_path / "templates"
 

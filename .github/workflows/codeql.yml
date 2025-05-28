@@ -44,6 +44,12 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Cache Poetry installation
+      uses: actions/cache@v3
+      with:
+        path: ~/.local
+        key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
     - name: Install Poetry
       uses: snok/install-poetry@v1
       with:
@@ -57,13 +63,18 @@ jobs:
       with:
         path: .venv
         key: venv-codeql-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          venv-codeql-${{ runner.os }}-
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        poetry install --no-interaction --no-root --only=main
 
     - name: Install warifuri
-      run: poetry install --no-interaction
+      run: poetry install --no-interaction --only=main
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
@@ -71,11 +82,17 @@ jobs:
         category: "/language:${{matrix.language}}"
         # Upload results to GitHub Security tab
         upload: true
+        # Configure CodeQL to handle Python properly
+        output: "/tmp/codeql-results"
+        upload-pack: true
 
     - name: Upload CodeQL results as artifact
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: codeql-results-${{ matrix.language }}
-        path: /home/runner/work/_temp/codeql_databases/
+        path: |
+          /tmp/codeql-results/
+          ${{ runner.temp }}/codeql_databases/
         retention-days: 30
+        include-hidden-files: true

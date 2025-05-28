@@ -1,0 +1,353 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Command Reference &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Quick Start Guide" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Command Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-commands">Core Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-init">warifuri init</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-list">warifuri list</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-run">warifuri run</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-show">warifuri show</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#validation-commands">Validation Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-validate">warifuri validate</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#visualization-commands">Visualization Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-graph">warifuri graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow-commands">Workflow Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-mark-done">warifuri mark-done</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#template-commands">Template Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-template-list">warifuri template list</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#github-integration">GitHub Integration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#warifuri-issue">warifuri issue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#global-options">Global Options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Command Reference</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user-guide/commands.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="command-reference">
+<h1>Command Reference<a class="headerlink" href="#command-reference" title="Link to this heading"></a></h1>
+<p>This section provides a comprehensive reference for all warifuri CLI commands.</p>
+<section id="core-commands">
+<h2>Core Commands<a class="headerlink" href="#core-commands" title="Link to this heading"></a></h2>
+<section id="warifuri-init">
+<h3>warifuri init<a class="headerlink" href="#warifuri-init" title="Link to this heading"></a></h3>
+<p>Create new projects, tasks, or deploy templates.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>init<span class="w"> </span>&lt;project&gt;
+warifuri<span class="w"> </span>init<span class="w"> </span>&lt;project&gt;/&lt;task&gt;
+warifuri<span class="w"> </span>init<span class="w"> </span>--template<span class="w"> </span>&lt;template&gt;
+warifuri<span class="w"> </span>init<span class="w"> </span>&lt;project&gt;<span class="w"> </span>--template<span class="w"> </span>&lt;template&gt;/&lt;task&gt;
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--template</span> <span class="pre">&lt;name&gt;</span></code>: Use a specific template</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--force</span></code>: Overwrite existing files</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code>: Show what would be created without creating</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--non-interactive</span></code>: Skip interactive prompts</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new project</span>
+warifuri<span class="w"> </span>init<span class="w"> </span>my-project
+
+<span class="c1"># Create a task in project</span>
+warifuri<span class="w"> </span>init<span class="w"> </span>my-project/setup-task
+
+<span class="c1"># Deploy from template</span>
+warifuri<span class="w"> </span>init<span class="w"> </span>--template<span class="w"> </span>data-pipeline
+</pre></div>
+</div>
+</section>
+<section id="warifuri-list">
+<h3>warifuri list<a class="headerlink" href="#warifuri-list" title="Link to this heading"></a></h3>
+<p>Display tasks and their current status.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>list<span class="w"> </span><span class="o">[</span>--ready<span class="p">|</span>--completed<span class="o">]</span><span class="w"> </span><span class="o">[</span>--project<span class="w"> </span>&lt;name&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--format<span class="w"> </span>&lt;type&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--ready</span></code>: Show only ready-to-run tasks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--completed</span></code>: Show only completed tasks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--project</span> <span class="pre">&lt;name&gt;</span></code>: Filter by project</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--format</span> <span class="pre">&lt;type&gt;</span></code>: Output format (plain, json, tsv)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--fields</span> <span class="pre">&lt;list&gt;</span></code>: Specify fields to display</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># List all tasks</span>
+warifuri<span class="w"> </span>list
+
+<span class="c1"># List ready tasks in JSON format</span>
+warifuri<span class="w"> </span>list<span class="w"> </span>--ready<span class="w"> </span>--format<span class="w"> </span>json
+</pre></div>
+</div>
+</section>
+<section id="warifuri-run">
+<h3>warifuri run<a class="headerlink" href="#warifuri-run" title="Link to this heading"></a></h3>
+<p>Execute tasks with automatic dependency resolution.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>task-name<span class="o">]</span>
+warifuri<span class="w"> </span>run<span class="w"> </span>--ready
+warifuri<span class="w"> </span>run<span class="w"> </span>--project<span class="w"> </span>&lt;name&gt;
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--ready</span></code>: Run all ready tasks automatically</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--project</span> <span class="pre">&lt;name&gt;</span></code>: Run all tasks in project</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dry-run</span></code>: Show execution plan without running</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--force</span></code>: Re-run completed tasks</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run specific task</span>
+warifuri<span class="w"> </span>run<span class="w"> </span>my-task
+
+<span class="c1"># Run all ready tasks</span>
+warifuri<span class="w"> </span>run<span class="w"> </span>--ready
+</pre></div>
+</div>
+</section>
+<section id="warifuri-show">
+<h3>warifuri show<a class="headerlink" href="#warifuri-show" title="Link to this heading"></a></h3>
+<p>Display detailed task information and metadata.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>show<span class="w"> </span>&lt;task-name&gt;
+</pre></div>
+</div>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Show task details</span>
+warifuri<span class="w"> </span>show<span class="w"> </span>data-processing
+</pre></div>
+</div>
+</section>
+</section>
+<section id="validation-commands">
+<h2>Validation Commands<a class="headerlink" href="#validation-commands" title="Link to this heading"></a></h2>
+<section id="warifuri-validate">
+<h3>warifuri validate<a class="headerlink" href="#warifuri-validate" title="Link to this heading"></a></h3>
+<p>Validate project configuration and check for issues.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>validate<span class="w"> </span><span class="o">[</span>--strict<span class="o">]</span>
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--strict</span></code>: Enable strict validation mode</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Basic validation</span>
+warifuri<span class="w"> </span>validate
+
+<span class="c1"># Strict validation</span>
+warifuri<span class="w"> </span>validate<span class="w"> </span>--strict
+</pre></div>
+</div>
+</section>
+</section>
+<section id="visualization-commands">
+<h2>Visualization Commands<a class="headerlink" href="#visualization-commands" title="Link to this heading"></a></h2>
+<section id="warifuri-graph">
+<h3>warifuri graph<a class="headerlink" href="#warifuri-graph" title="Link to this heading"></a></h3>
+<p>Generate dependency graphs in various formats.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>graph<span class="w"> </span><span class="o">[</span>--format<span class="w"> </span>&lt;type&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--output<span class="w"> </span>&lt;file&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--format</span> <span class="pre">&lt;type&gt;</span></code>: Output format (mermaid, html, ascii)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--output</span> <span class="pre">&lt;file&gt;</span></code>: Save to file instead of display</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate Mermaid graph</span>
+warifuri<span class="w"> </span>graph<span class="w"> </span>--format<span class="w"> </span>mermaid
+
+<span class="c1"># Save HTML graph to file</span>
+warifuri<span class="w"> </span>graph<span class="w"> </span>--format<span class="w"> </span>html<span class="w"> </span>--output<span class="w"> </span>deps.html
+</pre></div>
+</div>
+</section>
+</section>
+<section id="workflow-commands">
+<h2>Workflow Commands<a class="headerlink" href="#workflow-commands" title="Link to this heading"></a></h2>
+<section id="warifuri-mark-done">
+<h3>warifuri mark-done<a class="headerlink" href="#warifuri-mark-done" title="Link to this heading"></a></h3>
+<p>Mark a task as completed by creating done.md file.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>mark-done<span class="w"> </span>&lt;task-name&gt;
+</pre></div>
+</div>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mark task as done</span>
+warifuri<span class="w"> </span>mark-done<span class="w"> </span>setup-database
+</pre></div>
+</div>
+</section>
+</section>
+<section id="template-commands">
+<h2>Template Commands<a class="headerlink" href="#template-commands" title="Link to this heading"></a></h2>
+<section id="warifuri-template-list">
+<h3>warifuri template list<a class="headerlink" href="#warifuri-template-list" title="Link to this heading"></a></h3>
+<p>List available templates and their contained tasks.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>template<span class="w"> </span>list
+</pre></div>
+</div>
+</section>
+</section>
+<section id="github-integration">
+<h2>GitHub Integration<a class="headerlink" href="#github-integration" title="Link to this heading"></a></h2>
+<section id="warifuri-issue">
+<h3>warifuri issue<a class="headerlink" href="#warifuri-issue" title="Link to this heading"></a></h3>
+<p>Create and manage GitHub issues.</p>
+<p><strong>Syntax:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span>&lt;task-name&gt;<span class="w"> </span><span class="o">[</span>--repo<span class="w"> </span>&lt;repo&gt;<span class="o">]</span>
+</pre></div>
+</div>
+<p><strong>Options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--repo</span> <span class="pre">&lt;name&gt;</span></code>: Target repository</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--title</span> <span class="pre">&lt;text&gt;</span></code>: Custom issue title</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--labels</span> <span class="pre">&lt;list&gt;</span></code>: Issue labels</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create issue for task</span>
+warifuri<span class="w"> </span>issue<span class="w"> </span>create<span class="w"> </span>my-task<span class="w"> </span>--repo<span class="w"> </span>myorg/myrepo
+</pre></div>
+</div>
+</section>
+</section>
+<section id="global-options">
+<h2>Global Options<a class="headerlink" href="#global-options" title="Link to this heading"></a></h2>
+<p>These options are available for all commands:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--workspace</span> <span class="pre">&lt;path&gt;</span></code>: Specify workspace directory</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--log-level</span> <span class="pre">&lt;level&gt;</span></code>: Set logging level (debug, info, warning, error)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--version</span></code>: Show version information</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--help</span></code>: Show help information</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

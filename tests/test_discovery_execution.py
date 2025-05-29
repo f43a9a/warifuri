@@ -130,7 +130,7 @@ outputs: []
     def test_find_ready_tasks(self, project_with_tasks):
         """Test finding ready tasks."""
         projects = discover_all_projects(project_with_tasks)
-        ready_tasks = find_ready_tasks(projects)
+        ready_tasks = find_ready_tasks(projects, project_with_tasks)
 
         # Only extract should be ready (no dependencies)
         assert len(ready_tasks) == 1

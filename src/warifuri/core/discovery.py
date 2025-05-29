@@ -160,8 +160,15 @@ def discover_all_projects_safe(workspace_path: Path) -> List[Project]:
     return projects
 
 
-def find_ready_tasks(projects: List[Project]) -> List[Task]:
+def find_ready_tasks(projects: List[Project], workspace_path: Optional[Path] = None) -> List[Task]:
     """Find all ready tasks across projects."""
+    if not projects:
+        return []
+
+    # Get workspace path from first project if not provided
+    if workspace_path is None:
+        workspace_path = projects[0].path.parent.parent
+
     # Build task lookup for dependency checking
     all_tasks = {}
     for project in projects:
@@ -177,12 +184,28 @@ def find_ready_tasks(projects: List[Project]) -> List[Task]:
             # Check if all dependencies are completed
             dependencies_ready = True
             for dep_name in task.instruction.dependencies:
+                # Try full name first
                 dep_task = all_tasks.get(dep_name)
+
+                # If not found and it's a simple name, try project/dep format
+                if not dep_task and "/" not in dep_name:
+                    full_dep_name = f"{project.name}/{dep_name}"
+                    dep_task = all_tasks.get(full_dep_name)
+
                 if not dep_task or not dep_task.is_completed:
                     dependencies_ready = False
                     break
 
-            if dependencies_ready:
+            # Check if all input files exist (if task has inputs)
+            inputs_ready = True
+            if task.instruction.inputs:
+                # Import here to avoid circular import
+                from ..utils.validation import validate_file_references
+                file_errors = validate_file_references(task, workspace_path, check_inputs=True)
+                if file_errors:
+                    inputs_ready = False
+
+            if dependencies_ready and inputs_ready:
                 task.status = TaskStatus.READY
                 ready_tasks.append(task)
             else:

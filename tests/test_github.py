@@ -2,10 +2,8 @@
 
 import os
 import subprocess
-from pathlib import Path
 from unittest.mock import Mock, patch
 
-import pytest
 
 from warifuri.core.github import (
     get_github_repo,

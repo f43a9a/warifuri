@@ -110,17 +110,41 @@ def detect_circular_dependencies(tasks: List[Task]) -> Optional[List[str]]:
 def validate_file_references(
     task: Task, workspace_path: Path, check_inputs: bool = True, check_outputs: bool = False
 ) -> List[str]:
-    """Validate input/output file references."""
+    """Validate input/output file references with cross-project support."""
     errors = []
 
     if check_inputs:
         for input_file in task.instruction.inputs:
-            input_path = task.path / input_file
-            if not input_path.exists():
+            found = False
+
+            # Check workspace root first
+            input_path = workspace_path / input_file
+            if input_path.exists():
+                found = True
+            else:
+                # Check if it's a relative path
+                if input_file.startswith("../"):
+                    # For cross-project references, resolve from projects directory
+                    projects_base = task.path.parent.parent  # Get to projects/ directory
+                    clean_path = input_file
+                    while clean_path.startswith("../"):
+                        clean_path = clean_path[3:]
+
+                    cross_project_input = projects_base / clean_path
+                    if cross_project_input.exists():
+                        found = True
+                else:
+                    # Fallback: check in task directory
+                    task_input = task.path / input_file
+                    if task_input.exists():
+                        found = True
+
+            if not found:
                 errors.append(f"Input file not found: {input_file}")
 
     if check_outputs:
         for output_file in task.instruction.outputs:
+            # Output files are expected in the task directory
             output_path = task.path / output_file
             if not output_path.exists():
                 errors.append(f"Output file not found: {output_file}")

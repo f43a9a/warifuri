@@ -36,7 +36,7 @@ def init(
     - project_name/task_name: Create new task
     - Empty with --template: Expand template to current workspace
     """
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
 
     # Handle template-only expansion (no target)
     if not target and template:

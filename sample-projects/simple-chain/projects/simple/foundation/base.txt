@@ -1,0 +1,8 @@
+Foundation File Generated
+========================
+
+Generated at: 2025-05-29T10:50:29.962035
+Content: This is the foundation data for the simple chain test.
+Status: SUCCESS
+
+This file serves as input for the consumer task.

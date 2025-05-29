@@ -24,7 +24,7 @@ def show(
     format: str,
 ) -> None:
     """Show task definition and metadata."""
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
 
     if "/" not in task:
         click.echo("Error: Task must be in format 'project/task'.", err=True)

@@ -2,5 +2,9 @@
 
 from .cli.main import cli
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for console scripts."""
     cli()
+
+if __name__ == "__main__":
+    main()

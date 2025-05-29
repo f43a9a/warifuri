@@ -1,0 +1,9 @@
+name: task-a-foundation
+task_type: human
+description: "Foundation Task A - Creates foundation files with no external dependencies"
+auto_merge: false
+dependencies: []
+inputs: []
+outputs:
+  - "foundation_output.txt"
+note: "Test task to verify dependency resolution"

@@ -39,17 +39,61 @@ def setup_task_environment(task: Task) -> Dict[str, str]:
     }
 
 
-def validate_task_inputs(task: Task, execution_log: List[str]) -> bool:
-    """Validate that all required input files exist."""
+def validate_task_inputs(task: Task, execution_log: List[str], workspace_path: Optional[Path] = None) -> bool:
+    """Validate that all required input files exist with cross-project support."""
+    if workspace_path is None:
+        # Try to infer workspace path from task path
+        # Typical structure: workspace/projects/{project}/{task}
+        workspace_path = task.path.parent.parent.parent
+
     missing_inputs = []
 
     for input_file in task.instruction.inputs:
-        input_path = task.path / input_file
-        if not input_path.exists():
+        found = False
+
+        # Check workspace root first
+        input_path = workspace_path / input_file
+        if input_path.exists():
+            found = True
+            execution_log.append(f"Input file found in workspace root: {input_file}")
+        else:
+            # Check if it's a relative path
+            if input_file.startswith("../"):
+                # Try resolving relative to task directory
+                task_relative_input = task.path / input_file
+                if task_relative_input.exists():
+                    found = True
+                    execution_log.append(f"Input file found via relative path: {input_file}")
+                else:
+                    # Try cross-project resolution
+                    # Get the projects directory path properly
+                    projects_base = task.path.parent.parent  # Go up from task to projects level
+
+                    if projects_base.exists():
+                        # Remove the ../ prefix and resolve from projects directory
+                        clean_path = input_file
+                        while clean_path.startswith("../"):
+                            clean_path = clean_path[3:]
+
+                        cross_project_input = projects_base / clean_path
+
+                        execution_log.append(f"Trying cross-project path: {cross_project_input}")
+                        if cross_project_input.exists():
+                            found = True
+                            execution_log.append(f"Input file found via cross-project path: {input_file}")
+                        else:
+                            execution_log.append(f"Cross-project path not found: {cross_project_input}")
+
+            # Fallback: check in task directory
+            if not found:
+                fallback_path = task.path / input_file
+                if fallback_path.exists():
+                    found = True
+                    execution_log.append(f"Input file found in task directory: {input_file}")
+
+        if not found:
             missing_inputs.append(input_file)
             execution_log.append(f"ERROR: Missing input file: {input_file}")
-        else:
-            execution_log.append(f"Input file found: {input_file}")
 
     if missing_inputs:
         error_msg = f"Missing required input files: {', '.join(missing_inputs)}"
@@ -81,6 +125,94 @@ def validate_task_outputs(task: Task, temp_dir: Path, execution_log: List[str]) 
     return True
 
 
+def copy_input_files(task: Task, temp_dir: Path, execution_log: List[str], workspace_path: Optional[Path] = None) -> None:
+    """Copy input files to temporary directory with cross-project support."""
+    execution_log.append(f"copy_input_files called for task {task.name}")
+
+    if not task.instruction or not task.instruction.inputs:
+        execution_log.append("No inputs to copy")
+        return
+
+    execution_log.append(f"Found {len(task.instruction.inputs)} inputs to copy: {task.instruction.inputs}")
+
+    if workspace_path is None:
+        # Try to infer workspace path from task path
+        workspace_path = task.path.parent.parent.parent
+
+    execution_log.append(f"Using workspace path: {workspace_path}")
+
+    for input_file in task.instruction.inputs:
+        # Find where the input file actually exists
+        source_path = None
+
+        # Check workspace root first
+        workspace_input = workspace_path / input_file
+        if workspace_input.exists():
+            source_path = workspace_input
+            execution_log.append(f"Found input in workspace root: {input_file}")
+        else:
+            # Check if it's a relative path
+            if input_file.startswith("../"):
+                # Try resolving relative to task directory
+                task_relative_input = task.path / input_file
+                if task_relative_input.exists():
+                    source_path = task_relative_input.resolve()
+                    execution_log.append(f"Found input via relative path: {input_file}")
+                else:
+                    # Try cross-project resolution
+                    # Get the projects directory path properly
+                    projects_base = task.path.parent.parent  # Go up from task to projects level
+
+                    if projects_base.exists():
+                        # Remove the ../ prefix and resolve from projects directory
+                        clean_path = input_file
+                        while clean_path.startswith("../"):
+                            clean_path = clean_path[3:]
+
+                        cross_project_input = projects_base / clean_path
+
+                        if cross_project_input.exists():
+                            source_path = cross_project_input.resolve()
+                            execution_log.append(f"Found input via cross-project path: {input_file}")
+
+        # Fallback: check in task directory
+        if source_path is None:
+            task_input = task.path / input_file
+            if task_input.exists():
+                source_path = task_input
+                execution_log.append(f"Found input in task directory: {input_file}")
+
+        if source_path is None:
+            execution_log.append(f"WARNING: Could not locate input file for copying: {input_file}")
+            continue
+
+        # Determine destination path in temp directory
+        # For relative paths, we need to make them accessible within the temp directory
+        # Instead of preserving ../config-generator/shared.conf structure,
+        # we should flatten it to just shared.conf in the temp directory
+        if input_file.startswith("../"):
+            # Extract just the filename for relative paths
+            dest_path = temp_dir / Path(input_file).name
+            execution_log.append(f"Flattening relative path {input_file} to {Path(input_file).name}")
+        else:
+            # For absolute or simple file names, place directly in temp
+            dest_path = temp_dir / Path(input_file).name
+
+        # Create parent directories if needed
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Copy the file
+        try:
+            if source_path.is_file():
+                shutil.copy2(source_path, dest_path)
+                execution_log.append(f"Copied input file: {input_file} -> {dest_path}")
+            else:
+                shutil.copytree(source_path, dest_path, dirs_exist_ok=True)
+                execution_log.append(f"Copied input directory: {input_file} -> {dest_path}")
+        except Exception as e:
+            execution_log.append(f"ERROR copying input {input_file}: {e}")
+
+
 def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
     """Execute machine task in temporary directory with enhanced sandboxing."""
     logger.info(f"Executing machine task: {task.full_name}")
@@ -98,7 +230,8 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
         execution_log.append(f"Temporary directory: {temp_dir}")
 
         # Validate input files before execution
-        if not validate_task_inputs(task, execution_log):
+        workspace_path = task.path.parent.parent.parent
+        if not validate_task_inputs(task, execution_log, workspace_path):
             error_msg = "Input validation failed"
             execution_log.append(f"ERROR: {error_msg}")
             raise ExecutionError(error_msg)
@@ -106,6 +239,17 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
         # Copy task directory to temp
         copy_directory_contents(task.path, temp_dir)
         execution_log.append("Copied task files to temporary directory")
+
+        # Copy input files to temp directory maintaining structure
+        try:
+            execution_log.append("Starting to copy input files...")
+            execution_log.append("CRITICAL DEBUG: About to call copy_input_files")
+            copy_input_files(task, temp_dir, execution_log, workspace_path)
+            execution_log.append("CRITICAL DEBUG: copy_input_files completed")
+            execution_log.append("Finished copying input files")
+        except Exception as e:
+            execution_log.append(f"ERROR in copy_input_files: {e}")
+            raise
 
         # Find execution script
         run_script = None

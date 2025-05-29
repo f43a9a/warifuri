@@ -1,0 +1,20 @@
+name: core
+description: Core shared functionality project
+
+tasks:
+  config-generator:
+    command: python scripts/core_config.py
+    outputs:
+      - shared.conf
+      - version.txt
+    description: Generate shared configuration files
+
+  library-builder:
+    command: python scripts/core_library.py
+    inputs:
+      - shared.conf
+    outputs:
+      - core_lib.json
+    depends:
+      - config-generator
+    description: Build core library information

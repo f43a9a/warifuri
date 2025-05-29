@@ -1,10 +1,10 @@
 """Run command for executing tasks."""
 
-from typing import Optional
 
 import click
 
 from ..context import Context, pass_context
+from typing import Optional
 from ...core.discovery import discover_all_projects, find_ready_tasks, find_task_by_name
 from ...core.execution import execute_task
 
@@ -26,7 +26,7 @@ def run(
     With --task PROJECT: Run one ready task from the project.
     With --task PROJECT/TASK: Run the specific task.
     """
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
 
     # Discover all projects
     projects = discover_all_projects(workspace_path)
@@ -48,7 +48,7 @@ def run(
         else:
             # Project - find ready task
             project_name = task
-            ready_tasks = find_ready_tasks(projects)
+            ready_tasks = find_ready_tasks(projects, workspace_path)
             project_ready_tasks = [t for t in ready_tasks if t.project == project_name]
 
             if not project_ready_tasks:
@@ -58,7 +58,7 @@ def run(
             target_task = project_ready_tasks[0]
     else:
         # Auto-run ready task
-        ready_tasks = find_ready_tasks(projects)
+        ready_tasks = find_ready_tasks(projects, workspace_path)
 
         if not ready_tasks:
             click.echo("No ready tasks found.")

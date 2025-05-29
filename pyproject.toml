@@ -4,11 +4,11 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "warifuri"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Task automation with cross-project dependency resolution"
 authors = ["f43a9a"]
 readme = "README.md"
-package-mode = false
+packages = [{include = "warifuri", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -16,6 +16,10 @@ PyYAML = ">=6.0"
 gitpython = ">=3.1.0"
 requests = ">=2.28.0"
 flask = ">=2.0.0"
+click = ">=8.0.0"
+
+[tool.poetry.scripts]
+warifuri = "warifuri.__main__:main"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"

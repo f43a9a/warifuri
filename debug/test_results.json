@@ -1,0 +1,132 @@
+[
+  {
+    "sample_name": "cross-project",
+    "success": false,
+    "tests": {
+      "list": {
+        "success": true,
+        "stdout": "[PENDING] app/main-app\n  Main application processing\n\n[PENDING] app/validator\n  Validate application output\n\n[READY] core/config-generator\n  Generate shared configuration files\n\n[PENDING] core/library-builder\n  Build core library information\n\n",
+        "stderr": ""
+      },
+      "list_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      },
+      "run": {
+        "success": true,
+        "stdout": "Executing task: core/config-generator\nType: machine\nDescription: Generate shared configuration files\n\u2705 Task completed: core/config-generator\n",
+        "stderr": "2025-05-29 11:44:06 [INFO] warifuri.core.execution:86 - Executing machine task: core/config-generator\n2025-05-29 11:44:07 [INFO] warifuri.core.execution:187 - Machine task completed: core/config-generator\n"
+      },
+      "output_files": {
+        "success": false,
+        "expected": [
+          "shared.conf",
+          "version.txt",
+          "core_lib.json",
+          "app_output.txt",
+          "validation_report.txt"
+        ],
+        "found": []
+      },
+      "final_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      }
+    },
+    "errors": [
+      "list --show-status failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n",
+      "Missing output file: shared.conf",
+      "Missing output file: version.txt",
+      "Missing output file: core_lib.json",
+      "Missing output file: app_output.txt",
+      "Missing output file: validation_report.txt",
+      "final status check failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+    ]
+  },
+  {
+    "sample_name": "multi-file",
+    "success": false,
+    "tests": {
+      "list": {
+        "success": true,
+        "stdout": "[COMPLETED] multifile/generator\n  Generate multiple data files\n\n[COMPLETED] multifile/processor\n  Process all generated files\n\n",
+        "stderr": ""
+      },
+      "list_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      },
+      "run": {
+        "success": true,
+        "stdout": "No ready tasks found.\n",
+        "stderr": ""
+      },
+      "output_files": {
+        "success": false,
+        "expected": [
+          "data1.txt",
+          "data2.txt",
+          "config.json",
+          "summary.txt"
+        ],
+        "found": []
+      },
+      "final_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      }
+    },
+    "errors": [
+      "list --show-status failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n",
+      "Missing output file: data1.txt",
+      "Missing output file: data2.txt",
+      "Missing output file: config.json",
+      "Missing output file: summary.txt",
+      "final status check failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+    ]
+  },
+  {
+    "sample_name": "simple-chain",
+    "success": false,
+    "tests": {
+      "list": {
+        "success": true,
+        "stdout": "[COMPLETED] simple/consumer\n  Process foundation file\n\n[COMPLETED] simple/foundation\n  Generate foundation file\n\n",
+        "stderr": ""
+      },
+      "list_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      },
+      "run": {
+        "success": true,
+        "stdout": "No ready tasks found.\n",
+        "stderr": ""
+      },
+      "output_files": {
+        "success": false,
+        "expected": [
+          "base.txt",
+          "processed.txt"
+        ],
+        "found": []
+      },
+      "final_status": {
+        "success": false,
+        "stdout": "",
+        "stderr": "Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+      }
+    },
+    "errors": [
+      "list --show-status failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n",
+      "Missing output file: base.txt",
+      "Missing output file: processed.txt",
+      "final status check failed: Usage: python -m warifuri list [OPTIONS]\nTry 'python -m warifuri list --help' for help.\n\nError: No such option: --show-status\n"
+    ]
+  }
+]

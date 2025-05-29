@@ -156,7 +156,7 @@ user_prompt: |
         projects = discover_all_projects(ai_workflow_project)
 
         # Initially only data-prep should be ready
-        ready_tasks = find_ready_tasks(projects)
+        ready_tasks = find_ready_tasks(projects, ai_workflow_project)
         assert len(ready_tasks) == 1
         assert ready_tasks[0].name == "data-prep"
 

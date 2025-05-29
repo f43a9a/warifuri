@@ -1,0 +1,11 @@
+name: processor
+description: Process all generated files
+auto_merge: false
+dependencies:
+  - generator
+inputs:
+  - ../generator/data1.txt
+  - ../generator/data2.txt
+  - ../generator/config.json
+outputs:
+  - summary.txt

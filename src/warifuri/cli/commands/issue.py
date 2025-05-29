@@ -1,10 +1,10 @@
 """Issue command for GitHub integration."""
 
-from typing import List, Optional
 
 import click
 
 from ..context import Context, pass_context
+from typing import List, Optional
 from ...core.discovery import discover_all_projects, find_task_by_name
 from ...core.types import Project
 from ...core.github import (
@@ -34,7 +34,7 @@ def issue(
     dry_run: bool,
 ) -> None:
     """Create GitHub issues for projects and tasks."""
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
 
     # Check if GitHub CLI is available
     if not check_github_cli():

@@ -1,67 +1,15 @@
 """GitHub integration module for warifuri."""
 
-import html
 import json
 import logging
 import os
-import re
 import subprocess
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
-from urllib.parse import urlparse
 
 if TYPE_CHECKING:
     from .types import Project, Task
 
 logger = logging.getLogger(__name__)
-
-
-def sanitize_github_url(url: str) -> Optional[str]:
-    """Safely parse and validate GitHub URL."""
-    if not url or not isinstance(url, str):
-        return None
-
-    url = url.strip()
-
-    # Handle SSH URLs (git@github.com:owner/repo.git)
-    if url.startswith("git@github.com:"):
-        ssh_match = re.match(r"^git@github\.com:([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", url)
-        if ssh_match:
-            owner, repo = ssh_match.groups()
-            # Strip .git suffix if present
-            if repo.endswith('.git'):
-                repo = repo[:-4]
-            return f"{owner}/{repo}"
-        return None
-
-    # Parse URL to validate it
-    try:
-        parsed = urlparse(url)
-
-        # Only allow GitHub URLs
-        if parsed.hostname not in ("github.com", "www.github.com"):
-            return None
-
-        # Validate the scheme
-        if parsed.scheme not in ("https", "http"):
-            return None
-
-        # Remove fragment and query parameters for security
-        clean_path = parsed.path.rstrip("/")
-
-        # Validate GitHub repo path format (owner/repo)
-        path_match = re.match(r"^/([a-zA-Z0-9._-]+)/([a-zA-Z0-9._-]+)(?:\.git)?/?$", clean_path)
-
-        if not path_match:
-            return None
-
-        owner, repo = path_match.groups()
-        # Strip .git suffix if present
-        if repo.endswith('.git'):
-            repo = repo[:-4]
-        return f"{owner}/{repo}"
-
-    except Exception:
-        return None
 
 
 def get_github_repo() -> Optional[str]:
@@ -74,22 +22,22 @@ def get_github_repo() -> Optional[str]:
 
         remote_url = result.stdout.strip()
 
-        # Safely parse GitHub URL
-        repo_path = sanitize_github_url(remote_url)
-        if repo_path:
+        # Parse GitHub URL
+        if "github.com" in remote_url:
+            if remote_url.startswith("https://github.com/"):
+                repo_path = remote_url.replace("https://github.com/", "").replace(".git", "")
+            elif remote_url.startswith("git@github.com:"):
+                repo_path = remote_url.replace("git@github.com:", "").replace(".git", "")
+            else:
+                return None
+
             return repo_path
 
     except subprocess.CalledProcessError:
         pass
 
     # Try environment variable
-    env_repo = os.environ.get("GITHUB_REPOSITORY")
-    if env_repo:
-        # Validate environment variable format
-        if re.match(r"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$", env_repo):
-            return env_repo
-
-    return None
+    return os.environ.get("GITHUB_REPOSITORY")
 
 
 def check_github_cli() -> bool:
@@ -432,20 +380,14 @@ def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str =
     # Get task full name
     full_name = f"{task.project}/{task.name}" if hasattr(task, "project") else task.name
 
-    # Sanitize inputs to prevent HTML injection
-    safe_full_name = html.escape(full_name)
-    safe_description = html.escape(task.instruction.description) if task.instruction.description else "No description provided"
-
     body_lines = [
-        f"# Task: {safe_full_name}",
+        f"# Task: {full_name}",
         "",
     ]
 
     # Add parent issue link if available
     if parent_issue_url:
-        # Validate parent URL format
-        if re.match(r"^https://github\.com/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+/issues/\d+$", parent_issue_url):
-            body_lines.extend([f"**Parent Project**: {parent_issue_url}", ""])
+        body_lines.extend([f"**Parent Project**: {parent_issue_url}", ""])
     elif repo and hasattr(task, "project"):
         # Try to find parent issue automatically
         auto_parent = find_parent_issue(task.project, repo)
@@ -455,7 +397,9 @@ def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str =
     body_lines.extend(
         [
             "## Description",
-            safe_description,
+            task.instruction.description
+            if task.instruction.description
+            else "No description provided",
             "",
             f"**Type**: {task.task_type.value}",
             f"**Status**: {task.status.value}",

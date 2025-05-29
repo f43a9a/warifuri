@@ -37,7 +37,8 @@ def automation_list(
     project: Optional[str],
 ) -> None:
     """List tasks suitable for automation."""
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
+    assert workspace_path is not None
 
     # Discover projects
     projects = discover_all_projects(workspace_path)
@@ -118,7 +119,8 @@ def check_automation(
     check_only: bool,
 ) -> None:
     """Check if a task can be automated."""
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
+    assert workspace_path is not None
 
     # Parse task name
     if "/" not in task_name:
@@ -232,7 +234,8 @@ def create_pr(
     dry_run: bool,
 ) -> None:
     """Create a pull request for automated task execution."""
-    workspace_path = ctx.ensure_workspace_path()
+    workspace_path = ctx.workspace_path
+    assert workspace_path is not None
 
     # Check GitHub CLI
     if not check_github_cli():

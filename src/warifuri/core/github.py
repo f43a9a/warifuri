@@ -243,6 +243,7 @@ def _get_existing_labels(repo: str) -> set[str]:
         )
 
         import json
+
         return {label_info["name"] for label_info in json.loads(list_result.stdout)}
 
     except Exception as e:
@@ -404,7 +405,9 @@ def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str =
     return "\n".join(body_lines)
 
 
-def _add_parent_issue_section(body_lines: list, task: "Task", repo: str, parent_issue_url: str) -> None:
+def _add_parent_issue_section(
+    body_lines: list, task: "Task", repo: str, parent_issue_url: str
+) -> None:
     """Add parent issue link section to task body."""
     if parent_issue_url:
         body_lines.extend([f"**Parent Project**: {parent_issue_url}", ""])
@@ -416,15 +419,19 @@ def _add_parent_issue_section(body_lines: list, task: "Task", repo: str, parent_
 
 def _add_task_info_section(body_lines: list, task: "Task") -> None:
     """Add basic task information section."""
-    body_lines.extend([
-        "## Description",
-        task.instruction.description if task.instruction.description else "No description provided",
-        "",
-        f"**Type**: {task.task_type.value}",
-        f"**Status**: {task.status.value}",
-        f"**Completed**: {'Yes' if task.is_completed else 'No'}",
-        "",
-    ])
+    body_lines.extend(
+        [
+            "## Description",
+            task.instruction.description
+            if task.instruction.description
+            else "No description provided",
+            "",
+            f"**Type**: {task.task_type.value}",
+            f"**Status**: {task.status.value}",
+            f"**Completed**: {'Yes' if task.is_completed else 'No'}",
+            "",
+        ]
+    )
 
 
 def _add_dependencies_section(body_lines: list, task: "Task") -> None:
@@ -456,16 +463,16 @@ def _add_notes_and_execution_section(body_lines: list, task: "Task", full_name: 
     if task.instruction.note:
         body_lines.extend(["## Notes", task.instruction.note, ""])
 
-    body_lines.extend([
-        "## Execution",
-        f"Run with: `warifuri run --task {full_name}`",
-        "",
-        "--------",
-        "",
-        "Created by warifuri CLI",
-    ])
-
-    return "\n".join(body_lines)
+    body_lines.extend(
+        [
+            "## Execution",
+            f"Run with: `warifuri run --task {full_name}`",
+            "",
+            "--------",
+            "",
+            "Created by warifuri CLI",
+        ]
+    )
 
 
 def format_project_issue_body(project: "Project") -> str:

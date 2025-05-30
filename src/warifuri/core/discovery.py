@@ -201,6 +201,7 @@ def find_ready_tasks(projects: List[Project], workspace_path: Optional[Path] = N
             if task.instruction.inputs:
                 # Import here to avoid circular import
                 from ..utils.validation import validate_file_references
+
                 file_errors = validate_file_references(task, workspace_path, check_inputs=True)
                 if file_errors:
                     inputs_ready = False

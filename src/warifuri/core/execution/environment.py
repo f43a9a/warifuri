@@ -1,6 +1,5 @@
 """Environment setup for task execution."""
 
-import os
 from typing import Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:

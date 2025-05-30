@@ -13,7 +13,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def copy_input_files(task: "Task", temp_dir: Path, execution_log: List[str], workspace_path: Optional[Path] = None) -> None:
+def copy_input_files(
+    task: "Task", temp_dir: Path, execution_log: List[str], workspace_path: Optional[Path] = None
+) -> None:
     """Copy input files to temporary directory for task execution."""
     if not task.instruction.inputs:
         execution_log.append("No input files to copy")
@@ -52,7 +54,9 @@ def copy_input_files(task: "Task", temp_dir: Path, execution_log: List[str], wor
         _copy_file_or_directory(source_path, dest_path, input_file, execution_log)
 
 
-def _copy_file_or_directory(source_path: Path, dest_path: Path, input_file: str, execution_log: List[str]) -> None:
+def _copy_file_or_directory(
+    source_path: Path, dest_path: Path, input_file: str, execution_log: List[str]
+) -> None:
     """Copy a single file or directory."""
     try:
         if source_path.is_file():

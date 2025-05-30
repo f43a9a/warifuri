@@ -145,7 +145,9 @@ def _create_task(
     ensure_directory(task_path)
 
     if template:
-        _create_task_from_template(workspace_path, task_path, project_name, task_name, template, force, non_interactive)
+        _create_task_from_template(
+            workspace_path, task_path, project_name, task_name, template, force, non_interactive
+        )
     else:
         _create_basic_task(task_path, project_name, task_name)
 

@@ -25,6 +25,9 @@ warifuri = "warifuri.__main__:main"
 mypy = "*"
 ruff = "*"
 pytest = "*"
+vulture = "*"
+radon = "*"
+bandit = "*"
 
 [tool.mypy]
 python_version = "3.11"
@@ -64,3 +67,34 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "--color=yes"
+
+[tool.vulture]
+# デッドコード検出設定
+paths = ["src", "tests"]
+exclude = [
+    "*/migrations/*",
+    "*/tests/test_*",
+    "*/__pycache__/*"
+]
+min_confidence = 70
+ignore_decorators = ["@pytest.fixture", "@click.command", "@click.option"]
+ignore_names = ["unused_*", "_*"]
+
+[tool.radon]
+# 複雑度測定設定
+show = "mi"  # Maintainability Index
+min = "B"    # B以上の品質を要求
+max = "F"    # F以下は警告
+exclude = ["tests/*", "*/migrations/*"]
+
+[tool.bandit]
+# セキュリティチェック設定
+exclude_dirs = ["tests", "scripts"]
+skips = [
+    "B101",  # assert文の使用を許可
+    "B602",  # subprocess with shell=False - safe for controlled commands
+    "B603",  # subprocess with partial paths - acceptable for CLI tools
+    "B404",  # subprocess module usage - expected in task execution
+    "B606",  # starting process without shell - safe practice
+    "B607",  # partial executable path - acceptable for CLI tools
+]

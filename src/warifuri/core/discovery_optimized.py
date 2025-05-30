@@ -1,12 +1,12 @@
 """Optimized task discovery with performance enhancements."""
 
 import logging
+import time
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Optional
+from typing import Dict, List, Set, Tuple, Optional, Callable, Any
 from functools import lru_cache
-import os
 
-from .types import Task, TaskType
+from .types import Task
 from ..utils.filesystem import find_instruction_files
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class TaskCache:
     """Cache for task discovery results."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._task_cache: Dict[str, Task] = {}
         self._dependency_cache: Dict[str, Set[str]] = {}
         self._last_modified: Dict[str, float] = {}
@@ -82,8 +82,10 @@ def discover_tasks_optimized(workspace_path: Path) -> List[Task]:
 
         try:
             # Load task (this could be further optimized with bulk YAML loading)
-            from .types import load_task_from_path
-            task = load_task_from_path(task_path)
+            from .discovery import discover_task
+
+            project_name = task_path.parent.name
+            task = discover_task(project_name, task_path)
 
             if task:
                 tasks.append(task)
@@ -129,8 +131,7 @@ def build_dependency_graph_optimized(tasks: List[Task]) -> Dict[str, Set[str]]:
 
 
 def find_ready_tasks_optimized(
-    tasks: List[Task],
-    dependency_graph: Dict[str, Set[str]]
+    tasks: List[Task], dependency_graph: Dict[str, Set[str]]
 ) -> List[Task]:
     """Find ready tasks using optimized algorithms."""
     if not tasks:
@@ -140,10 +141,7 @@ def find_ready_tasks_optimized(
     start_time = time.time()
 
     # Create lookup sets for O(1) membership testing
-    completed_tasks = {
-        task.full_name for task in tasks
-        if (task.path / "done.md").exists()
-    }
+    completed_tasks = {task.full_name for task in tasks if (task.path / "done.md").exists()}
 
     ready_tasks = []
 
@@ -210,9 +208,10 @@ def detect_cycles_optimized(dependency_graph: Dict[str, Set[str]]) -> List[List[
 
 
 # Performance monitoring decorator
-def monitor_performance(func):
+def monitor_performance(func: Callable) -> Callable:
     """Decorator to monitor function performance."""
-    def wrapper(*args, **kwargs):
+
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         start_time = time.time()
         result = func(*args, **kwargs)
         elapsed = time.time() - start_time
@@ -221,6 +220,7 @@ def monitor_performance(func):
             logger.warning(f"Slow operation detected: {func.__name__} took {elapsed:.3f}s")
 
         return result
+
     return wrapper
 
 

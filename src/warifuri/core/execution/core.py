@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 from typing import List, Optional, TYPE_CHECKING
 
-from ...utils.atomic import safe_rmtree, FileLock
 from ...utils.filesystem import get_git_commit_sha, safe_write_file
 from .errors import ExecutionError
 from .machine import execute_machine_task
@@ -14,7 +13,7 @@ from .ai import execute_ai_task
 from .human import execute_human_task
 
 if TYPE_CHECKING:
-    from ...core.types import Task, TaskType
+    from ...core.types import Task
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,10 @@ def check_dependencies(task: "Task", all_tasks: List["Task"]) -> bool:
 
 
 def execute_task(
-    task: "Task", dry_run: bool = False, force: bool = False, all_tasks: Optional[List["Task"]] = None
+    task: "Task",
+    dry_run: bool = False,
+    force: bool = False,
+    all_tasks: Optional[List["Task"]] = None,
 ) -> bool:
     """Execute task based on its type.
 

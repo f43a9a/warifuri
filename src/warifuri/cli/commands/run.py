@@ -1,6 +1,5 @@
 """Run command for executing tasks."""
 
-
 import click
 
 from ..context import Context, pass_context
@@ -79,7 +78,9 @@ def run(
             # Special handling for human tasks
             if target_task.task_type == TaskType.HUMAN:
                 click.echo(f"Human task '{target_task.full_name}' requires manual intervention.")
-                click.echo("Please complete the task manually and run 'warifuri mark-done' when finished.")
+                click.echo(
+                    "Please complete the task manually and run 'warifuri mark-done' when finished."
+                )
                 return
 
             # Collect all tasks for dependency checking

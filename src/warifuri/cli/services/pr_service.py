@@ -6,8 +6,7 @@ This module provides GitHub PR creation functionality following Unix philosophy:
 - Testability: Each component can be tested independently
 """
 
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 import click
 from ..context import Context
 from ...core.github import check_github_cli, get_github_repo
@@ -159,10 +158,15 @@ class PullRequestService:
 
         try:
             cmd = [
-                "gh", "pr", "create",
-                "--title", pr_details["pr_title"],
-                "--body", pr_details["pr_body"],
-                "--base", base_branch,
+                "gh",
+                "pr",
+                "create",
+                "--title",
+                pr_details["pr_title"],
+                "--body",
+                pr_details["pr_body"],
+                "--base",
+                base_branch,
             ]
 
             if draft:
@@ -210,19 +214,48 @@ class AutomationValidator:
         if self.workspace_path is None:
             raise click.ClickException("Workspace path is required")
 
+    def validate_github_prerequisites(self) -> bool:
+        """Validate GitHub prerequisites for PR creation."""
+        # Check if git repository is configured
+        import subprocess
+
+        try:
+            # Check if we're in a git repository
+            subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                cwd=self.workspace_path,
+                check=True,
+                capture_output=True,
+            )
+        except subprocess.CalledProcessError:
+            click.echo("❌ Not in a git repository", err=True)
+            return False
+
+        # TODO: Add more GitHub-specific checks (remote, auth, etc.)
+        click.echo("✅ GitHub prerequisites validated")
+        return True
+
     def validate_task_ready(self, task_name: str) -> bool:
         """Validate that a task is ready for automation."""
-        from ...core.discovery import discover_tasks, find_ready_tasks
+        from ...core.discovery import discover_all_projects, find_ready_tasks
 
-        # Discover tasks
-        tasks = discover_tasks(self.workspace_path)
-        if not tasks:
-            click.echo("❌ No tasks found in workspace", err=True)
+        # Discover all projects and their tasks
+        if self.workspace_path is None:
+            raise click.ClickException("Workspace path is required")
+
+        projects = discover_all_projects(self.workspace_path)
+        if not projects:
+            click.echo("❌ No projects found in workspace", err=True)
             return False
+
+        # Find all tasks from all projects
+        all_tasks = []
+        for project in projects:
+            all_tasks.extend(project.tasks)
 
         # Find the specific task
         target_task = None
-        for task in tasks:
+        for task in all_tasks:
             if task.name == task_name:
                 target_task = task
                 break
@@ -232,7 +265,7 @@ class AutomationValidator:
             return False
 
         # Check if task is ready
-        ready_tasks = find_ready_tasks(tasks)
+        ready_tasks = find_ready_tasks(projects)
         if target_task not in ready_tasks:
             click.echo(f"❌ Task '{task_name}' is not ready (missing dependencies)", err=True)
             return False

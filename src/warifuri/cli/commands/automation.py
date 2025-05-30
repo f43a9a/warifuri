@@ -1,6 +1,5 @@
 """Automation command for GitHub Actions integration."""
 
-import json
 from typing import Optional
 
 import click

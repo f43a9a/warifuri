@@ -50,6 +50,7 @@ def execute_machine_task(task: "Task", dry_run: bool = False) -> bool:
         if result.returncode != 0:
             # Log failure with detailed execution log
             from .core import log_failure
+
             log_failure(task, result.stderr, "Machine execution failed", execution_log)
             return False
 
@@ -60,6 +61,7 @@ def execute_machine_task(task: "Task", dry_run: bool = False) -> bool:
         logger.error(f"Machine task failed: {task.full_name} - {e}")
         execution_log.append(f"EXCEPTION: {str(e)}")
         from .core import log_failure
+
         log_failure(task, str(e), "Machine execution error", execution_log)
         return False
     finally:
@@ -123,7 +125,9 @@ def _build_execution_command(run_script: Path, execution_log: List[str]) -> List
     return cmd
 
 
-def _execute_script(cmd: List[str], temp_dir: Path, task: "Task", execution_log: List[str]) -> subprocess.CompletedProcess:
+def _execute_script(
+    cmd: List[str], temp_dir: Path, task: "Task", execution_log: List[str]
+) -> subprocess.CompletedProcess:
     """Execute the script and return the result."""
     env = setup_task_environment(task)
     execution_log.append(f"Environment variables: {list(env.keys())}")
@@ -156,6 +160,7 @@ def _handle_machine_task_success(task: "Task", temp_dir: Path, execution_log: Li
     if not validate_task_outputs(task, temp_dir, execution_log):
         # Import core functions to avoid circular imports
         from .core import log_failure
+
         log_failure(
             task, "Expected output files not created", "Output validation failed", execution_log
         )
@@ -163,6 +168,7 @@ def _handle_machine_task_success(task: "Task", temp_dir: Path, execution_log: Li
 
     # Copy back outputs
     from .core import copy_outputs_back
+
     copy_outputs_back(task, temp_dir, execution_log)
 
     # Validate output files again
@@ -170,11 +176,13 @@ def _handle_machine_task_success(task: "Task", temp_dir: Path, execution_log: Li
         error_msg = "Output validation failed"
         execution_log.append(f"ERROR: {error_msg}")
         from .core import log_failure
+
         log_failure(task, error_msg, "Output validation error", execution_log)
         return False
 
     # Save execution log
     from .core import save_execution_log, create_done_file
+
     save_execution_log(task, execution_log, success=True)
 
     # Create done.md

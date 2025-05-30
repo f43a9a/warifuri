@@ -1,7 +1,7 @@
 """AI task execution."""
 
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...core.types import Task
@@ -51,6 +51,7 @@ def execute_ai_task(task: "Task", dry_run: bool = False) -> bool:
 
         # Create done.md
         from .core import create_done_file
+
         create_done_file(task, "AI task completed successfully")
 
         logger.info(f"AI task completed: {task.full_name}")

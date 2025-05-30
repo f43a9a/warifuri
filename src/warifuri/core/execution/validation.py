@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _resolve_input_path_safely(input_file: str, task_path: Path, projects_base: Path) -> tuple[Path | None, str]:
+def _resolve_input_path_safely(
+    input_file: str, task_path: Path, projects_base: Path
+) -> tuple[Path | None, str]:
     """Safely resolve input file path preventing path traversal attacks.
 
     Args:
@@ -39,7 +41,10 @@ def _resolve_input_path_safely(input_file: str, task_path: Path, projects_base: 
                 source_path = source_path.parent
                 # Ensure we don't traverse above projects directory
                 if not str(source_path).startswith(str(projects_base)):
-                    return None, f"SECURITY: Path traversal outside projects directory: {input_file}"
+                    return (
+                        None,
+                        f"SECURITY: Path traversal outside projects directory: {input_file}",
+                    )
 
             source_path = source_path / clean_path
 
@@ -56,7 +61,9 @@ def _resolve_input_path_safely(input_file: str, task_path: Path, projects_base: 
         return None, f"ERROR resolving path {input_file}: {e}"
 
 
-def validate_task_inputs(task: "Task", execution_log: List[str], workspace_path: Optional[Path] = None) -> bool:
+def validate_task_inputs(
+    task: "Task", execution_log: List[str], workspace_path: Optional[Path] = None
+) -> bool:
     """Validate that all input files exist before task execution."""
     if not task.instruction.inputs:
         execution_log.append("No input files to validate")

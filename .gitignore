@@ -73,3 +73,4 @@ docker/volumes/
 
 # Internal development docs - not for public release
 docs/internal/
+reports/bandit-report.json

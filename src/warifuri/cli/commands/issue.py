@@ -1,6 +1,5 @@
 """Issue command for GitHub integration."""
 
-
 import click
 
 from ..context import Context, pass_context

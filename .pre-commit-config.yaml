@@ -16,7 +16,6 @@ repos:
   #   hooks:
   #     - id: isort
   #       language_version: python3
-
   # 静的解析（flake8）
   - repo: https://github.com/pycqa/flake8
     rev: 7.2.0
@@ -24,16 +23,14 @@ repos:
       - id: flake8
         language_version: python3
         args: ["--max-line-length=1000", "--extend-ignore=E501,W503,F811,E203"]
-        files: ^warifuri/.+\.py$  # warifuriパッケージのみをチェック
-  # 型チェック（mypy）
+        files: ^src/warifuri/.+\.py$  # warifuriパッケージのみをチェック  # 型チェック（mypy）
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
     hooks:
       - id: mypy
         args: ["--config-file=pyproject.toml"]
         additional_dependencies: ["types-PyYAML", "types-requests", "click", "types-jsonschema"]
-        files: ^warifuri/.+\.py$  # warifuriパッケージのみをチェック
-
+        files: ^src/warifuri/.+\.py$  # warifuriパッケージのみをチェック
   # 高速Linter/Formatter（ruff）
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.10
@@ -41,9 +38,9 @@ repos:
       - id: ruff
         language_version: python3
         args: ["--fix"]  # 自動修正を有効化
-        files: ^warifuri/.+\.py$  # warifuriパッケージのみをチェック
+        files: ^src/warifuri/.+\.py$  # warifuriパッケージのみをチェック
       - id: ruff-format  # blackを置き換えるフォーマッター
-        files: ^warifuri/.+\.py$  # warifuriパッケージのみをチェック
+        files: ^src/warifuri/.+\.py$  # warifuriパッケージのみをチェック
 
   # 改行・空白修正
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -53,3 +50,50 @@ repos:
       - id: trailing-whitespace
       - id: check-yaml
       - id: check-added-large-files
+
+  # デッドコード検出（vulture）
+  - repo: local
+    hooks:
+      - id: vulture
+        name: vulture (dead code detection)
+        entry: vulture
+        language: system
+        files: ^src/.+\.py$
+        args: ["src", "--min-confidence", "70", "--exclude", "*/tests/*"]
+        pass_filenames: false
+  # 重複コード検出（Pythonベース）
+  - repo: local
+    hooks:
+      - id: duplicate-code-check
+        name: duplicate code detection (manual check)
+        entry: python
+        language: system
+        files: ^src/.+\.py$
+        args: ["-c", "import ast, sys; print('Manual duplicate code check needed for', len(sys.argv[1:]), 'files')"]
+        pass_filenames: true
+  # セキュリティチェック（bandit）
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: ["--config", "pyproject.toml", "-r", "src", "-f", "json", "-o", "reports/bandit-report.json"]
+        files: ^src/.+\.py$
+        pass_filenames: false
+
+  # 複雑度測定（radon）
+  - repo: local
+    hooks:
+      - id: radon-cc
+        name: radon complexity check
+        entry: radon
+        language: system
+        files: ^src/.+\.py$
+        args: ["cc", "src", "--min", "B", "--show-complexity"]
+        pass_filenames: false
+      - id: radon-mi
+        name: radon maintainability index
+        entry: radon
+        language: system
+        files: ^src/.+\.py$
+        args: ["mi", "src", "--min", "B", "--show"]
+        pass_filenames: false

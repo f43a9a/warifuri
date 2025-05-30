@@ -1,0 +1,198 @@
+# AI Test Implementation TODO List
+
+## Phase 1: Core Test Infrastructure Setup
+
+- id: T001
+  title: "pytest導入と基本設定"
+  description: "pytestを導入し、基本的な設定ファイル（pytest.ini or pyproject.toml）を作成する。"
+  status: "in_progress"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["pytest", "setup"]
+
+- id: T002
+  title: "ディレクトリ構造の作成"
+  description: "指示書に基づいたテストディレクトリ（tests/unit, tests/integration, etc.）を作成する。"
+  status: "todo"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["structure", "setup"]
+
+- id: T003
+  title: "noxfile.py または tox.ini の設定"
+  description: "noxfile.py または tox.ini をセットアップし、テストスイート全体を一括実行できるようにする。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["test_runner", "setup"]
+
+## Phase 2: Static Analysis Integration
+
+- id: T004
+  title: "mypy (strict) のCI統合"
+  description: "mypyをstrictモードで実行し、CIでエラー時にブロックするように設定する。"
+  status: "done"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["mypy", "ci", "static_analysis"]
+
+- id: T005
+  title: "ruff のCI統合"
+  description: "ruffを実行し、CIでエラー時にブロックするように設定する。"
+  status: "done"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["ruff", "ci", "static_analysis"]
+
+- id: T006
+  title: "bandit のCI統合"
+  description: "banditを実行し、severity=LOW以上でCIがブロックするように設定する。"
+  status: "in_progress"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["bandit", "ci", "security", "static_analysis"]
+
+- id: T007
+  title: "safety のCI統合"
+  description: "safetyを実行し、脆弱性が検出された場合にCIがブロックするように設定する。"
+  status: "todo"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["safety", "ci", "security", "dependencies"]
+
+## Phase 3: Unit Testing
+
+- id: T008
+  title: "主要モジュールの単体テストカバレッジ向上 (src/warifuri/core)"
+  description: "src/warifuri/core 配下の主要な関数・クラスに対して単体テストを作成する。正常系、異常系、境界値テストを含む。"
+  status: "todo"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["unit_test", "core_logic"]
+  sub_tasks:
+    - "src/warifuri/core/discovery.py"
+    - "src/warifuri/core/github.py"
+    - "src/warifuri/core/types.py"
+    # 他のcoreモジュールも追加
+
+- id: T009
+  title: "主要CLIサービスモジュールの単体テストカバレッジ向上 (src/warifuri/cli/services)"
+  description: "src/warifuri/cli/services 配下の主要なサービスクラスに対して単体テストを作成する。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["unit_test", "cli_services"]
+  sub_tasks:
+    - "src/warifuri/cli/services/automation_service.py"
+    - "src/warifuri/cli/services/pr_service.py"
+    # 他のserviceモジュールも追加
+
+- id: T010
+  title: "hypothesis の導入と適用"
+  description: "hypothesisを導入し、既存の単体テストの一部に適用してプロパティベーステストを試行する。"
+  status: "todo"
+  priority: "low"
+  assignee: "ai_copilot"
+  tags: ["unit_test", "hypothesis", "property_based_testing"]
+
+## Phase 4: Mutation Testing
+
+- id: T011
+  title: "mutmut の導入とCI統合"
+  description: "mutmutを導入し、Mutation Score が90%未満の場合にCIがブロックするように設定する。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["mutation_test", "mutmut", "ci"]
+
+## Phase 5: Integration Testing
+
+- id: T012
+  title: "主要機能の統合テスト作成"
+  description: "主要な機能フロー（例：タスク発見から実行まで）について、外部依存をモック化した統合テストを作成する。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["integration_test"]
+
+- id: T013
+  title: "テストデータYAMLの仕様定義とサンプル作成 (tests/data)"
+  description: "tests/data/*.yaml 形式のテストデータ仕様を確定し、サンプルデータを作成する。"
+  status: "todo"
+  priority: "low"
+  assignee: "ai_copilot"
+  tags: ["integration_test", "test_data"]
+
+## Phase 6: E2E Testing
+
+- id: T014
+  title: "主要CLIコマンドのE2Eテスト作成"
+  description: "主要なCLIコマンド（例：warifuri run, warifuri list）のエンドツーエンドテストを作成する。subprocess.run() を使用。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["e2e_test", "cli"]
+
+- id: T015
+  title: "Playwright導入検討（将来的なWeb UIテスト用）"
+  description: "将来的にWeb UIが導入された場合のE2Eテスト用にPlaywrightの導入を検討・調査する。"
+  status: "todo"
+  priority: "low"
+  assignee: "ai_copilot"
+  tags: ["e2e_test", "playwright", "future"]
+
+## Phase 7: Snapshot Testing
+
+- id: T016
+  title: "snapshottest の導入と適用"
+  description: "snapshottestを導入し、CLI出力などのスナップショットテストを一部機能に適用する。"
+  status: "todo"
+  priority: "low"
+  assignee: "ai_copilot"
+  tags: ["snapshot_test", "cli_output"]
+
+## Phase 8: CI Workflow and Coverage
+
+- id: T017
+  title: "GitHub Actions ワークフローの整備"
+  description: "指示書に基づいたCI条件（pytest失敗、カバレッジ、mutation scoreなど）をGitHub Actionsワークフローに設定する。"
+  status: "todo"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["ci", "github_actions"]
+
+- id: T018
+  title: "テストカバレッジ100%達成（警告設定）"
+  description: "StatementおよびBranchカバレッジ100%を目指す。CIでは警告とし、段階的に必須化を検討。"
+  status: "todo"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["coverage", "ci"]
+
+## Phase 9: Documentation and Specification
+
+- id: T019
+  title: "テスト観点記述仕様のサンプル作成 (tests/specs)"
+  description: "tests/specs/*.yaml 形式のテスト観点記述仕様に基づき、サンプルを作成する。"
+  status: "todo"
+  priority: "low"
+  assignee: "ai_copilot"
+  tags: ["documentation", "test_specification"]
+
+## Ongoing Tasks
+
+- id: T020
+  title: "新規機能・修正時のテスト追加"
+  description: "新しい機能追加やバグ修正時には、必ず対応するテスト（単体、統合、E2E）を作成・更新する。"
+  status: "ongoing"
+  priority: "high"
+  assignee: "ai_copilot"
+  tags: ["maintenance", "development_process"]
+
+- id: T021
+  title: "依存関係の更新と脆弱性チェック (safety)"
+  description: "定期的に依存関係を更新し、safety を用いて脆弱性をチェックする。pyproject.toml または requirements.txt に反映。"
+  status: "ongoing"
+  priority: "medium"
+  assignee: "ai_copilot"
+  tags: ["maintenance", "security", "dependencies"]

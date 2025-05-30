@@ -77,18 +77,28 @@ def validate_task_inputs(
     execution_log.append("Validating input files...")
 
     for input_file in task.instruction.inputs:
+        # When validating inputs for a task, the paths in `task.instruction.inputs`
+        # are relative to the task's own directory (`task.path`).
+        # The `_resolve_input_path_safely` function handles resolving these,
+        # including cases like `../other_project/file.txt`.
+        # The `source_path` returned is the absolute path to the input file
+        # in the *original* workspace structure.
         source_path, log_message = _resolve_input_path_safely(input_file, task.path, projects_base)
         execution_log.append(log_message)
 
-        if source_path is None:
+        if source_path is None:  # Indicates a security or resolution error
             all_inputs_valid = False
+            # The error message from _resolve_input_path_safely is already in execution_log
             continue
 
         if not source_path.exists():
-            execution_log.append(f"ERROR: Input file not found: {source_path}")
+            # This is the critical check: does the resolved source file exist in the workspace?
+            execution_log.append(
+                f"ERROR: Missing input file: {input_file} (resolved to {source_path})"
+            )
             all_inputs_valid = False
         else:
-            execution_log.append(f"✓ Input file exists: {source_path}")
+            execution_log.append(f"✓ Input file exists: {input_file} (resolved to {source_path})")
 
     return all_inputs_valid
 
@@ -103,11 +113,20 @@ def validate_task_outputs(task: "Task", temp_dir: Path, execution_log: List[str]
     execution_log.append("Validating output files...")
 
     for output_file in task.instruction.outputs:
+        # Output files are expected to be in the `temp_dir` (or `temp_dir/output` if using WARIFURI_OUTPUT_DIR)
+        # For now, let's assume they are directly in temp_dir as per current logic.
+        # If WARIFURI_OUTPUT_DIR is consistently "output", this should be temp_dir / "output" / output_file
+
+        # Check if the output is expected in a subdirectory (e.g. "data/result.json")
+        # The `output_file` string itself can contain subdirectories.
         output_path = temp_dir / output_file
+
         if not output_path.exists():
-            execution_log.append(f"ERROR: Expected output file not created: {output_file}")
+            execution_log.append(
+                f"ERROR: Missing expected output: {output_file} (expected at {output_path})"
+            )
             all_outputs_valid = False
         else:
-            execution_log.append(f"✓ Output file created: {output_file}")
+            execution_log.append(f"✓ Output file created: {output_file} (at {output_path})")
 
     return all_outputs_valid

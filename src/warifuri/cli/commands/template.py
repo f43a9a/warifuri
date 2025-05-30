@@ -25,7 +25,7 @@ def list_templates(
     format: str,
 ) -> None:
     """List available templates."""
-    workspace_path = ctx.workspace_path
+    workspace_path = ctx.ensure_workspace_path()
 
     templates_dir = workspace_path / "templates"
 
@@ -37,7 +37,8 @@ def list_templates(
         templates = [
             d.name for d in templates_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
         ]
-    except Exception:
+    except (OSError, FileNotFoundError) as e:
+        ctx.logger.warning("Could not read templates directory: %s", e)
         templates = []
 
     if not templates:

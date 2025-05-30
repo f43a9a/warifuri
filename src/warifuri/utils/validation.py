@@ -79,6 +79,7 @@ def detect_circular_dependencies(tasks: List[Task]) -> Optional[List[str]]:
     colors: Dict[str, int] = {task.full_name: WHITE for task in tasks}
 
     def dfs(node: str, path: List[str]) -> Optional[List[str]]:
+        """Dfs function."""
         if colors.get(node, BLACK) == GRAY:
             # Found cycle - return the cycle path
             cycle_start = path.index(node)

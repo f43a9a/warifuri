@@ -1,11 +1,6 @@
 warifuri.cli package
 ====================
 
-.. automodule:: warifuri.cli
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 Subpackages
 -----------
 
@@ -13,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    warifuri.cli.commands
+   warifuri.cli.services
 
 Submodules
 ----------
@@ -29,6 +25,14 @@ warifuri.cli.main module
 ------------------------
 
 .. automodule:: warifuri.cli.main
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: warifuri.cli
    :members:
    :show-inheritance:
    :undoc-members:

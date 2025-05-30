@@ -1,14 +1,64 @@
-"""Task execution engine."""
+"""Tas# Re-export all functions from the modular execution package for backward compatibility
+from .execution import (
+    ExecutionError,
+    execute_task,
+    check_dependencies,
+    copy_outputs_back,
+    save_execution_log,
+    log_failure,
+    create_done_file,
+    execute_machine_task,
+    execute_ai_task,
+    execute_human_task,
+    validate_task_inputs,
+    validate_task_outputs,
+    _resolve_input_path_safely,
+    copy_input_files,
+    setup_task_environment,
+)e - backward compatibility wrapper.
 
-import datetime
-import logging
-import os
-import subprocess
-import shutil
-from pathlib import Path
-from typing import Dict, List, Optional
+This module provides backward compatibility by re-exporting all functions
+from the modular execution package.
+"""
+
+# Re-export all functions from the modular execution components
+from .execution import (
+    ExecutionError,
+    execute_task,
+    check_dependencies,
+    copy_outputs_back,
+    save_execution_log,
+    log_failure,
+    create_done_file,
+    execute_machine_task,
+    execute_ai_task,
+    execute_human_task,
+    validate_task_inputs,
+    validate_task_outputs,
+    copy_input_files,
+    setup_task_environment,
+)
+
+__all__ = [
+    "ExecutionError",
+    "execute_task",
+    "check_dependencies",
+    "copy_outputs_back",
+    "save_execution_log",
+    "log_failure",
+    "create_done_file",
+    "execute_machine_task",
+    "execute_ai_task",
+    "execute_human_task",
+    "validate_task_inputs",
+    "validate_task_outputs",
+    "_resolve_input_path_safely",
+    "copy_input_files",
+    "setup_task_environment",
+]
 
 from ..core.types import Task, TaskType
+from ..utils.atomic import atomic_write_text, safe_rmtree, FileLock
 from ..utils.filesystem import (
     copy_directory_contents,
     create_temp_dir,
@@ -23,6 +73,70 @@ class ExecutionError(Exception):
     """Task execution error."""
 
     pass
+
+
+
+
+def _resolve_input_path_safely(input_file: str, task_path: Path, projects_base: Path) -> tuple[Path | None, str]:
+    """Safely resolve input file path preventing path traversal attacks.
+
+    Args:
+        input_file: Input file path (potentially with ../)
+        task_path: Current task directory
+        projects_base: Base projects directory
+
+    Returns:
+        Tuple of (resolved_path, log_message) or (None, error_message)
+    """
+    try:
+        if input_file.startswith("../"):
+            # Count ../ sequences and check for excessive traversal
+            clean_path = input_file
+            traversal_count = 0
+            while clean_path.startswith("../"):
+                clean_path = clean_path[3:]
+                traversal_count += 1
+                # Prevent excessive path traversal
+                if traversal_count > 10:
+                    return None, f"Excessive path traversal detected: {input_file}"
+
+            # Calculate expected path after traversal from task_path
+            current_path = task_path
+            for _ in range(traversal_count):
+                current_path = current_path.parent
+
+            # Create target path
+            target_path = current_path / clean_path
+            resolved_path = target_path.resolve()
+
+            # Security check: ensure resolved path is within projects directory
+            projects_resolved = projects_base.resolve()
+            if not resolved_path.is_relative_to(projects_resolved):
+                return None, f"Path traversal attack detected: {input_file} -> {resolved_path}"
+
+            if resolved_path.exists():
+                return resolved_path, f"Cross-project input resolved: {input_file} -> {resolved_path}"
+            else:
+                return None, f"Cross-project path not found: {resolved_path}"
+        else:
+            # Regular task-relative path
+            target_path = task_path / input_file
+            resolved_path = target_path.resolve()
+
+            # Security check: ensure resolved path is within task directory or projects directory
+            task_resolved = task_path.resolve()
+            projects_resolved = projects_base.resolve()
+
+            if not (resolved_path.is_relative_to(task_resolved) or resolved_path.is_relative_to(projects_resolved)):
+                return None, f"Path traversal attack detected: {input_file} -> {resolved_path}"
+
+            if resolved_path.exists():
+                return resolved_path, f"Task-relative input found: {input_file}"
+            else:
+                return None, f"Task-relative path not found: {resolved_path}"
+
+    except (OSError, ValueError) as e:
+        return None, f"Path resolution error for {input_file}: {e}"
 
 
 def setup_task_environment(task: Task) -> Dict[str, str]:
@@ -213,6 +327,116 @@ def copy_input_files(task: Task, temp_dir: Path, execution_log: List[str], works
             execution_log.append(f"ERROR copying input {input_file}: {e}")
 
 
+def _setup_machine_task_environment(task: Task, temp_dir: Path, execution_log: List[str]) -> None:
+    """Setup environment for machine task execution."""
+    workspace_path = task.path.parent.parent.parent
+
+    # Validate input files before execution
+    if not validate_task_inputs(task, execution_log, workspace_path):
+        error_msg = "Input validation failed"
+        execution_log.append(f"ERROR: {error_msg}")
+        raise ExecutionError(error_msg)
+
+    # Copy task directory to temp
+    copy_directory_contents(task.path, temp_dir)
+    execution_log.append("Copied task files to temporary directory")
+
+    # Copy input files to temp directory maintaining structure
+    try:
+        execution_log.append("Starting to copy input files...")
+        execution_log.append("CRITICAL DEBUG: About to call copy_input_files")
+        copy_input_files(task, temp_dir, execution_log, workspace_path)
+        execution_log.append("CRITICAL DEBUG: copy_input_files completed")
+        execution_log.append("Finished copying input files")
+    except Exception as e:
+        execution_log.append(f"ERROR in copy_input_files: {e}")
+        raise
+
+
+def _find_execution_script(temp_dir: Path, task: Task, execution_log: List[str]) -> Path:
+    """Find and return the execution script for the task."""
+    for pattern in ["run.sh", "run.py"]:
+        script_path = temp_dir / pattern
+        if script_path.exists():
+            execution_log.append(f"Found executable script: {script_path.name}")
+            return script_path
+
+    error_msg = f"No executable script found in {task.full_name}"
+    execution_log.append(f"ERROR: {error_msg}")
+    raise ExecutionError(error_msg)
+
+
+def _build_execution_command(run_script: Path, execution_log: List[str]) -> List[str]:
+    """Build the command to execute the script."""
+    if run_script.suffix == ".sh":
+        cmd = ["bash", "-euo", "pipefail", str(run_script)]
+    elif run_script.suffix == ".py":
+        cmd = ["python", str(run_script)]
+    else:
+        error_msg = f"Unsupported script type: {run_script}"
+        execution_log.append(f"ERROR: {error_msg}")
+        raise ExecutionError(error_msg)
+
+    execution_log.append(f"Command: {' '.join(cmd)}")
+    return cmd
+
+
+def _execute_script(cmd: List[str], temp_dir: Path, task: Task, execution_log: List[str]) -> subprocess.CompletedProcess:
+    """Execute the script and return the result."""
+    env = setup_task_environment(task)
+    execution_log.append(f"Environment variables: {list(env.keys())}")
+    execution_log.append(f"Working directory: {temp_dir}")
+
+    logger.debug(f"Executing command: {' '.join(cmd)}")
+    logger.debug(f"Working directory: {temp_dir}")
+
+    result = subprocess.run(
+        cmd,
+        cwd=temp_dir,
+        env={**dict(os.environ), **env},
+        capture_output=True,
+        text=True,
+    )
+
+    # Log execution results
+    execution_log.append(f"Exit code: {result.returncode}")
+    if result.stdout:
+        execution_log.append(f"STDOUT:\n{result.stdout}")
+    if result.stderr:
+        execution_log.append(f"STDERR:\n{result.stderr}")
+
+    return result
+
+
+def _handle_machine_task_success(task: Task, temp_dir: Path, execution_log: List[str]) -> bool:
+    """Handle successful machine task execution."""
+    # Validate outputs were created
+    if not validate_task_outputs(task, temp_dir, execution_log):
+        log_failure(
+            task, "Expected output files not created", "Output validation failed", execution_log
+        )
+        return False
+
+    # Copy back outputs
+    copy_outputs_back(task, temp_dir, execution_log)
+
+    # Validate output files again
+    if not validate_task_outputs(task, temp_dir, execution_log):
+        error_msg = "Output validation failed"
+        execution_log.append(f"ERROR: {error_msg}")
+        log_failure(task, error_msg, "Output validation error", execution_log)
+        return False
+
+    # Save execution log
+    save_execution_log(task, execution_log, success=True)
+
+    # Create done.md
+    create_done_file(task, "Machine task completed successfully")
+
+    logger.info(f"Machine task completed: {task.full_name}")
+    return True
+
+
 def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
     """Execute machine task in temporary directory with enhanced sandboxing."""
     logger.info(f"Executing machine task: {task.full_name}")
@@ -229,107 +453,25 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
         logger.debug(f"Created temporary directory: {temp_dir}")
         execution_log.append(f"Temporary directory: {temp_dir}")
 
-        # Validate input files before execution
-        workspace_path = task.path.parent.parent.parent
-        if not validate_task_inputs(task, execution_log, workspace_path):
-            error_msg = "Input validation failed"
-            execution_log.append(f"ERROR: {error_msg}")
-            raise ExecutionError(error_msg)
-
-        # Copy task directory to temp
-        copy_directory_contents(task.path, temp_dir)
-        execution_log.append("Copied task files to temporary directory")
-
-        # Copy input files to temp directory maintaining structure
-        try:
-            execution_log.append("Starting to copy input files...")
-            execution_log.append("CRITICAL DEBUG: About to call copy_input_files")
-            copy_input_files(task, temp_dir, execution_log, workspace_path)
-            execution_log.append("CRITICAL DEBUG: copy_input_files completed")
-            execution_log.append("Finished copying input files")
-        except Exception as e:
-            execution_log.append(f"ERROR in copy_input_files: {e}")
-            raise
+        # Setup environment for machine task
+        _setup_machine_task_environment(task, temp_dir, execution_log)
 
         # Find execution script
-        run_script = None
-        for pattern in ["run.sh", "run.py"]:
-            script_path = temp_dir / pattern
-            if script_path.exists():
-                run_script = script_path
-                break
+        run_script = _find_execution_script(temp_dir, task, execution_log)
 
-        if not run_script:
-            error_msg = f"No executable script found in {task.full_name}"
-            execution_log.append(f"ERROR: {error_msg}")
-            raise ExecutionError(error_msg)
+        # Build execution command
+        cmd = _build_execution_command(run_script, execution_log)
 
-        execution_log.append(f"Found executable script: {run_script.name}")
-
-        # Setup environment
-        env = setup_task_environment(task)
-        execution_log.append(f"Environment variables: {list(env.keys())}")
-
-        # Execute script with enhanced bash safety
-        if run_script.suffix == ".sh":
-            cmd = ["bash", "-euo", "pipefail", str(run_script)]
-        elif run_script.suffix == ".py":
-            cmd = ["python", str(run_script)]
-        else:
-            error_msg = f"Unsupported script type: {run_script}"
-            execution_log.append(f"ERROR: {error_msg}")
-            raise ExecutionError(error_msg)
-
-        logger.debug(f"Executing command: {' '.join(cmd)}")
-        logger.debug(f"Working directory: {temp_dir}")
-        execution_log.append(f"Command: {' '.join(cmd)}")
-        execution_log.append(f"Working directory: {temp_dir}")
-
-        result = subprocess.run(
-            cmd,
-            cwd=temp_dir,
-            env={**dict(os.environ), **env},
-            capture_output=True,
-            text=True,
-        )
-
-        # Log execution results
-        execution_log.append(f"Exit code: {result.returncode}")
-        if result.stdout:
-            execution_log.append(f"STDOUT:\n{result.stdout}")
-        if result.stderr:
-            execution_log.append(f"STDERR:\n{result.stderr}")
+        # Execute script
+        result = _execute_script(cmd, temp_dir, task, execution_log)
 
         if result.returncode != 0:
             # Log failure with detailed execution log
             log_failure(task, result.stderr, "Machine execution failed", execution_log)
             return False
 
-        # Validate outputs were created
-        if not validate_task_outputs(task, temp_dir, execution_log):
-            log_failure(
-                task, "Expected output files not created", "Output validation failed", execution_log
-            )
-            return False
-
-        # Copy back outputs
-        copy_outputs_back(task, temp_dir, execution_log)
-
-        # Validate output files
-        if not validate_task_outputs(task, temp_dir, execution_log):
-            error_msg = "Output validation failed"
-            execution_log.append(f"ERROR: {error_msg}")
-            log_failure(task, error_msg, "Output validation error", execution_log)
-            return False
-
-        # Save execution log
-        save_execution_log(task, execution_log, success=True)
-
-        # Create done.md
-        create_done_file(task, "Machine task completed successfully")
-
-        logger.info(f"Machine task completed: {task.full_name}")
-        return True
+        # Handle successful execution
+        return _handle_machine_task_success(task, temp_dir, execution_log)
 
     except Exception as e:
         logger.error(f"Machine task failed: {task.full_name} - {e}")
@@ -340,7 +482,7 @@ def execute_machine_task(task: Task, dry_run: bool = False) -> bool:
         # Clean up temp directory
         logger.debug(f"Cleaning up temporary directory: {temp_dir}")
         execution_log.append(f"Cleaned up temporary directory: {temp_dir}")
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        safe_rmtree(temp_dir)
 
 
 def execute_ai_task(task: Task, dry_run: bool = False) -> bool:
@@ -402,9 +544,9 @@ def execute_human_task(task: Task, dry_run: bool = False) -> bool:
     if dry_run:
         logger.info(f"[DRY RUN] Human task requires manual intervention: {task.full_name}")
     else:
-        print(f"Human task '{task.full_name}' requires manual intervention.")
-        print(f"Description: {task.instruction.description}")
-        print("Please complete the task manually and run 'warifuri mark-done' when finished.")
+        logger.info(f"Human task '{task.full_name}' requires manual intervention.")
+        logger.info(f"Description: {task.instruction.description}")
+        logger.info("Please complete the task manually and run 'warifuri mark-done' when finished.")
 
     return True
 

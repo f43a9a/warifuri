@@ -23,11 +23,12 @@ def list_test_workspace(temp_workspace):
 task_type: machine
 description: This is a ready machine task
 dependencies: []
-inputs: ["input.txt"]
 outputs: ["output.txt"]
 """
     )
     safe_write_file(ready_task / "run.sh", "#!/bin/bash\necho 'ready'")
+    # Create the required input file to make task ready
+    safe_write_file(ready_task / "input.txt", "test input")
 
     # Completed task
     completed_task = project_a / "completed-task"

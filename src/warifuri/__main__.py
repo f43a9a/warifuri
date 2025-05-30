@@ -2,7 +2,7 @@
 
 from .cli.main import cli
 
-def main():
+def main() -> None:
     """Main entry point for console scripts."""
     cli()
 

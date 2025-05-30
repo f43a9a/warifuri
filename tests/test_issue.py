@@ -1,5 +1,6 @@
 """Tests for issue command."""
 
+import click
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -238,14 +239,17 @@ class TestIssueCommand:
         """Test when workspace path is None."""
         runner = CliRunner()
 
-        result = runner.invoke(
-            issue,
-            ["--project", "test-project"],
-            obj=Context(workspace_path=None)
-        )
+        with patch.object(Context, 'ensure_workspace_path') as mock_ensure:
+            mock_ensure.side_effect = click.ClickException("Could not find workspace directory")
 
-        # Should fail due to assertion
-        assert result.exit_code != 0
+            result = runner.invoke(
+                issue,
+                ["--project", "test-project"],
+                obj=Context(workspace_path=None)
+            )
+
+            # Should fail due to assertion
+            assert result.exit_code != 0
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")

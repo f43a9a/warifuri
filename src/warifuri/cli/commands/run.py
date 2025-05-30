@@ -7,6 +7,7 @@ from ..context import Context, pass_context
 from typing import Optional
 from ...core.discovery import discover_all_projects, find_ready_tasks, find_task_by_name
 from ...core.execution import execute_task
+from ...core.types import TaskType
 
 
 @click.command()
@@ -26,7 +27,7 @@ def run(
     With --task PROJECT: Run one ready task from the project.
     With --task PROJECT/TASK: Run the specific task.
     """
-    workspace_path = ctx.workspace_path
+    workspace_path = ctx.ensure_workspace_path()
 
     # Discover all projects
     projects = discover_all_projects(workspace_path)
@@ -75,6 +76,12 @@ def run(
         if dry_run:
             click.echo("[DRY RUN] Task execution simulation completed.")
         else:
+            # Special handling for human tasks
+            if target_task.task_type == TaskType.HUMAN:
+                click.echo(f"Human task '{target_task.full_name}' requires manual intervention.")
+                click.echo("Please complete the task manually and run 'warifuri mark-done' when finished.")
+                return
+
             # Collect all tasks for dependency checking
             all_tasks = []
             for proj in projects:

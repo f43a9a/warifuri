@@ -1,5 +1,6 @@
 """Tests for mark_done command."""
 
+import click
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -117,14 +118,17 @@ class TestMarkDoneCommand:
         """Test when workspace path is None."""
         runner = CliRunner()
 
-        result = runner.invoke(
-            mark_done,
-            ["project/task"],
-            obj=Context(workspace_path=None)
-        )
+        with patch.object(Context, 'ensure_workspace_path') as mock_ensure:
+            mock_ensure.side_effect = click.ClickException("Could not find workspace directory")
 
-        # Should fail due to assertion
-        assert result.exit_code != 0
+            result = runner.invoke(
+                mark_done,
+                ["project/task"],
+                obj=Context(workspace_path=None)
+            )
+
+            # Should fail due to assertion
+            assert result.exit_code != 0
 
     def test_mark_done_with_slash_in_task_name(self, tmp_path: Path) -> None:
         """Test with task name containing multiple slashes."""

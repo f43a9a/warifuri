@@ -1,11 +1,6 @@
 warifuri.cli.commands package
 =============================
 
-.. automodule:: warifuri.cli.commands
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 Submodules
 ----------
 
@@ -85,6 +80,14 @@ warifuri.cli.commands.validate module
 -------------------------------------
 
 .. automodule:: warifuri.cli.commands.validate
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: warifuri.cli.commands
    :members:
    :show-inheritance:
    :undoc-members:

@@ -1,13 +1,16 @@
 warifuri.utils package
 ======================
 
-.. automodule:: warifuri.utils
+Submodules
+----------
+
+warifuri.utils.atomic module
+----------------------------
+
+.. automodule:: warifuri.utils.atomic
    :members:
    :show-inheritance:
    :undoc-members:
-
-Submodules
-----------
 
 warifuri.utils.filesystem module
 --------------------------------
@@ -53,6 +56,14 @@ warifuri.utils.yaml\_utils module
 ---------------------------------
 
 .. automodule:: warifuri.utils.yaml_utils
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: warifuri.utils
    :members:
    :show-inheritance:
    :undoc-members:

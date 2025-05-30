@@ -1,11 +1,6 @@
 warifuri package
 ================
 
-.. automodule:: warifuri
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 Subpackages
 -----------
 
@@ -16,3 +11,11 @@ Subpackages
    warifuri.core
    warifuri.schemas
    warifuri.utils
+
+Module contents
+---------------
+
+.. automodule:: warifuri
+   :members:
+   :show-inheritance:
+   :undoc-members:

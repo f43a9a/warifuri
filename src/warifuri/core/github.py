@@ -220,7 +220,20 @@ def ensure_labels_exist(repo: str, labels: List[str]) -> Dict[str, bool]:
     if not labels:
         return results
 
-    # Get list of all existing labels once
+    existing_labels = _get_existing_labels(repo)
+
+    for label in labels:
+        if label in existing_labels:
+            results[label] = True
+            logger.debug("Label '%s' already exists", label)
+        else:
+            results[label] = _create_label(repo, label)
+
+    return results
+
+
+def _get_existing_labels(repo: str) -> set[str]:
+    """Get set of existing label names from repository."""
     try:
         list_result = subprocess.run(
             ["gh", "label", "list", "--repo", repo, "--json", "name"],
@@ -230,53 +243,45 @@ def ensure_labels_exist(repo: str, labels: List[str]) -> Dict[str, bool]:
         )
 
         import json
-
-        existing_labels = {label_info["name"] for label_info in json.loads(list_result.stdout)}
+        return {label_info["name"] for label_info in json.loads(list_result.stdout)}
 
     except Exception as e:
         logger.warning("Could not get existing labels: %s", e)
-        existing_labels = set()
+        return set()
 
-    for label in labels:
-        if label in existing_labels:
-            results[label] = True
-            logger.debug("Label '%s' already exists", label)
+
+def _create_label(repo: str, label: str) -> bool:
+    """Create a single label and return success status."""
+    try:
+        logger.info("Creating missing label: %s", label)
+        create_result = subprocess.run(
+            [
+                "gh",
+                "label",
+                "create",
+                label,
+                "--color",
+                "0969da",  # Blue color
+                "--description",
+                f"Auto-created by warifuri for {label}",
+                "--repo",
+                repo,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        if create_result.returncode == 0:
+            logger.info("✅ Created label: %s", label)
+            return True
         else:
-            try:
-                # Create label if missing
-                logger.info("Creating missing label: %s", label)
-                create_result = subprocess.run(
-                    [
-                        "gh",
-                        "label",
-                        "create",
-                        label,
-                        "--color",
-                        "0969da",  # Blue color
-                        "--description",
-                        f"Auto-created by warifuri for {label}",
-                        "--repo",
-                        repo,
-                    ],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
+            logger.warning("Failed to create label '%s': %s", label, create_result.stderr.strip())
+            return False
 
-                if create_result.returncode == 0:
-                    results[label] = True
-                    logger.info("✅ Created label: %s", label)
-                else:
-                    results[label] = False
-                    logger.warning(
-                        "Failed to create label '%s': %s", label, create_result.stderr.strip()
-                    )
-
-            except Exception as e:
-                logger.warning("Failed to process label '%s': %s", label, e)
-                results[label] = False
-
-    return results
+    except Exception as e:
+        logger.warning("Failed to process label '%s': %s", label, e)
+        return False
 
 
 def create_issue_safe(
@@ -377,43 +382,62 @@ def check_issue_exists(title: str, repo: str) -> bool:
 
 def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str = "") -> str:
     """Format task issue body in Markdown with optional parent linking."""
-    # Get task full name
     full_name = f"{task.project}/{task.name}" if hasattr(task, "project") else task.name
 
-    body_lines = [
-        f"# Task: {full_name}",
-        "",
-    ]
+    body_lines = [f"# Task: {full_name}", ""]
 
-    # Add parent issue link if available
+    # Add parent issue section
+    _add_parent_issue_section(body_lines, task, repo, parent_issue_url)
+
+    # Add basic task information
+    _add_task_info_section(body_lines, task)
+
+    # Add task dependencies
+    _add_dependencies_section(body_lines, task)
+
+    # Add inputs and outputs
+    _add_files_sections(body_lines, task)
+
+    # Add notes and execution info
+    _add_notes_and_execution_section(body_lines, task, full_name)
+
+    return "\n".join(body_lines)
+
+
+def _add_parent_issue_section(body_lines: list, task: "Task", repo: str, parent_issue_url: str) -> None:
+    """Add parent issue link section to task body."""
     if parent_issue_url:
         body_lines.extend([f"**Parent Project**: {parent_issue_url}", ""])
     elif repo and hasattr(task, "project"):
-        # Try to find parent issue automatically
         auto_parent = find_parent_issue(task.project, repo)
         if auto_parent:
             body_lines.extend([f"**Parent Project**: {auto_parent}", ""])
 
-    body_lines.extend(
-        [
-            "## Description",
-            task.instruction.description
-            if task.instruction.description
-            else "No description provided",
-            "",
-            f"**Type**: {task.task_type.value}",
-            f"**Status**: {task.status.value}",
-            f"**Completed**: {'Yes' if task.is_completed else 'No'}",
-            "",
-        ]
-    )
 
+def _add_task_info_section(body_lines: list, task: "Task") -> None:
+    """Add basic task information section."""
+    body_lines.extend([
+        "## Description",
+        task.instruction.description if task.instruction.description else "No description provided",
+        "",
+        f"**Type**: {task.task_type.value}",
+        f"**Status**: {task.status.value}",
+        f"**Completed**: {'Yes' if task.is_completed else 'No'}",
+        "",
+    ])
+
+
+def _add_dependencies_section(body_lines: list, task: "Task") -> None:
+    """Add dependencies section if task has dependencies."""
     if task.instruction.dependencies:
         body_lines.extend(["## Dependencies", ""])
         for dep in task.instruction.dependencies:
             body_lines.append(f"- [ ] {dep}")
         body_lines.append("")
 
+
+def _add_files_sections(body_lines: list, task: "Task") -> None:
+    """Add input and output files sections."""
     if task.instruction.inputs:
         body_lines.extend(["## Input Files", ""])
         for input_file in task.instruction.inputs:
@@ -426,19 +450,20 @@ def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str =
             body_lines.append(f"- `{output_file}`")
         body_lines.append("")
 
+
+def _add_notes_and_execution_section(body_lines: list, task: "Task", full_name: str) -> None:
+    """Add notes and execution information sections."""
     if task.instruction.note:
         body_lines.extend(["## Notes", task.instruction.note, ""])
 
-    body_lines.extend(
-        [
-            "## Execution",
-            f"Run with: `warifuri run --task {full_name}`",
-            "",
-            "--------",
-            "",
-            "Created by warifuri CLI",
-        ]
-    )
+    body_lines.extend([
+        "## Execution",
+        f"Run with: `warifuri run --task {full_name}`",
+        "",
+        "--------",
+        "",
+        "Created by warifuri CLI",
+    ])
 
     return "\n".join(body_lines)
 

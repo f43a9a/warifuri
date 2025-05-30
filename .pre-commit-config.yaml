@@ -70,14 +70,23 @@ repos:
         language: system
         files: ^src/.+\.py$
         args: ["-c", "import ast, sys; print('Manual duplicate code check needed for', len(sys.argv[1:]), 'files')"]
-        pass_filenames: true
-  # セキュリティチェック（bandit）
+        pass_filenames: true  # セキュリティチェック（bandit）
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.9
     hooks:
       - id: bandit
         args: ["--config", "pyproject.toml", "-r", "src", "-f", "json", "-o", "reports/bandit-report.json"]
         files: ^src/.+\.py$
+        pass_filenames: false
+  # 依存関係の脆弱性チェック（safety）
+  - repo: local
+    hooks:
+      - id: safety-check
+        name: safety (dependency vulnerability scan)
+        entry: safety
+        language: system
+        args: ["check", "--save-json", "reports/safety-report.json"]
+        files: ^(pyproject\.toml|poetry\.lock|requirements.*\.txt)$
         pass_filenames: false
 
   # 複雑度測定（radon）

@@ -469,15 +469,20 @@
     - "artifact upload問題解決: missing download info エラー修正"
     - "`tee`コマンドでpytest出力をファイルにリダイレクト"
     - "ファイル存在検証ステップで upload前チェック実装"
+    - "poetry.lock同期問題解決: 102行の更新でpyproject.toml一致"
+    - "CI workflow改善: poetry check --lock 追加で将来の同期エラー防止"
+    - "actions/upload-artifact@v4 にアップグレード"
     - "プルリクエスト作成: fix/workflow-yaml-syntax → main"
     - "最終テスト結果: 732 passed, 1 skipped (100%パス率)"
     - "最終カバレッジ: 96% (2641文のうち94未カバー)"
   technical_achievements:
     - "auto-merge.yml workflow修正: pytest output capture修正"
     - "validate_output.txt と pytest.log の適切な生成確認"
+    - "包括的デバッグ出力: ファイル検索、サイズ確認、ディレクトリリスト"
+    - "poetry.lock 完全同期: dependency resolution 問題解決"
     - "CI/CD pipeline エラー完全解決"
     - "包括的テストインフラ最終検証完了"
-  notes: "✅ T022完了！CI/CDパイプライン修正とプルリクエスト準備完了。メインブランチマージ待ちの状態"
+  notes: "✅ T022完了！CI/CDパイプライン修正、poetry.lock同期、包括的デバッグ実装完了。GitHub Actions実行準備完了"
 
 ## Project Completion Summary
 

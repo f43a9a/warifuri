@@ -57,6 +57,18 @@ jobs:
     - name: Install warifuri
       run: poetry install --no-interaction
 
+    - name: Check poetry.lock synchronization
+      run: |
+        echo "Checking if poetry.lock is synchronized with pyproject.toml..."
+        if ! poetry check --lock; then
+          echo "⚠️  poetry.lock is out of sync with pyproject.toml"
+          echo "This could cause dependency resolution issues"
+          echo "Consider running 'poetry lock' locally and committing the changes"
+          exit 1
+        else
+          echo "✅ poetry.lock is synchronized with pyproject.toml"
+        fi
+
     - name: Check for auto_merge.yaml files
       id: check-auto-merge
       run: |

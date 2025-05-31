@@ -89,13 +89,24 @@ jobs:
     - name: Run tests
       run: |
         echo "Running test suite..."
-        poetry run pytest tests/ -v --tb=short
+        poetry run pytest tests/ -v --tb=short | tee pytest.log
 
     - name: Check code quality
       run: |
         echo "Checking code quality..."
         poetry run ruff check .
         poetry run mypy warifuri
+
+    - name: Validate files for upload
+      run: |
+        if [ -f validate_output.txt ] && [ -f pytest.log ]; then
+          echo "Files ready for upload"
+          ls -la validate_output.txt pytest.log
+        else
+          echo "Files missing:"
+          ls -la validate_output.txt pytest.log || echo "Files not found"
+          exit 1
+        fi
 
     - name: Upload validation results
       if: always()

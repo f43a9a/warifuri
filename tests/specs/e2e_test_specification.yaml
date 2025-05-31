@@ -1,0 +1,237 @@
+# End-to-End Test Specification for Warifuri
+# E2Eテストの観点記述仕様
+
+$schema: "https://warifuri.dev/schemas/test-spec.schema.json"
+specification_version: "1.0.0"
+test_type: "e2e"
+target_component: "warifuri.complete_workflow"
+
+metadata:
+  title: "End-to-End User Journey Test Specification"
+  description: "Warifuri の完全なユーザージャーニーE2Eテスト観点記述"
+  author: "ai_copilot"
+  created_date: "2025-05-31"
+  updated_date: "2025-05-31"
+  priority: "critical"
+  coverage_target: 80
+
+# ユーザージャーニーシナリオ
+user_journeys:
+  - journey: "新規プロジェクト開発者"
+    persona: "初めてWarifuriを使用する開発者"
+    goal: "新規プロジェクトでタスク自動化を導入"
+
+    steps:
+      - step: "Warifuriインストール"
+        action: "pip install warifuri"
+        expected: "正常にインストール完了"
+        verification:
+          - "warifuri --version でバージョン表示"
+          - "warifuri --help でヘルプ表示"
+
+      - step: "プロジェクト初期化"
+        action: "warifuri init"
+        expected: "プロジェクト設定ファイル作成"
+        verification:
+          - ".warifuri/ ディレクトリ作成"
+          - "config.yaml ファイル作成"
+          - "デフォルト設定値が適切"
+
+      - step: "初回タスク作成"
+        action: "タスクYAMLファイルを手動作成"
+        expected: "有効なタスク定義が作成される"
+        verification:
+          - "YAML構文が正しい"
+          - "スキーマ検証が通過"
+
+      - step: "タスク発見・一覧表示"
+        action: "warifuri list"
+        expected: "作成したタスクが表示される"
+        verification:
+          - "JSON形式での出力"
+          - "すべてのタスク情報が含まれる"
+
+      - step: "タスク実行"
+        action: "warifuri run task-id"
+        expected: "タスクが正常に実行される"
+        verification:
+          - "実行ログが出力される"
+          - "ステータスが更新される"
+          - "成功時の適切なメッセージ"
+
+  - journey: "チーム開発リーダー"
+    persona: "複数人での開発プロジェクトを管理"
+    goal: "チーム全体でのタスク自動化とワークフロー標準化"
+
+    steps:
+      - step: "既存プロジェクトにWarifuri導入"
+        action: "既存プロジェクトディレクトリで warifuri init"
+        expected: "既存ファイルと競合せずに初期化"
+
+      - step: "複雑な依存関係タスク作成"
+        action: "複数の相互依存タスクを定義"
+        expected: "依存関係グラフが正しく構築"
+
+      - step: "依存関係可視化"
+        action: "warifuri graph"
+        expected: "依存関係グラフが表示される"
+
+      - step: "バッチタスク実行"
+        action: "warifuri run --all"
+        expected: "依存順序でタスクが実行される"
+
+      - step: "GitHub統合設定"
+        action: "GitHub連携機能の設定と使用"
+        expected: "イシュー・PR作成が自動化される"
+
+  - journey: "CI/CD統合担当者"
+    persona: "CI/CDパイプラインを管理する担当者"
+    goal: "GitHub ActionsでのWarifuri統合"
+
+    steps:
+      - step: "GitHub Actions ワークフロー作成"
+        action: ".github/workflows/warifuri.yml 作成"
+        expected: "CI/CDでWarifuriが動作"
+
+      - step: "自動タスク実行"
+        action: "PRトリガーでタスク自動実行"
+        expected: "適切なタスクが自動実行される"
+
+      - step: "結果通知"
+        action: "実行結果のSlack/Teams通知"
+        expected: "成功・失敗が適切に通知される"
+
+# 実行環境
+execution_environments:
+  - environment: "ローカル開発環境"
+    os: ["Ubuntu 22.04", "macOS 13+", "Windows 11"]
+    python: ["3.11", "3.12"]
+    requirements:
+      - "Git 2.0+"
+      - "インターネット接続"
+      - "GitHub CLI (一部機能)"
+
+  - environment: "GitHub Actions"
+    runner: ["ubuntu-latest", "macos-latest", "windows-latest"]
+    requirements:
+      - "GitHub token 設定"
+      - "適切な権限設定"
+
+  - environment: "Docker コンテナ"
+    base_image: "python:3.11-slim"
+    requirements:
+      - "Git インストール"
+      - "必要な依存関係"
+
+# 実データを使用したテストケース
+real_data_scenarios:
+  - scenario: "実際のOSSプロジェクト"
+    description: "実在するOSSプロジェクトでのWarifuri使用"
+    test_projects:
+      - "小規模Pythonライブラリ"
+      - "中規模Webアプリケーション"
+      - "大規模マルチモジュールプロジェクト"
+
+    verification_points:
+      - "既存ビルドシステムとの競合なし"
+      - "パフォーマンス劣化なし"
+      - "開発者エクスペリエンス向上"
+
+# エラー回復シナリオ
+error_recovery_scenarios:
+  - scenario: "ネットワーク断絶からの回復"
+    simulation: "GitHub API接続エラー"
+    expected_behavior:
+      - "適切なエラーメッセージ表示"
+      - "リトライ機構の動作"
+      - "オフライン動作への切り替え"
+
+  - scenario: "ディスク容量不足"
+    simulation: "ファイル書き込み失敗"
+    expected_behavior:
+      - "容量不足の検出"
+      - "クリーンアップ提案"
+      - "部分的実行結果の保存"
+
+  - scenario: "権限不足"
+    simulation: "ファイル・ディレクトリアクセス拒否"
+    expected_behavior:
+      - "権限エラーの明確な説明"
+      - "解決方法の提示"
+      - "代替手段の提案"
+
+# パフォーマンス要件
+performance_benchmarks:
+  user_experience:
+    - "コマンド応答時間: < 3秒"
+    - "大規模プロジェクト (1000+ タスク): < 30秒"
+    - "メモリ使用量: < 200MB"
+
+  scalability:
+    - "100並行タスク実行対応"
+    - "10,000ファイルプロジェクト対応"
+    - "100MB設定ファイル処理対応"
+
+# セキュリティテスト観点
+security_verification:
+  - aspect: "入力検証"
+    tests:
+      - "悪意のあるYAMLファイル処理"
+      - "パストラバーサル攻撃耐性"
+      - "コマンドインジェクション耐性"
+
+  - aspect: "認証・認可"
+    tests:
+      - "GitHub token適切な管理"
+      - "ファイルアクセス権限遵守"
+      - "機密情報の漏洩防止"
+
+# 互換性テスト
+compatibility_verification:
+  backward_compatibility:
+    - "旧バージョン設定ファイル読み込み"
+    - "既存プロジェクトとの統合"
+    - "レガシーYAML形式サポート"
+
+  forward_compatibility:
+    - "新機能追加時の既存機能維持"
+    - "設定形式変更時の移行パス"
+    - "API変更時の互換性レイヤー"
+
+# 品質ゲート
+quality_gates:
+  functional:
+    - "すべてのユーザージャーニーが完走"
+    - "エラー回復シナリオが正常動作"
+    - "実データテストが成功"
+
+  non_functional:
+    - "パフォーマンス要件を満たす"
+    - "セキュリティ要件を満たす"
+    - "互換性要件を満たす"
+
+  user_experience:
+    - "直感的なコマンド操作"
+    - "分かりやすいエラーメッセージ"
+    - "適切なヘルプ・ドキュメント"
+
+# 監視・ログ
+monitoring_verification:
+  logging:
+    - "適切なログレベル設定"
+    - "構造化ログ出力"
+    - "デバッグ情報の充実"
+
+  metrics:
+    - "実行時間測定"
+    - "成功・失敗率追跡"
+    - "リソース使用量監視"
+
+notes: |
+  E2Eテストは実際のユーザー体験を重視し、
+  現実的な使用シナリオでの動作を検証する。
+  エラー回復、パフォーマンス、セキュリティ、互換性を
+  包括的に検証し、本番運用での信頼性を保証する。
+
+  実データを使用することで、理論上の動作と
+  実際の動作の乖離を検出し、真の品質を担保する。

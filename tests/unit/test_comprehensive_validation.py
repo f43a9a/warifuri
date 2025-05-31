@@ -25,7 +25,15 @@ class DataLoader:
         """複数ドキュメントYAMLファイルを読み込み"""
         file_path = self.base_path / relative_path
         with open(file_path, "r", encoding="utf-8") as f:
-            return list(yaml.safe_load_all(f))
+            # First try loading as multiple documents
+            documents = list(yaml.safe_load_all(f))
+
+            # If we got exactly one document and it's a list, return the list items
+            if len(documents) == 1 and isinstance(documents[0], list):
+                return documents[0]
+
+            # Otherwise return the documents as-is
+            return documents
 
     def load_schema(self, schema_name: str):
         """スキーマファイルを読み込み"""

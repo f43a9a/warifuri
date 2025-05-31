@@ -2,14 +2,12 @@
 # 複数プロジェクトの個別ドキュメント構成
 
 # Document 1: Frontend Project
-projects:
-  - id: "web-frontend"
-    name: "Web Frontend Application"
-    description: "Reactベースのフロントエンドアプリケーション"
-    type: "application"
-    language: "javascript"
+id: "web-frontend"
+name: "Web Frontend Application"
+description: "Reactベースのフロントエンドアプリケーション"
+type: "application"
+language: "javascript"
 framework: "React"
-
 structure:
   root: "frontend/"
   directories:
@@ -26,27 +24,29 @@ structure:
       purpose: "Static assets"
     - path: "tests/"
       purpose: "Test files"
-
 dependencies:
-  external:
+  runtime:
     - name: "react"
       version: "^18.0.0"
-      purpose: "UI framework"
-    - name: "axios"
-      version: "^1.0.0"
-      purpose: "HTTP client"
-  internal:
-    - "api-gateway"
-
+      purpose: "UI library"
+    - name: "react-dom"
+      version: "^18.0.0"
+      purpose: "React DOM manipulation"
+  development:
+    - name: "webpack"
+      version: "^5.0.0"
+      purpose: "Module bundler"
+    - name: "babel"
+      version: "^7.0.0"
+      purpose: "JavaScript compiler"
 build:
   tool: "npm"
   scripts:
+    start: "npm start"
     build: "npm run build"
     test: "npm test"
-    dev: "npm start"
   outputs:
     - "build/"
-
 testing:
   framework: "jest"
   coverage:
@@ -55,19 +55,19 @@ testing:
   commands:
     unit: "npm test"
     integration: "npm run test:integration"
-
 metadata:
   version: "1.2.0"
   maintainers: ["frontend-team@example.com"]
   tags: ["react", "frontend", "web"]
 
-  - id: "api-gateway"
-    name: "API Gateway Service"
-    description: "Node.js/ExpressベースのAPIゲートウェイ"
-    type: "service"
-    language: "javascript"
+---
+# Document 2: API Gateway Project
+id: "api-gateway"
+name: "API Gateway Service"
+description: "Node.js/ExpressベースのAPIゲートウェイ"
+type: "service"
+language: "javascript"
 framework: "Express"
-
 structure:
   root: "api-gateway/"
   directories:
@@ -81,10 +81,9 @@ structure:
           type: "source"
           description: "Route definitions"
     - path: "middleware/"
-      purpose: "Express middleware"
+      purpose: "Custom middleware"
     - path: "tests/"
       purpose: "Test files"
-
 dependencies:
   external:
     - name: "express"
@@ -96,7 +95,6 @@ dependencies:
   internal:
     - "user-service"
     - "product-service"
-
 build:
   tool: "npm"
   scripts:
@@ -105,7 +103,6 @@ build:
     test: "npm test"
   outputs:
     - "dist/"
-
 testing:
   framework: "mocha"
   coverage:
@@ -114,21 +111,19 @@ testing:
   commands:
     unit: "npm test"
     integration: "npm run test:integration"
-
 metadata:
   version: "2.0.1"
   maintainers: ["backend-team@example.com"]
   tags: ["api", "gateway", "microservice"]
 
+---
 # Document 3: User Service Project
-
 id: "user-service"
 name: "User Management Service"
-description: "Pythonベースのユーザー管理マイクロサービス"
+description: "ユーザー管理を担当するマイクロサービス"
 type: "service"
 language: "python"
 framework: "FastAPI"
-
 structure:
   root: "services/user-service/"
   directories:
@@ -145,7 +140,6 @@ structure:
       purpose: "Test files"
     - path: "migrations/"
       purpose: "Database migrations"
-
 dependencies:
   external:
     - name: "fastapi"
@@ -159,7 +153,6 @@ dependencies:
       purpose: "Data validation"
   internal:
     - "shared-database"
-
 build:
   tool: "poetry"
   scripts:
@@ -168,7 +161,6 @@ build:
     migrate: "alembic upgrade head"
   outputs:
     - "dist/"
-
 testing:
   framework: "pytest"
   coverage:
@@ -177,7 +169,6 @@ testing:
   commands:
     unit: "pytest tests/unit/"
     integration: "pytest tests/integration/"
-
 metadata:
   version: "1.5.2"
   maintainers: ["backend-team@example.com"]

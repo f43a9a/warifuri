@@ -1,0 +1,347 @@
+# Performance Test Specification for Warifuri
+# パフォーマンステストの観点記述仕様
+
+$schema: "https://warifuri.dev/schemas/test-spec.schema.json"
+specification_version: "1.0.0"
+test_type: "performance"
+target_component: "warifuri.performance"
+
+metadata:
+  title: "Performance and Load Test Specification"
+  description: "Warifuri のパフォーマンステスト観点記述"
+  author: "ai_copilot"
+  created_date: "2025-05-31"
+  updated_date: "2025-05-31"
+  priority: "high"
+  test_environment: "controlled_lab"
+
+# パフォーマンス要件定義
+performance_requirements:
+  response_time:
+    - command: "warifuri list"
+      target: "< 2秒"
+      acceptable: "< 5秒"
+      critical: "< 10秒"
+
+    - command: "warifuri run simple-task"
+      target: "< 5秒"
+      acceptable: "< 15秒"
+      critical: "< 30秒"
+
+    - command: "warifuri graph"
+      target: "< 3秒"
+      acceptable: "< 8秒"
+      critical: "< 15秒"
+
+  throughput:
+    - metric: "並行タスク実行"
+      target: "100並行実行"
+      acceptable: "50並行実行"
+      minimum: "10並行実行"
+
+    - metric: "ファイル処理速度"
+      target: "1000ファイル/秒"
+      acceptable: "500ファイル/秒"
+      minimum: "100ファイル/秒"
+
+  resource_usage:
+    memory:
+      idle: "< 50MB"
+      normal_operation: "< 200MB"
+      heavy_load: "< 500MB"
+      critical_threshold: "< 1GB"
+
+    cpu:
+      idle: "< 5%"
+      normal_operation: "< 50%"
+      heavy_load: "< 80%"
+      critical_threshold: "< 95%"
+
+    disk_io:
+      read_speed: "> 50MB/s"
+      write_speed: "> 30MB/s"
+      iops: "> 1000"
+
+# 負荷テストシナリオ
+load_test_scenarios:
+  - scenario: "標準負荷テスト"
+    description: "通常使用時の負荷パターン"
+    duration: "30分"
+    user_pattern:
+      - users: 10
+        ramp_up: "2分"
+        actions:
+          - "warifuri list (毎30秒)"
+          - "warifuri run (毎2分)"
+          - "warifuri show (毎1分)"
+
+    expected_performance:
+      avg_response_time: "< 3秒"
+      95th_percentile: "< 8秒"
+      99th_percentile: "< 15秒"
+      error_rate: "< 1%"
+
+  - scenario: "ピーク負荷テスト"
+    description: "ピーク時間の高負荷パターン"
+    duration: "15分"
+    user_pattern:
+      - users: 50
+        ramp_up: "5分"
+        actions:
+          - "warifuri list (毎10秒)"
+          - "warifuri run (毎30秒)"
+
+    expected_performance:
+      avg_response_time: "< 5秒"
+      95th_percentile: "< 15秒"
+      error_rate: "< 5%"
+      system_stability: "安定動作"
+
+  - scenario: "ストレステスト"
+    description: "システム限界の特定"
+    duration: "60分"
+    user_pattern:
+      - users: "1→500 (段階的増加)"
+        ramp_up: "30分"
+        sustain: "15分"
+        ramp_down: "15分"
+
+    acceptance_criteria:
+      breaking_point: "> 200並行ユーザー"
+      graceful_degradation: "段階的な性能低下"
+      recovery_time: "< 5分"
+
+# スケーラビリティテスト
+scalability_tests:
+  - dimension: "プロジェクトサイズ"
+    test_cases:
+      - case: "小規模プロジェクト"
+        data_size:
+          tasks: "10個"
+          files: "100個"
+          dependencies: "5レベル"
+        expected_performance: "基準パフォーマンス"
+
+      - case: "中規模プロジェクト"
+        data_size:
+          tasks: "100個"
+          files: "1,000個"
+          dependencies: "10レベル"
+        expected_performance: "基準の1.5倍以内"
+
+      - case: "大規模プロジェクト"
+        data_size:
+          tasks: "1,000個"
+          files: "10,000個"
+          dependencies: "20レベル"
+        expected_performance: "基準の3倍以内"
+
+      - case: "超大規模プロジェクト"
+        data_size:
+          tasks: "10,000個"
+          files: "100,000個"
+          dependencies: "50レベル"
+        expected_performance: "基準の10倍以内"
+
+  - dimension: "依存関係複雑度"
+    test_cases:
+      - complexity: "線形依存"
+        structure: "A→B→C→D→E"
+        expected: "O(n) 時間計算量"
+
+      - complexity: "ツリー依存"
+        structure: "A→[B,C], B→[D,E], C→[F,G]"
+        expected: "O(n log n) 時間計算量"
+
+      - complexity: "複雑グラフ"
+        structure: "多重依存・部分的循環"
+        expected: "O(n²) 以下の時間計算量"
+
+# メモリ効率テスト
+memory_efficiency_tests:
+  - test: "メモリリーク検出"
+    description: "長時間実行時のメモリ増加"
+    test_procedure:
+      - "1000回のタスク実行"
+      - "メモリ使用量の継続監視"
+      - "GC後のメモリ使用量確認"
+    acceptance_criteria:
+      - "実行回数に比例しない"
+      - "メモリ増加率 < 1MB/時間"
+      - "最大メモリ使用量 < 1GB"
+
+  - test: "大容量データ処理"
+    description: "大きなYAMLファイルの処理効率"
+    test_data:
+      - "10MB YAMLファイル"
+      - "100MB YAMLファイル"
+      - "1GB YAMLファイル"
+    expected_behavior:
+      - "ストリーミング処理による定常メモリ使用"
+      - "ファイルサイズに比例しない実行時間"
+
+# 並行性・並列性テスト
+concurrency_tests:
+  - test: "並行タスク実行"
+    description: "複数タスクの同時実行"
+    test_scenarios:
+      - concurrent_tasks: 10
+        expected: "リニアスケーリング"
+      - concurrent_tasks: 50
+        expected: "80%以上の効率"
+      - concurrent_tasks: 100
+        expected: "60%以上の効率"
+
+    safety_requirements:
+      - "データ競合なし"
+      - "デッドロックなし"
+      - "ファイル破損なし"
+
+  - test: "並列ファイル処理"
+    description: "複数ファイルの並列処理"
+    test_setup:
+      - "1000個のYAMLファイル"
+      - "並列度: 1, 2, 4, 8, 16"
+    expected_results:
+      - "並列度に応じた処理時間短縮"
+      - "CPUコア数までのスケーラビリティ"
+
+# リソース使用効率テスト
+resource_efficiency_tests:
+  - resource: "CPU使用率"
+    tests:
+      - scenario: "CPU集約的処理"
+        description: "依存関係解析の最適化"
+        measurement: "CPU使用率プロファイル"
+        target: "マルチコア効率利用"
+
+      - scenario: "I/O待機時のCPU"
+        description: "ファイル読み込み中のCPU使用"
+        target: "I/O待機中はCPU使用率低下"
+
+  - resource: "ディスクI/O"
+    tests:
+      - scenario: "シーケンシャル読み込み"
+        description: "大量ファイルの効率的読み込み"
+        optimization: "バッファリング・先読み"
+
+      - scenario: "ランダムアクセス"
+        description: "設定ファイルのランダムアクセス"
+        optimization: "キャッシング戦略"
+
+# キャッシング効率テスト
+caching_tests:
+  - cache_type: "ファイルシステムキャッシュ"
+    tests:
+      - test: "YAMLファイル解析キャッシュ"
+        scenario: "同一ファイルの再読み込み"
+        expected: "2回目以降は90%高速化"
+
+      - test: "依存関係グラフキャッシュ"
+        scenario: "依存関係の再計算"
+        expected: "キャッシュヒット時99%高速化"
+
+  - cache_type: "GitHub APIキャッシュ"
+    tests:
+      - test: "APIレスポンスキャッシュ"
+        scenario: "同一API呼び出し"
+        expected: "TTL内は即座に応答"
+
+      - test: "キャッシュ無効化"
+        scenario: "データ更新時のキャッシュクリア"
+        expected: "適切なキャッシュ無効化"
+
+# ベンチマークテスト
+benchmark_tests:
+  - benchmark: "コマンド実行時間"
+    baseline: "v0.1.0 リリース"
+    regression_threshold: "20%性能低下"
+
+    commands:
+      - "warifuri list"
+      - "warifuri run benchmark-task"
+      - "warifuri graph"
+      - "warifuri validate"
+
+    test_data:
+      - "小規模プロジェクト (10タスク)"
+      - "中規模プロジェクト (100タスク)"
+      - "大規模プロジェクト (1000タスク)"
+
+  - benchmark: "メモリ使用量"
+    measurement: "RSS (Resident Set Size)"
+    regression_threshold: "50%メモリ増加"
+
+    scenarios:
+      - "起動時メモリ"
+      - "タスク実行時メモリ"
+      - "大量データ処理時メモリ"
+
+# パフォーマンス監視
+monitoring_setup:
+  metrics:
+    - "応答時間 (平均・パーセンタイル)"
+    - "スループット (req/sec)"
+    - "エラー率 (%)"
+    - "リソース使用量 (CPU・メモリ・ディスク)"
+    - "同時接続数"
+
+  alerting:
+    - "応答時間 > 閾値"
+    - "エラー率 > 5%"
+    - "メモリ使用量 > 80%"
+    - "CPU使用率 > 90%"
+
+  reporting:
+    - "パフォーマンストレンド分析"
+    - "回帰検出レポート"
+    - "容量計画レポート"
+
+# 品質ゲート
+performance_quality_gates:
+  response_time:
+    - "95パーセンタイル < 目標値"
+    - "99パーセンタイル < 許容値"
+    - "最大応答時間 < 限界値"
+
+  resource_usage:
+    - "メモリ使用量 < 制限値"
+    - "CPU使用率 < 制限値"
+    - "ディスクI/O < 制限値"
+
+  stability:
+    - "メモリリークなし"
+    - "長時間実行での安定性"
+    - "リソース解放の適切性"
+
+  scalability:
+    - "負荷増加に対する線形スケーリング"
+    - "破綻点の明確な特定"
+    - "graceful degradation"
+
+# 最適化候補
+optimization_targets:
+  high_priority:
+    - "依存関係解析アルゴリズム"
+    - "YAMLファイル解析処理"
+    - "GitHub API呼び出し効率"
+
+  medium_priority:
+    - "ファイルシステムアクセス最適化"
+    - "ログ出力の効率化"
+    - "並列処理の改善"
+
+  low_priority:
+    - "起動時間の短縮"
+    - "メモリ使用量の削減"
+    - "キャッシュ戦略の改善"
+
+notes: |
+  パフォーマンステストは継続的に実行し、
+  性能回帰の早期発見と改善を行う。
+
+  実際の使用パターンを模倣したテストシナリオにより、
+  現実的なパフォーマンス評価を実施する。
+
+  スケーラビリティテストにより、将来の成長に対する
+  システムの適応能力を検証する。

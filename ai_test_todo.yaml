@@ -5,10 +5,20 @@
 - id: T001
   title: "pytest導入と基本設定"
   description: "pytestを導入し、基本的な設定ファイル（pytest.ini or pyproject.toml）を作成する。"
-  status: "in_progress"
+  status: "done"
   priority: "high"
   assignee: "ai_copilot"
   tags: ["pytest", "setup"]
+  completion_details:
+    - "pytestを開発依存関係として追加完了"
+    - "pyproject.tomlに包括的なpytest設定完了"
+    - "テストパス: tests/ ディレクトリ指定"
+    - "python_files: test_*.py パターン設定"
+    - "python_functions: test_* パターン設定"
+    - "addopts: --color=yes で出力色付け有効"
+    - "hypothesis設定統合: max_examples=50, deadline=10s"
+    - "738テスト実行可能な完全なテスト基盤構築完了"
+  notes: "pytest完全導入完了。pyproject.tomlベースの設定で包括的テストワークフロー実現。"
 
 - id: T002
   title: "ディレクトリ構造の作成"
@@ -413,10 +423,36 @@
 - id: T019
   title: "テスト観点記述仕様のサンプル作成 (tests/specs)"
   description: "tests/specs/*.yaml 形式のテスト観点記述仕様に基づき、サンプルを作成する。"
-  status: "todo"
+  status: "done"
   priority: "low"
   assignee: "ai_copilot"
   tags: ["documentation", "test_specification"]
+  completion_date: "2025-05-31"
+  completion_details:
+    - "包括的なテスト仕様書6ファイルを作成完了"
+    - "unit_test_specification.yaml - 単体テスト観点記述 (warifuri.core対象)"
+    - "integration_test_specification.yaml - 統合テスト観点記述 (warifuri.cli対象)"
+    - "e2e_test_specification.yaml - E2Eテスト観点記述 (ユーザージャーニー)"
+    - "security_test_specification.yaml - セキュリティテスト観点記述 (OWASP Top 10準拠)"
+    - "performance_test_specification.yaml - パフォーマンステスト観点記述"
+    - "test_specification_schema.yaml - テスト仕様書のJSONスキーマ定義"
+    - "README.md - テスト仕様の使用方法・管理プロセス説明"
+  technical_achievements:
+    - "各テストタイプ別の詳細な観点記述を実装"
+    - "JSONスキーマによる仕様書の構造化・検証機能"
+    - "AI支援テスト生成のための明確なガイドライン提供"
+    - "OWASP Top 10、CWE Top 25等のセキュリティ標準準拠"
+    - "プロパティベーステスト、モッキング戦略等の先進的テスト手法統合"
+    - "品質ゲート、カバレッジ要件、パフォーマンス要件の明文化"
+    - "実際のユーザージャーニーに基づくE2Eテストシナリオ"
+    - "継続的改善・バージョン管理プロセスの定義"
+  coverage_specifications:
+    - "単体テスト: 95%カバレッジ目標"
+    - "統合テスト: 90%カバレッジ目標"
+    - "E2Eテスト: 80%カバレッジ目標"
+    - "セキュリティテスト: OWASP Top 10完全対応"
+    - "パフォーマンステスト: 応答時間<3秒、メモリ<200MB"
+  notes: "包括的なテスト観点記述仕様フレームワーク完成。各テストタイプの詳細な実行指針とAI支援テスト生成のための明確なガイドラインを提供。"
 
 ## Ongoing Tasks
 

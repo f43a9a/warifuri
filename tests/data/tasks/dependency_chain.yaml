@@ -1,27 +1,27 @@
 # Dependency Chain Sample
 # 連鎖する依存関係のテストケース
 
-tasks:
-  # タスク1: 基盤設定
-  - id: "foundation-setup"
-    title: "基盤環境の設定"
-    description: "すべての後続タスクに必要な基盤環境を設定する"
-    type: "machine"
-    status: "todo"
-    execution:
-      script: |
-        #!/bin/bash
-        mkdir -p workspace/{input,output,temp}
-        echo "Foundation setup completed" > workspace/.setup_marker
-    validation:
-      output_files:
-        - "workspace/.setup_marker"
-    tags: ["foundation", "setup"]
+# Task 1: Foundation Setup
+id: "foundation-setup"
+title: "基盤環境の設定"
+description: "すべての後続タスクに必要な基盤環境を設定する"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    #!/bin/bash
+    mkdir -p workspace/{input,output,temp}
+    echo "Foundation setup completed" > workspace/.setup_marker
+validation:
+  output_files:
+    - "workspace/.setup_marker"
+tags: ["foundation", "setup"]
 
-  # タスク2: データ準備（基盤設定に依存）
-  - id: "data-preparation"
-    title: "データファイルの準備"
-    description: "処理対象のデータファイルを準備する"
+---
+# Task 2: Data Preparation (depends on foundation-setup)
+id: "data-preparation"
+title: "データファイルの準備"
+description: "処理対象のデータファイルを準備する"
 type: "machine"
 status: "todo"
 dependencies:
@@ -37,12 +37,12 @@ execution:
     fi
 
     # サンプルデータを作成
-    cat > workspace/input/sample_data.csv << EOF
+    cat > workspace/input/sample_data.csv << EOF2
     id,name,value
     1,item1,100
     2,item2,200
     3,item3,300
-    EOF
+    EOF2
 
     echo "Data preparation completed" > workspace/.data_ready
 validation:
@@ -51,11 +51,11 @@ validation:
     - "workspace/.data_ready"
 tags: ["data", "preparation"]
 
-# タスク3: データ検証（データ準備に依存）
-
-id: "data-validation"
-title: "データの妥当性検証"
-description: "準備されたデータの妥当性を検証する"
+---
+# Task 3: Processing A (depends on data-preparation)
+id: "parallel-processing-a"
+title: "並列処理A：データ集約"
+description: "データを集約して統計情報を生成する"
 type: "machine"
 status: "todo"
 dependencies:
@@ -70,47 +70,18 @@ execution:
       exit 1
     fi
 
-    # データファイルの存在と内容を確認
-    if [[ ! -f "workspace/input/sample_data.csv" ]]; then
-      echo "ERROR: Sample data file not found"
-      exit 1
-    fi
+    # データ集約処理
+    awk -F, '
+    NR > 1 {
+      sum += $3
+      count++
+    }
+    END {
+      print "Total records: " count
+      print "Sum of values: " sum
+      print "Average: " sum/count
+    }' workspace/input/sample_data.csv > workspace/output/aggregation_result.txt
 
-    # 行数チェック（ヘッダー + 3行 = 4行）
-    line_count=$(wc -l < workspace/input/sample_data.csv)
-    if [[ $line_count -ne 4 ]]; then
-      echo "ERROR: Expected 4 lines, got $line_count"
-      exit 1
-    fi
-
-    echo "Data validation completed" > workspace/.validation_done
-validation:
-  output_files:
-    - "workspace/.validation_done"
-tags: ["validation", "quality"]
-
-# タスク4: 並列処理A（データ検証に依存）
-
-id: "parallel-processing-a"
-title: "並列処理A: 集計"
-description: "データの集計処理を実行する"
-type: "machine"
-status: "todo"
-dependencies:
-  - id: "data-validation"
-    type: "strict"
-execution:
-  script: |
-    #!/bin/bash
-    # データ検証が完了していることを確認
-    if [[ ! -f "workspace/.validation_done" ]]; then
-      echo "ERROR: Data validation not completed"
-      exit 1
-    fi
-
-    # 集計処理
-    total_value=$(tail -n +2 workspace/input/sample_data.csv | cut -d',' -f3 | paste -sd+ | bc)
-    echo "Total value: $total_value" > workspace/output/aggregation_result.txt
     echo "Processing A completed" > workspace/.processing_a_done
 validation:
   output_files:
@@ -118,30 +89,35 @@ validation:
     - "workspace/.processing_a_done"
 tags: ["processing", "aggregation", "parallel"]
 
-# タスク5: 並列処理B（データ検証に依存）
-
+---
+# Task 4: Processing B (depends on data-preparation)
 id: "parallel-processing-b"
-title: "並列処理B: 変換"
-description: "データの変換処理を実行する"
+title: "並列処理B：データ変換"
+description: "データを変換して新しい形式で出力する"
 type: "machine"
 status: "todo"
 dependencies:
-  - id: "data-validation"
+  - id: "data-preparation"
     type: "strict"
 execution:
   script: |
     #!/bin/bash
-    # データ検証が完了していることを確認
-    if [[ ! -f "workspace/.validation_done" ]]; then
-      echo "ERROR: Data validation not completed"
+    # データ準備が完了していることを確認
+    if [[ ! -f "workspace/.data_ready" ]]; then
+      echo "ERROR: Data preparation not completed"
       exit 1
     fi
 
-    # 変換処理（値を2倍にする）
-    tail -n +2 workspace/input/sample_data.csv | while IFS=',' read -r id name value; do
-      doubled_value=$((value * 2))
-      echo "$id,$name,$doubled_value"
-    done > workspace/output/transformed_data.csv
+    # データ変換処理
+    awk -F, '
+    NR == 1 {
+      print "ID,NAME,VALUE,CATEGORY"
+      next
+    }
+    {
+      category = ($3 < 150) ? "LOW" : ($3 < 250) ? "MEDIUM" : "HIGH"
+      print $1 "," $2 "," $3 "," category
+    }' workspace/input/sample_data.csv > workspace/output/transformed_data.csv
 
     echo "Processing B completed" > workspace/.processing_b_done
 validation:
@@ -150,8 +126,8 @@ validation:
     - "workspace/.processing_b_done"
 tags: ["processing", "transformation", "parallel"]
 
-# タスク6: 最終統合（両方の並列処理に依存）
-
+---
+# Task 5: Final Integration (depends on both parallel processes)
 id: "final-integration"
 title: "最終結果の統合"
 description: "並列処理の結果を統合して最終レポートを生成する"
@@ -176,7 +152,7 @@ execution:
     fi
 
     # 最終レポート生成
-    cat > workspace/output/final_report.txt << EOF
+    cat > workspace/output/final_report.txt << EOF2
     === Final Processing Report ===
 
     Aggregation Result:
@@ -186,7 +162,7 @@ execution:
     $(wc -l < workspace/output/transformed_data.csv) records transformed
 
     Processing completed at: $(date)
-    EOF
+    EOF2
 
     echo "Final integration completed" > workspace/.final_done
 validation:

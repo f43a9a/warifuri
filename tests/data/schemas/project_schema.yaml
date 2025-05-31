@@ -1,0 +1,320 @@
+# JSON Schema for Project Structure Test Data
+# プロジェクト構造テストデータ用JSONスキーマ
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Project Structure Schema"
+description: "プロジェクト構造の定義スキーマ"
+type: "object"
+
+required:
+  - id
+  - name
+  - type
+
+properties:
+  id:
+    type: "string"
+    description: "プロジェクトの一意識別子"
+    pattern: "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+
+  name:
+    type: "string"
+    description: "プロジェクト名"
+    minLength: 1
+    maxLength: 100
+
+  description:
+    type: "string"
+    description: "プロジェクトの説明"
+
+  type:
+    type: "string"
+    enum: ["library", "application", "service", "tool", "framework"]
+    description: "プロジェクトタイプ"
+
+  language:
+    type: "string"
+    enum: ["python", "javascript", "typescript", "java", "go", "rust", "other"]
+    description: "メインプログラミング言語"
+
+  framework:
+    type: "string"
+    description: "使用フレームワーク"
+
+  structure:
+    type: "object"
+    description: "プロジェクトディレクトリ構造"
+    properties:
+      root:
+        type: "string"
+        description: "ルートディレクトリ"
+      directories:
+        type: "array"
+        items:
+          type: "object"
+          required: ["path", "purpose"]
+          properties:
+            path:
+              type: "string"
+              description: "ディレクトリパス"
+            purpose:
+              type: "string"
+              description: "ディレクトリの用途"
+            files:
+              type: "array"
+              items:
+                type: "object"
+                required: ["name"]
+                properties:
+                  name:
+                    type: "string"
+                    description: "ファイル名"
+                  type:
+                    type: "string"
+                    enum: ["source", "config", "test", "documentation", "build", "data"]
+                    description: "ファイルタイプ"
+                  description:
+                    type: "string"
+                    description: "ファイルの説明"
+
+  dependencies:
+    type: "object"
+    description: "プロジェクト依存関係"
+    properties:
+      external:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              type: "string"
+              description: "パッケージ名"
+            version:
+              type: "string"
+              description: "バージョン制約"
+            purpose:
+              type: "string"
+              description: "使用目的"
+            description:
+              type: "string"
+              description: "パッケージの説明"
+      internal:
+        type: "array"
+        items:
+          type: "string"
+          description: "内部プロジェクト依存"
+      runtime:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              type: "string"
+              description: "パッケージ名"
+            version:
+              type: "string"
+              description: "バージョン制約"
+            description:
+              type: "string"
+              description: "パッケージの説明"
+      development:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              type: "string"
+              description: "パッケージ名"
+            version:
+              type: "string"
+              description: "バージョン制約"
+            description:
+              type: "string"
+              description: "パッケージの説明"
+
+  tasks:
+    type: "object"
+    description: "プロジェクトタスク定義"
+    patternProperties:
+      "^[a-z][a-z_]*$":
+        type: "array"
+        items:
+          type: "object"
+          required: ["id", "title", "command"]
+          properties:
+            id:
+              type: "string"
+              description: "タスクID"
+            title:
+              type: "string"
+              description: "タスクタイトル"
+            command:
+              type: "string"
+              description: "実行コマンド"
+            description:
+              type: "string"
+              description: "タスクの説明"
+
+  configuration:
+    type: "object"
+    description: "プロジェクト設定"
+    properties:
+      environment:
+        type: "object"
+        description: "環境設定"
+        patternProperties:
+          "^[a-z][a-z_]*$":
+            type: "object"
+            additionalProperties: true
+            description: "環境変数設定"
+      build_settings:
+        type: "object"
+        description: "ビルド設定"
+        properties:
+          output_directory:
+            type: "string"
+            description: "出力ディレクトリ"
+          target_browsers:
+            type: "string"
+            description: "対象ブラウザ"
+          optimization:
+            type: "boolean"
+            description: "最適化フラグ"
+        additionalProperties: true
+
+  automation:
+    type: "object"
+    description: "自動化設定"
+    properties:
+      ci_cd:
+        type: "object"
+        description: "CI/CD設定"
+        properties:
+          trigger:
+            type: "string"
+            description: "トリガー条件"
+          branches:
+            type: "array"
+            items:
+              type: "string"
+            description: "対象ブランチ"
+          steps:
+            type: "array"
+            items:
+              type: "string"
+            description: "実行ステップ"
+        additionalProperties: true
+      quality_gates:
+        type: "object"
+        description: "品質ゲート設定"
+        additionalProperties: true
+
+  monitoring:
+    type: "object"
+    description: "監視設定"
+    properties:
+      health_checks:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            endpoint:
+              type: "string"
+              description: "ヘルスチェックエンドポイント"
+            interval:
+              type: "string"
+              description: "チェック間隔"
+            timeout:
+              type: "string"
+              description: "タイムアウト"
+          additionalProperties: true
+        description: "ヘルスチェック設定"
+      metrics:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+              description: "メトリクス名"
+            type:
+              type: "string"
+              description: "メトリクスタイプ"
+          additionalProperties: true
+        description: "メトリクス設定"
+      additionalProperties: true
+
+  build:
+    type: "object"
+    description: "ビルド設定"
+    properties:
+      tool:
+        type: "string"
+        description: "ビルドツール"
+      scripts:
+        type: "object"
+        additionalProperties:
+          type: "string"
+        description: "ビルドスクリプト"
+      outputs:
+        type: "array"
+        items:
+          type: "string"
+        description: "出力ファイル・ディレクトリ"
+
+  testing:
+    type: "object"
+    description: "テスト設定"
+    properties:
+      framework:
+        type: "string"
+        description: "テストフレームワーク"
+      coverage:
+        type: "object"
+        properties:
+          target:
+            type: "number"
+            minimum: 0
+            maximum: 100
+            description: "カバレッジ目標（%）"
+          exclude:
+            type: "array"
+            items:
+              type: "string"
+            description: "カバレッジから除外するパス"
+      commands:
+        type: "object"
+        additionalProperties:
+          type: "string"
+        description: "テストコマンド"
+
+  metadata:
+    type: "object"
+    description: "メタデータ"
+    properties:
+      created:
+        type: "string"
+        format: "date-time"
+        description: "作成日時"
+      updated:
+        type: "string"
+        format: "date-time"
+        description: "更新日時"
+      version:
+        type: "string"
+        description: "プロジェクトバージョン"
+      maintainers:
+        type: "array"
+        items:
+          type: "string"
+        description: "メンテナー"
+      tags:
+        type: "array"
+        items:
+          type: "string"
+        description: "タグ"
+
+additionalProperties: false

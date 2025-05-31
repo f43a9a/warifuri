@@ -59,7 +59,23 @@ jobs:
 
     - name: Run test suite with coverage
       run: |
-        poetry run pytest tests/ -v --cov=src/warifuri --cov-report=xml --cov-report=term --cov-fail-under=90
+        echo "Running comprehensive test suite..."
+        poetry run pytest tests/ -v --cov=src/warifuri --cov-report=xml --cov-report=term --cov-fail-under=90 --tb=short
+
+        # Capture test results for better error reporting
+        if [ $? -ne 0 ]; then
+          echo "❌ Test suite failed!"
+          echo "## ❌ Test Failure Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The test suite has failed. Please check the logs for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Common causes:" >> $GITHUB_STEP_SUMMARY
+          echo "- New tests are failing" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage dropped below 90%" >> $GITHUB_STEP_SUMMARY
+          echo "- Property-based tests found edge cases" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration test issues" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
 
     - name: Check coverage threshold
       run: |
@@ -77,6 +93,47 @@ jobs:
         else:
             print('✅ Coverage meets minimum threshold')
         "
+
+    - name: Check mutation test status (monitoring only)
+      if: matrix.python-version == '3.11'
+      run: |
+        echo "Checking mutation testing cache status..."
+
+        # Use our dedicated mutation test script for better reporting
+        if poetry run python scripts/mutation_test.py status > /dev/null 2>&1; then
+          echo "Mutation cache found, generating detailed results..."
+
+          # Get detailed results
+          poetry run python scripts/mutation_test.py results > mutation-results.txt
+
+          echo "## 🧬 Mutation Testing Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Check score against threshold
+          if poetry run python scripts/mutation_test.py check 90 > mutation-check.txt 2>&1; then
+            echo "- ✅ **Mutation Score**: Meets 90%+ target" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- ⚠️ **Mutation Score**: Below 90% target (see details)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Add detailed results
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Details:**" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat mutation-results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*Note: Mutation tests run locally only due to time constraints. Use \`nox -s mutation\` to run.*" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "No mutation cache found. This is expected for new environments."
+          echo "## 🧬 Mutation Testing Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ℹ️ **Info**: No mutation cache found (expected for CI)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📝 **Action**: Run \`nox -s mutation\` locally to generate mutation test results" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎯 **Target**: Maintain 90%+ mutation kill rate" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
 
     - name: Upload coverage reports
       if: matrix.python-version == '3.11'
@@ -367,6 +424,7 @@ jobs:
         echo "- **Code Style**: ruff linting (zero violations)" >> $GITHUB_STEP_SUMMARY
         echo "- **Security**: Bandit + Safety + Semgrep scans" >> $GITHUB_STEP_SUMMARY
         echo "- **Property Testing**: Hypothesis-based edge case detection" >> $GITHUB_STEP_SUMMARY
+        echo "- **Mutation Testing**: Monitor locally (target ≥90% kill rate)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
 
         # Overall status

@@ -1,0 +1,184 @@
+# Multi Project Sample - Individual Project Documents
+# 複数プロジェクトの個別ドキュメント構成
+
+# Document 1: Frontend Project
+projects:
+  - id: "web-frontend"
+    name: "Web Frontend Application"
+    description: "Reactベースのフロントエンドアプリケーション"
+    type: "application"
+    language: "javascript"
+framework: "React"
+
+structure:
+  root: "frontend/"
+  directories:
+    - path: "src/"
+      purpose: "Source code"
+      files:
+        - name: "App.js"
+          type: "source"
+          description: "Main application component"
+        - name: "index.js"
+          type: "source"
+          description: "Application entry point"
+    - path: "public/"
+      purpose: "Static assets"
+    - path: "tests/"
+      purpose: "Test files"
+
+dependencies:
+  external:
+    - name: "react"
+      version: "^18.0.0"
+      purpose: "UI framework"
+    - name: "axios"
+      version: "^1.0.0"
+      purpose: "HTTP client"
+  internal:
+    - "api-gateway"
+
+build:
+  tool: "npm"
+  scripts:
+    build: "npm run build"
+    test: "npm test"
+    dev: "npm start"
+  outputs:
+    - "build/"
+
+testing:
+  framework: "jest"
+  coverage:
+    target: 80
+    exclude: ["tests/", "node_modules/"]
+  commands:
+    unit: "npm test"
+    integration: "npm run test:integration"
+
+metadata:
+  version: "1.2.0"
+  maintainers: ["frontend-team@example.com"]
+  tags: ["react", "frontend", "web"]
+
+  - id: "api-gateway"
+    name: "API Gateway Service"
+    description: "Node.js/ExpressベースのAPIゲートウェイ"
+    type: "service"
+    language: "javascript"
+framework: "Express"
+
+structure:
+  root: "api-gateway/"
+  directories:
+    - path: "src/"
+      purpose: "Source code"
+      files:
+        - name: "app.js"
+          type: "source"
+          description: "Express application"
+        - name: "routes/"
+          type: "source"
+          description: "Route definitions"
+    - path: "middleware/"
+      purpose: "Express middleware"
+    - path: "tests/"
+      purpose: "Test files"
+
+dependencies:
+  external:
+    - name: "express"
+      version: "^4.18.0"
+      purpose: "Web framework"
+    - name: "helmet"
+      version: "^6.0.0"
+      purpose: "Security middleware"
+  internal:
+    - "user-service"
+    - "product-service"
+
+build:
+  tool: "npm"
+  scripts:
+    start: "node src/app.js"
+    dev: "nodemon src/app.js"
+    test: "npm test"
+  outputs:
+    - "dist/"
+
+testing:
+  framework: "mocha"
+  coverage:
+    target: 85
+    exclude: ["tests/", "node_modules/"]
+  commands:
+    unit: "npm test"
+    integration: "npm run test:integration"
+
+metadata:
+  version: "2.0.1"
+  maintainers: ["backend-team@example.com"]
+  tags: ["api", "gateway", "microservice"]
+
+# Document 3: User Service Project
+
+id: "user-service"
+name: "User Management Service"
+description: "Pythonベースのユーザー管理マイクロサービス"
+type: "service"
+language: "python"
+framework: "FastAPI"
+
+structure:
+  root: "services/user-service/"
+  directories:
+    - path: "src/"
+      purpose: "Source code"
+      files:
+        - name: "main.py"
+          type: "source"
+          description: "FastAPI application"
+        - name: "models/"
+          type: "source"
+          description: "Data models"
+    - path: "tests/"
+      purpose: "Test files"
+    - path: "migrations/"
+      purpose: "Database migrations"
+
+dependencies:
+  external:
+    - name: "fastapi"
+      version: "^0.100.0"
+      purpose: "Web framework"
+    - name: "sqlalchemy"
+      version: "^2.0.0"
+      purpose: "ORM"
+    - name: "pydantic"
+      version: "^2.0.0"
+      purpose: "Data validation"
+  internal:
+    - "shared-database"
+
+build:
+  tool: "poetry"
+  scripts:
+    start: "uvicorn main:app --reload"
+    test: "pytest"
+    migrate: "alembic upgrade head"
+  outputs:
+    - "dist/"
+
+testing:
+  framework: "pytest"
+  coverage:
+    target: 90
+    exclude: ["tests/", "migrations/"]
+  commands:
+    unit: "pytest tests/unit/"
+    integration: "pytest tests/integration/"
+
+metadata:
+  version: "1.5.2"
+  maintainers: ["backend-team@example.com"]
+  tags: ["python", "fastapi", "microservice", "user"]

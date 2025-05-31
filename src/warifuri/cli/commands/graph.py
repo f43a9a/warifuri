@@ -47,10 +47,15 @@ def graph(
     if all_tasks:
         from ...utils.validation import detect_circular_dependencies
 
-        cycle = detect_circular_dependencies(all_tasks)
-        if cycle:
-            click.echo(f"⚠️  Warning: Circular dependency detected: {' -> '.join(cycle)}")
-            click.echo("Displaying graph anyway for visualization purposes...")
+        try:
+            cycle = detect_circular_dependencies(all_tasks)
+            if cycle:
+                click.echo(f"⚠️  Warning: Circular dependency detected: {' -> '.join(cycle)}")
+                click.echo("Displaying graph anyway for visualization purposes...")
+                click.echo()
+        except Exception as e:
+            click.echo(f"⚠️  Warning: Could not check for circular dependencies: {e}")
+            click.echo("Displaying graph anyway...")
             click.echo()
 
     if not all_tasks:

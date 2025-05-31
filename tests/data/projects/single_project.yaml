@@ -1,0 +1,153 @@
+# Single Project Sample
+# 単一プロジェクトの基本構造
+
+id: "simple-web-app"
+name: "Simple Web Application"
+description: "シンプルなWebアプリケーションプロジェクト"
+type: "application"
+language: "javascript"
+framework: "React"
+
+structure:
+  root: "/workspace/projects/simple-web-app"
+  directories:
+    - path: "src"
+      purpose: "ソースコード"
+      files:
+        - name: "index.js"
+          type: "source"
+          description: "エントリーポイント"
+        - name: "App.js"
+          type: "source"
+          description: "メインアプリケーション"
+    - path: "src/components"
+      purpose: "UIコンポーネント"
+    - path: "src/pages"
+      purpose: "ページコンポーネント"
+    - path: "src/utils"
+      purpose: "ユーティリティ関数"
+    - path: "tests"
+      purpose: "テストファイル"
+    - path: "docs"
+      purpose: "ドキュメント"
+    - path: "public"
+      purpose: "静的ファイル"
+      files:
+        - name: "index.html"
+          type: "config"
+          description: "HTMLテンプレート"
+
+dependencies:
+  external:
+    - name: "react"
+      version: "^18.0.0"
+      purpose: "UIライブラリ"
+    - name: "react-dom"
+      version: "^18.0.0"
+      purpose: "React DOM操作"
+    - name: "jest"
+      version: "^29.0.0"
+      purpose: "テストフレームワーク"
+    - name: "eslint"
+      version: "^8.0.0"
+      purpose: "コード品質チェック"
+
+files:
+  source:
+    - path: "src/index.js"
+      type: "source"
+      description: "エントリーポイント"
+    - path: "src/App.js"
+      type: "source"
+      description: "メインアプリケーション"
+    - path: "README.md"
+      type: "documentation"
+      description: "プロジェクト説明"
+    - path: ".gitignore"
+      type: "config"
+      description: "Git除外設定"
+
+dependencies:
+  runtime:
+    - name: "react"
+      version: "^18.0.0"
+      description: "UIライブラリ"
+    - name: "react-dom"
+      version: "^18.0.0"
+      description: "React DOM操作"
+
+  development:
+    - name: "jest"
+      version: "^29.0.0"
+      description: "テストフレームワーク"
+    - name: "eslint"
+      version: "^8.0.0"
+      description: "コード品質チェック"
+
+tasks:
+  setup:
+    - id: "install-dependencies"
+      title: "依存関係のインストール"
+      command: "npm install"
+
+  development:
+    - id: "start-dev-server"
+      title: "開発サーバー起動"
+      command: "npm start"
+    - id: "run-tests"
+      title: "テスト実行"
+      command: "npm test"
+    - id: "lint-code"
+      title: "コード品質チェック"
+      command: "npm run lint"
+
+  build:
+    - id: "build-production"
+      title: "本番ビルド"
+      command: "npm run build"
+    - id: "serve-build"
+      title: "ビルド結果のサーブ"
+      command: "npm run serve"
+
+configuration:
+  environment:
+    development:
+      PORT: 3000
+      NODE_ENV: "development"
+      API_URL: "http://localhost:8080/api"
+
+    production:
+      NODE_ENV: "production"
+      API_URL: "https://api.example.com"
+
+  build_settings:
+    output_directory: "build"
+    target_browsers: "> 0.2%, not dead, not op_mini all"
+    optimization: true
+
+automation:
+  ci_cd:
+    trigger: "push"
+    branches: ["main", "develop"]
+    steps:
+      - "install-dependencies"
+      - "lint-code"
+      - "run-tests"
+      - "build-production"
+
+  quality_gates:
+    test_coverage: 80
+    lint_errors: 0
+    build_warnings: 5
+
+monitoring:
+  health_checks:
+    - endpoint: "/health"
+      interval: "30s"
+      timeout: "5s"
+
+  metrics:
+    - name: "build_time"
+      type: "duration"
+    - name: "test_pass_rate"
+      type: "percentage"

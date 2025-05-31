@@ -1,0 +1,239 @@
+# JSON Schema for Workflow Test Data
+# ワークフローテストデータ用JSONスキーマ
+
+$schema: "http://json-schema.org/draft-07/schema#"
+title: "Workflow Schema"
+description: "ワークフロー定義スキーマ"
+type: "object"
+
+required:
+  - id
+  - name
+  - type
+  - steps
+
+properties:
+  id:
+    type: "string"
+    description: "ワークフローの一意識別子"
+    pattern: "^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+
+  name:
+    type: "string"
+    description: "ワークフロー名"
+    minLength: 1
+    maxLength: 100
+
+  description:
+    type: "string"
+    description: "ワークフローの説明"
+
+  type:
+    type: "string"
+    enum: ["ci", "cd", "automation", "deployment", "testing", "monitoring"]
+    description: "ワークフロータイプ"
+
+  trigger:
+    type: "object"
+    description: "ワークフロートリガー"
+    properties:
+      events:
+        type: "array"
+        items:
+          type: "string"
+          enum: ["push", "pull_request", "schedule", "manual", "tag", "release"]
+        description: "トリガーイベント"
+      branches:
+        type: "array"
+        items:
+          type: "string"
+        description: "対象ブランチ"
+      paths:
+        type: "array"
+        items:
+          type: "string"
+        description: "対象パス"
+      schedule:
+        type: "string"
+        description: "スケジュール（cron形式）"
+
+  environment:
+    type: "object"
+    description: "実行環境"
+    properties:
+      os:
+        type: "string"
+        enum: ["ubuntu", "windows", "macos", "self-hosted"]
+        description: "実行OS"
+      runtime:
+        type: "object"
+        properties:
+          language:
+            type: "string"
+            description: "ランタイム言語"
+          version:
+            type: "string"
+            description: "ランタイムバージョン"
+      variables:
+        type: "object"
+        additionalProperties:
+          type: "string"
+        description: "環境変数"
+      secrets:
+        type: "array"
+        items:
+          type: "string"
+        description: "必要なシークレット"
+
+  steps:
+    type: "array"
+    minItems: 1
+    items:
+      type: "object"
+      required: ["id", "name", "action"]
+      properties:
+        id:
+          type: "string"
+          description: "ステップID"
+          pattern: "^[a-z0-9][a-z0-9-_]*[a-z0-9]$"
+        name:
+          type: "string"
+          description: "ステップ名"
+        description:
+          type: "string"
+          description: "ステップの説明"
+        action:
+          type: "string"
+          description: "実行アクション"
+        inputs:
+          type: "object"
+          additionalProperties: true
+          description: "アクション入力"
+        outputs:
+          type: "object"
+          additionalProperties:
+            type: "string"
+          description: "アクション出力"
+        condition:
+          type: "string"
+          description: "実行条件"
+        timeout:
+          type: "integer"
+          minimum: 1
+          description: "タイムアウト（分）"
+        retry:
+          type: "object"
+          properties:
+            attempts:
+              type: "integer"
+              minimum: 1
+              maximum: 10
+              description: "リトライ回数"
+            delay:
+              type: "integer"
+              minimum: 1
+              description: "リトライ間隔（秒）"
+        dependencies:
+          type: "array"
+          items:
+            type: "string"
+          description: "依存ステップ"
+
+  artifacts:
+    type: "object"
+    description: "成果物設定"
+    properties:
+      upload:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name", "path"]
+          properties:
+            name:
+              type: "string"
+              description: "成果物名"
+            path:
+              type: "string"
+              description: "成果物パス"
+            retention:
+              type: "integer"
+              minimum: 1
+              maximum: 90
+              description: "保持期間（日）"
+      download:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name"]
+          properties:
+            name:
+              type: "string"
+              description: "ダウンロード成果物名"
+            path:
+              type: "string"
+              description: "展開先パス"
+
+  notifications:
+    type: "object"
+    description: "通知設定"
+    properties:
+      channels:
+        type: "array"
+        items:
+          type: "string"
+          enum: ["email", "slack", "teams", "webhook"]
+        description: "通知チャンネル"
+      events:
+        type: "array"
+        items:
+          type: "string"
+          enum: ["success", "failure", "cancelled", "always"]
+        description: "通知イベント"
+      recipients:
+        type: "array"
+        items:
+          type: "string"
+        description: "通知先"
+
+  concurrency:
+    type: "object"
+    description: "並行実行制御"
+    properties:
+      group:
+        type: "string"
+        description: "並行グループ"
+      cancel_in_progress:
+        type: "boolean"
+        description: "進行中のジョブをキャンセル"
+
+  matrix:
+    type: "object"
+    description: "マトリックス実行"
+    additionalProperties:
+      type: "array"
+
+  metadata:
+    type: "object"
+    description: "メタデータ"
+    properties:
+      created:
+        type: "string"
+        format: "date-time"
+        description: "作成日時"
+      updated:
+        type: "string"
+        format: "date-time"
+        description: "更新日時"
+      version:
+        type: "string"
+        description: "ワークフローバージョン"
+      author:
+        type: "string"
+        description: "作成者"
+      tags:
+        type: "array"
+        items:
+          type: "string"
+        description: "タグ"
+
+additionalProperties: false

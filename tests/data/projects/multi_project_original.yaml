@@ -1,0 +1,264 @@
+# Multi Project Sample
+# 複数プロジェクトの構成
+
+workspace_info:
+  name: "microservices-ecosystem"
+  description: "マイクロサービスエコシステムの複数プロジェクト構成"
+  version: "2.1.0"
+  root_directory: "/workspace/projects/microservices"
+
+projects:
+  # フロントエンドプロジェクト
+  - id: "frontend"
+    name: "web-frontend"
+    description: "Reactベースのフロントエンドアプリケーション"
+    type: "web_application"
+    path: "frontend"
+
+    dependencies:
+      external:
+        - name: "react"
+          version: "^18.0.0"
+        - name: "axios"
+          version: "^1.0.0"
+
+      internal:
+        - project_id: "api-gateway"
+          type: "runtime"
+          description: "APIへのアクセス"
+
+    tasks:
+      - id: "frontend-setup"
+        title: "フロントエンド環境構築"
+        commands: ["npm install"]
+      - id: "frontend-build"
+        title: "フロントエンドビルド"
+        commands: ["npm run build"]
+        depends_on: ["frontend-setup"]
+      - id: "frontend-test"
+        title: "フロントエンドテスト"
+        commands: ["npm test"]
+        depends_on: ["frontend-setup"]
+
+  # APIゲートウェイプロジェクト
+  - id: "api-gateway"
+    name: "api-gateway"
+    description: "Node.js/ExpressベースのAPIゲートウェイ"
+    type: "api_service"
+    path: "api-gateway"
+
+    dependencies:
+      external:
+        - name: "express"
+          version: "^4.18.0"
+        - name: "helmet"
+          version: "^6.0.0"
+
+      internal:
+        - project_id: "user-service"
+          type: "runtime"
+          description: "ユーザー管理サービス"
+        - project_id: "product-service"
+          type: "runtime"
+          description: "商品管理サービス"
+
+    tasks:
+      - id: "gateway-setup"
+        title: "ゲートウェイ環境構築"
+        commands: ["npm install"]
+      - id: "gateway-test"
+        title: "ゲートウェイテスト"
+        commands: ["npm test"]
+        depends_on: ["gateway-setup"]
+      - id: "gateway-start"
+        title: "ゲートウェイ起動"
+        commands: ["npm start"]
+        depends_on: ["gateway-setup"]
+
+  # ユーザーサービス
+  - id: "user-service"
+    name: "user-service"
+    description: "Pythonベースのユーザー管理マイクロサービス"
+    type: "microservice"
+    path: "services/user-service"
+
+    dependencies:
+      external:
+        - name: "fastapi"
+          version: "^0.100.0"
+        - name: "sqlalchemy"
+          version: "^2.0.0"
+        - name: "pydantic"
+          version: "^2.0.0"
+
+      internal:
+        - project_id: "shared-database"
+          type: "runtime"
+          description: "共有データベース"
+
+    tasks:
+      - id: "user-service-setup"
+        title: "ユーザーサービス環境構築"
+        commands: ["pip install -r requirements.txt"]
+      - id: "user-service-test"
+        title: "ユーザーサービステスト"
+        commands: ["pytest"]
+        depends_on: ["user-service-setup"]
+      - id: "user-service-start"
+        title: "ユーザーサービス起動"
+        commands: ["uvicorn main:app --reload"]
+        depends_on: ["user-service-setup"]
+
+  # 商品サービス
+  - id: "product-service"
+    name: "product-service"
+    description: "Goベースの商品管理マイクロサービス"
+    type: "microservice"
+    path: "services/product-service"
+
+    dependencies:
+      external:
+        - name: "gin"
+          version: "v1.9.1"
+        - name: "gorm"
+          version: "v1.25.0"
+
+      internal:
+        - project_id: "shared-database"
+          type: "runtime"
+          description: "共有データベース"
+
+    tasks:
+      - id: "product-service-setup"
+        title: "商品サービス環境構築"
+        commands: ["go mod download"]
+      - id: "product-service-test"
+        title: "商品サービステスト"
+        commands: ["go test ./..."]
+        depends_on: ["product-service-setup"]
+      - id: "product-service-build"
+        title: "商品サービスビルド"
+        commands: ["go build -o bin/product-service"]
+        depends_on: ["product-service-setup"]
+      - id: "product-service-start"
+        title: "商品サービス起動"
+        commands: ["./bin/product-service"]
+        depends_on: ["product-service-build"]
+
+  # 共有データベース
+  - id: "shared-database"
+    name: "shared-database"
+    description: "PostgreSQLベースの共有データベース"
+    type: "database"
+    path: "infrastructure/database"
+
+    tasks:
+      - id: "database-setup"
+        title: "データベース初期化"
+        commands: ["docker-compose up -d postgres"]
+      - id: "database-migrate"
+        title: "データベースマイグレーション"
+        commands: ["./scripts/migrate.sh"]
+        depends_on: ["database-setup"]
+      - id: "database-seed"
+        title: "テストデータ投入"
+        commands: ["./scripts/seed.sh"]
+        depends_on: ["database-migrate"]
+
+# プロジェクト間の依存関係グラフ
+dependency_graph:
+  # レベル0: 基盤インフラ
+  level_0:
+    - "shared-database"
+
+  # レベル1: バックエンドサービス
+  level_1:
+    - "user-service"
+    - "product-service"
+
+  # レベル2: APIレイヤー
+  level_2:
+    - "api-gateway"
+
+  # レベル3: フロントエンド
+  level_3:
+    - "frontend"
+
+# 全体的な構築順序
+build_order:
+  parallel_groups:
+    - group: "infrastructure"
+      projects: ["shared-database"]
+      tasks: ["database-setup", "database-migrate", "database-seed"]
+
+    - group: "backend_services"
+      projects: ["user-service", "product-service"]
+      tasks: ["*-setup", "*-test", "*-build"]
+      requires: ["infrastructure"]
+
+    - group: "api_layer"
+      projects: ["api-gateway"]
+      tasks: ["gateway-setup", "gateway-test"]
+      requires: ["backend_services"]
+
+    - group: "frontend"
+      projects: ["frontend"]
+      tasks: ["frontend-setup", "frontend-test", "frontend-build"]
+      requires: ["api_layer"]
+
+# 統合テスト設定
+integration_tests:
+  - name: "end_to_end_flow"
+    description: "フロントエンドからバックエンドまでの完全なフロー"
+    requires_projects: ["frontend", "api-gateway", "user-service", "product-service", "shared-database"]
+    test_scenarios:
+      - "user_registration_and_login"
+      - "product_search_and_view"
+      - "order_creation_flow"
+
+  - name: "service_communication"
+    description: "マイクロサービス間の通信テスト"
+    requires_projects: ["api-gateway", "user-service", "product-service"]
+    test_scenarios:
+      - "cross_service_data_consistency"
+      - "service_discovery_and_failover"
+
+# 監視とログ設定
+monitoring:
+  centralized_logging:
+    enabled: true
+    log_aggregator: "elasticsearch"
+    retention_days: 30
+
+  metrics_collection:
+    enabled: true
+    collector: "prometheus"
+    dashboards: ["grafana"]
+
+  health_checks:
+    interval: "30s"
+    endpoints:
+      - service: "user-service"
+        url: "http://localhost:8001/health"
+      - service: "product-service"
+        url: "http://localhost:8002/health"
+      - service: "api-gateway"
+        url: "http://localhost:8000/health"
+
+# デプロイメント設定
+deployment:
+  environments:
+    - name: "development"
+      auto_deploy: true
+      trigger: "feature_branches"
+
+    - name: "staging"
+      auto_deploy: true
+      trigger: "main_branch"
+      requires_approval: false
+
+    - name: "production"
+      auto_deploy: false
+      trigger: "release_tags"
+      requires_approval: true
+      approval_count: 2

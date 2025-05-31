@@ -1,0 +1,89 @@
+# Dependency Chain Sample
+# 連鎖する依存関係のテストケース
+
+tasks:
+  # タスク1: 基盤設定
+  - id: "foundation-setup"
+    title: "基盤環境の設定"
+    description: "すべての後続タスクに必要な基盤環境を設定する"
+    type: "machine"
+    status: "todo"
+    execution:
+      script: |
+        #!/bin/bash
+        mkdir -p workspace/{input,output,temp}
+        echo "Foundation setup completed" > workspace/.setup_marker
+    validation:
+      output_files:
+        - "workspace/.setup_marker"
+    tags: ["foundation", "setup"]
+
+  # タスク2: データ準備（基盤設定に依存）
+  - id: "data-preparation"
+    title: "データファイルの準備"
+    description: "処理対象のデータファイルを準備する"
+    type: "machine"
+    status: "todo"
+    dependencies:
+      - id: "foundation-setup"
+        type: "strict"
+    execution:
+      script: |
+        #!/bin/bash
+        echo "sample data" > workspace/input/data.txt
+        echo "Sample configuration" > workspace/input/config.json
+    validation:
+      input_files:
+        - "workspace/.setup_marker"
+      output_files:
+        - "workspace/input/data.txt"
+        - "workspace/input/config.json"
+    tags: ["data", "preparation"]
+
+  # タスク3: データ処理（データ準備に依存）
+  - id: "data-processing"
+    title: "データの処理"
+    description: "準備されたデータを処理し、結果を出力する"
+    type: "machine"
+    status: "todo"
+    dependencies:
+      - id: "data-preparation"
+        type: "strict"
+    execution:
+      script: |
+        #!/bin/bash
+        cat workspace/input/data.txt | tr 'a-z' 'A-Z' > workspace/output/processed.txt
+        wc -l workspace/input/data.txt > workspace/output/stats.txt
+    validation:
+      input_files:
+        - "workspace/input/data.txt"
+        - "workspace/input/config.json"
+      output_files:
+        - "workspace/output/processed.txt"
+        - "workspace/output/stats.txt"
+    tags: ["processing", "transform"]
+
+  # タスク4: レポート生成（データ処理に依存）
+  - id: "report-generation"
+    title: "レポートの生成"
+    description: "処理結果から最終レポートを生成する"
+    type: "machine"
+    status: "todo"
+    dependencies:
+      - id: "data-processing"
+        type: "strict"
+    execution:
+      script: |
+        #!/bin/bash
+        echo "## Processing Report" > workspace/output/report.md
+        echo "### Stats" >> workspace/output/report.md
+        cat workspace/output/stats.txt >> workspace/output/report.md
+        echo "### Processed Data" >> workspace/output/report.md
+        head -5 workspace/output/processed.txt >> workspace/output/report.md
+    validation:
+      input_files:
+        - "workspace/output/processed.txt"
+        - "workspace/output/stats.txt"
+      output_files:
+        - "workspace/output/report.md"
+    tags: ["report", "documentation"]

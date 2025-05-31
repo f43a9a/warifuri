@@ -1,0 +1,108 @@
+# Basic Automation Workflow Sample
+# 基本的な自動化ワークフロー
+
+id: "ci-basic"
+name: "Basic CI/CD Pipeline"
+description: "基本的なCI/CDパイプライン"
+type: "ci"
+
+trigger:
+  events: ["push", "pull_request"]
+  branches: ["main", "develop"]
+  paths: ["src/**", "tests/**"]
+
+environment:
+  os: "ubuntu"
+  runtime:
+    language: "python"
+    version: "3.11"
+  variables:
+    CI_ENV: "test"
+    DEBUG: "false"
+  secrets: ["API_TOKEN", "DATABASE_URL"]
+
+steps:
+  - id: "checkout"
+    name: "Checkout Code"
+    description: "ソースコードをチェックアウト"
+    action: "actions/checkout@v4"
+    inputs:
+      fetch-depth: 0
+
+  - id: "setup-python"
+    name: "Setup Python"
+    description: "Python環境をセットアップ"
+    action: "actions/setup-python@v4"
+    inputs:
+      python-version: "3.11"
+      cache: "pip"
+
+  - id: "install-deps"
+    name: "Install Dependencies"
+    description: "依存関係をインストール"
+    action: "run"
+    inputs:
+      script: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+    dependencies: ["setup-python"]
+
+  - id: "lint"
+    name: "Lint Code"
+    description: "コードをリント"
+    action: "run"
+    inputs:
+      script: |
+        ruff check src/
+        black --check src/
+    dependencies: ["install-deps"]
+    timeout: 10
+
+  - id: "test"
+    name: "Run Tests"
+    description: "テストを実行"
+    action: "run"
+    inputs:
+      script: |
+        pytest tests/ --cov=src --cov-report=xml
+    dependencies: ["install-deps"]
+    timeout: 30
+    retry:
+      attempts: 3
+      delay: 5
+
+  - id: "build"
+    name: "Build Package"
+    description: "パッケージをビルド"
+    action: "run"
+    inputs:
+      script: |
+        python -m build
+    dependencies: ["test"]
+    condition: "success()"
+
+artifacts:
+  upload:
+    - name: "test-results"
+      path: "test-results.xml"
+      retention: 30
+    - name: "coverage"
+      path: "coverage.xml"
+      retention: 7
+    - name: "package"
+      path: "dist/"
+      retention: 90
+
+notifications:
+  channels: ["slack", "email"]
+  events: ["failure", "success"]
+  recipients: ["dev-team@example.com"]
+
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel_in_progress: true
+
+metadata:
+  version: "1.0.0"
+  author: "DevOps Team"
+  tags: ["ci", "python", "automation"]

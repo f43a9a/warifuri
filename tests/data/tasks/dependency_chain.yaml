@@ -1,0 +1,196 @@
+# Dependency Chain Sample
+# 連鎖する依存関係のテストケース
+
+tasks:
+  # タスク1: 基盤設定
+  - id: "foundation-setup"
+    title: "基盤環境の設定"
+    description: "すべての後続タスクに必要な基盤環境を設定する"
+    type: "machine"
+    status: "todo"
+    execution:
+      script: |
+        #!/bin/bash
+        mkdir -p workspace/{input,output,temp}
+        echo "Foundation setup completed" > workspace/.setup_marker
+    validation:
+      output_files:
+        - "workspace/.setup_marker"
+    tags: ["foundation", "setup"]
+
+  # タスク2: データ準備（基盤設定に依存）
+  - id: "data-preparation"
+    title: "データファイルの準備"
+    description: "処理対象のデータファイルを準備する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "foundation-setup"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # 基盤設定が完了していることを確認
+    if [[ ! -f "workspace/.setup_marker" ]]; then
+      echo "ERROR: Foundation setup not completed"
+      exit 1
+    fi
+
+    # サンプルデータを作成
+    cat > workspace/input/sample_data.csv << EOF
+    id,name,value
+    1,item1,100
+    2,item2,200
+    3,item3,300
+    EOF
+
+    echo "Data preparation completed" > workspace/.data_ready
+validation:
+  output_files:
+    - "workspace/input/sample_data.csv"
+    - "workspace/.data_ready"
+tags: ["data", "preparation"]
+
+# タスク3: データ検証（データ準備に依存）
+
+id: "data-validation"
+title: "データの妥当性検証"
+description: "準備されたデータの妥当性を検証する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "data-preparation"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # データ準備が完了していることを確認
+    if [[ ! -f "workspace/.data_ready" ]]; then
+      echo "ERROR: Data preparation not completed"
+      exit 1
+    fi
+
+    # データファイルの存在と内容を確認
+    if [[ ! -f "workspace/input/sample_data.csv" ]]; then
+      echo "ERROR: Sample data file not found"
+      exit 1
+    fi
+
+    # 行数チェック（ヘッダー + 3行 = 4行）
+    line_count=$(wc -l < workspace/input/sample_data.csv)
+    if [[ $line_count -ne 4 ]]; then
+      echo "ERROR: Expected 4 lines, got $line_count"
+      exit 1
+    fi
+
+    echo "Data validation completed" > workspace/.validation_done
+validation:
+  output_files:
+    - "workspace/.validation_done"
+tags: ["validation", "quality"]
+
+# タスク4: 並列処理A（データ検証に依存）
+
+id: "parallel-processing-a"
+title: "並列処理A: 集計"
+description: "データの集計処理を実行する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "data-validation"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # データ検証が完了していることを確認
+    if [[ ! -f "workspace/.validation_done" ]]; then
+      echo "ERROR: Data validation not completed"
+      exit 1
+    fi
+
+    # 集計処理
+    total_value=$(tail -n +2 workspace/input/sample_data.csv | cut -d',' -f3 | paste -sd+ | bc)
+    echo "Total value: $total_value" > workspace/output/aggregation_result.txt
+    echo "Processing A completed" > workspace/.processing_a_done
+validation:
+  output_files:
+    - "workspace/output/aggregation_result.txt"
+    - "workspace/.processing_a_done"
+tags: ["processing", "aggregation", "parallel"]
+
+# タスク5: 並列処理B（データ検証に依存）
+
+id: "parallel-processing-b"
+title: "並列処理B: 変換"
+description: "データの変換処理を実行する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "data-validation"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # データ検証が完了していることを確認
+    if [[ ! -f "workspace/.validation_done" ]]; then
+      echo "ERROR: Data validation not completed"
+      exit 1
+    fi
+
+    # 変換処理（値を2倍にする）
+    tail -n +2 workspace/input/sample_data.csv | while IFS=',' read -r id name value; do
+      doubled_value=$((value * 2))
+      echo "$id,$name,$doubled_value"
+    done > workspace/output/transformed_data.csv
+
+    echo "Processing B completed" > workspace/.processing_b_done
+validation:
+  output_files:
+    - "workspace/output/transformed_data.csv"
+    - "workspace/.processing_b_done"
+tags: ["processing", "transformation", "parallel"]
+
+# タスク6: 最終統合（両方の並列処理に依存）
+
+id: "final-integration"
+title: "最終結果の統合"
+description: "並列処理の結果を統合して最終レポートを生成する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "parallel-processing-a"
+    type: "strict"
+  - id: "parallel-processing-b"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # 両方の処理が完了していることを確認
+    if [[ ! -f "workspace/.processing_a_done" ]]; then
+      echo "ERROR: Processing A not completed"
+      exit 1
+    fi
+    if [[ ! -f "workspace/.processing_b_done" ]]; then
+      echo "ERROR: Processing B not completed"
+      exit 1
+    fi
+
+    # 最終レポート生成
+    cat > workspace/output/final_report.txt << EOF
+    === Final Processing Report ===
+
+    Aggregation Result:
+    $(cat workspace/output/aggregation_result.txt)
+
+    Transformation Result:
+    $(wc -l < workspace/output/transformed_data.csv) records transformed
+
+    Processing completed at: $(date)
+    EOF
+
+    echo "Final integration completed" > workspace/.final_done
+validation:
+  output_files:
+    - "workspace/output/final_report.txt"
+    - "workspace/.final_done"
+tags: ["integration", "final", "report"]

@@ -39,6 +39,7 @@ types-requests = "*"
 types-jsonschema = "*"
 hypothesis = "^6.131.31"
 mutmut = "^3.3.0"
+snapshottest = "^0.6.0"
 
 [tool.mypy]
 python_version = "3.11"

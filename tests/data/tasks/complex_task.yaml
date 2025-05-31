@@ -1,0 +1,154 @@
+# Complex Task Definition Sample
+# 複雑な依存関係と設定を持つタスク
+
+id: "data-processing-pipeline"
+title: "データ処理パイプライン"
+description: "複数ステップのデータ処理を行う複雑なタスク"
+type: "machine"
+status: "todo"
+
+# 依存関係の設定
+dependencies:
+  - id: "setup-environment"
+    type: "strict"
+    description: "環境設定が完了している必要がある"
+  - id: "data-preparation"
+    type: "soft"
+    description: "データ準備が完了していることが望ましい"
+
+# 複雑な実行設定
+execution:
+  script: |
+    #!/bin/bash
+    set -euo pipefail
+
+    # ステップ1: 入力データの検証
+    echo "Validating input data..."
+    if [[ ! -f "input_data.csv" ]]; then
+        echo "ERROR: input_data.csv not found"
+        exit 1
+    fi
+
+    # ステップ2: データ処理
+    echo "Processing data..."
+    python3 -c "
+    import pandas as pd
+    import json
+
+    # CSVを読み込み
+    df = pd.read_csv('input_data.csv')
+
+    # データ処理
+    result = {
+        'total_rows': len(df),
+        'columns': list(df.columns),
+        'summary': df.describe().to_dict()
+    }
+
+    # 結果をJSONで保存
+    with open('processing_result.json', 'w') as f:
+        json.dump(result, f, indent=2)
+
+    print('Data processing completed')
+    "
+
+    # ステップ3: 結果の検証
+    echo "Validating results..."
+    if [[ ! -f "processing_result.json" ]]; then
+        echo "ERROR: processing_result.json not generated"
+        exit 1
+    fi
+
+    echo "Pipeline completed successfully"
+
+  # 実行環境の設定
+  environment:
+    variables:
+      PYTHONPATH: "${WORKSPACE_ROOT}/src"
+      DATA_DIR: "${WORKSPACE_ROOT}/data"
+    requirements:
+      python: ">=3.8"
+      packages:
+        - "pandas>=1.3.0"
+        - "numpy>=1.20.0"
+
+  # タイムアウト設定
+  timeout: "300s"
+
+  # リトライ設定
+  retry:
+    max_attempts: 3
+    backoff: "exponential"
+    delay: "10s"
+
+# タグとメタデータ
+tags:
+  - "data-processing"
+  - "pipeline"
+  - "complex"
+  - "python"
+
+metadata:
+  estimated_duration: "5m"
+  complexity: "high"
+  category: "processing"
+  author: "data-team"
+  version: "1.2.0"
+
+# 詳細なバリデーション設定
+validation:
+  # 出力ファイルの存在確認
+  output_files:
+    - "processing_result.json"
+
+  # ファイル内容の検証
+  expected_content:
+    - file: "processing_result.json"
+      json_schema:
+        type: "object"
+        required: ["total_rows", "columns", "summary"]
+        properties:
+          total_rows:
+            type: "integer"
+            minimum: 0
+          columns:
+            type: "array"
+            items:
+              type: "string"
+          summary:
+            type: "object"
+
+  # パフォーマンス要件
+  performance:
+    max_memory: "512MB"
+    max_cpu_time: "120s"
+
+# エラーハンドリング設定
+error_handling:
+  on_failure:
+    - action: "cleanup"
+      script: |
+        rm -f processing_result.json
+        echo "Cleanup completed"
+    - action: "notify"
+      level: "error"
+      message: "Data processing pipeline failed"
+
+  recoverable_errors:
+    - pattern: "MemoryError"
+      action: "retry_with_less_memory"
+    - pattern: "TimeoutError"
+      action: "extend_timeout"
+
+# 出力設定
+output:
+  artifacts:
+    - "processing_result.json"
+  logs:
+    level: "INFO"
+    format: "json"
+  metrics:
+    - name: "processing_time"
+      type: "duration"
+    - name: "rows_processed"
+      type: "counter"

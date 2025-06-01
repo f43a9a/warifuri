@@ -1,10 +1,18 @@
 """Test configuration."""
 
 # Standard library imports first
+import os
 import shutil
 import tempfile
 from pathlib import Path
 from typing import Generator
+
+# Set explicit temp directory for CI stability
+if os.getenv("CI"):
+    import tempfile
+
+    os.environ["TMPDIR"] = "/tmp"
+    tempfile.tempdir = "/tmp"
 
 # Third-party imports
 import pytest

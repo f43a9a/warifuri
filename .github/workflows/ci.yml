@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11']
+        python-version: ['3.11', '3.12']
 
     steps:
     - name: Checkout code
@@ -59,7 +59,12 @@ jobs:
 
     - name: Run test suite
       run: |
-        poetry run pytest tests/ -v --cov=src/warifuri --cov-report=xml --cov-report=term
+        echo "Python version: $(python --version)"
+        echo "Working directory: $(pwd)"
+        echo "Available space: $(df -h .)"
+        echo "Temp directory: $TMPDIR"
+        echo "Running tests with verbose output..."
+        poetry run pytest tests/ -v --tb=long --cov=src/warifuri --cov-report=xml --cov-report=term
 
     - name: Upload coverage reports
       if: matrix.python-version == '3.11'

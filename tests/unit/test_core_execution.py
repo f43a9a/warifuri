@@ -109,10 +109,11 @@ def test_copy_outputs_back_success(
     assert "Copied outputs: File: output.txt" in execution_log
 
 
+@patch("pathlib.Path.mkdir")
 @patch("warifuri.core.execution.core.safe_write_file")
 @patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-def test_save_execution_log_success(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
+def test_save_execution_log_success(mock_git_sha, mock_datetime, mock_safe_write, mock_mkdir, sample_task):
     """Test save_execution_log with success=True."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()
@@ -135,10 +136,11 @@ def test_save_execution_log_success(mock_git_sha, mock_datetime, mock_safe_write
     assert "test123" in log_content
 
 
+@patch("pathlib.Path.mkdir")
 @patch("warifuri.core.execution.core.safe_write_file")
 @patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-def test_save_execution_log_failure(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
+def test_save_execution_log_failure(mock_git_sha, mock_datetime, mock_safe_write, mock_mkdir, sample_task):
     """Test save_execution_log with success=False."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()
@@ -208,10 +210,11 @@ def test_create_done_file_write_error(mock_safe_write, sample_task):
         create_done_file(sample_task, message)
 
 
+@patch("pathlib.Path.mkdir")
 @patch("warifuri.core.execution.core.safe_write_file")
 @patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-def test_log_failure_success(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
+def test_log_failure_success(mock_git_sha, mock_datetime, mock_safe_write, mock_mkdir, sample_task):
     """Test successful log_failure."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()

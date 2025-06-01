@@ -87,4 +87,10 @@ ignore = ["E203", "E501", "C901"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
-addopts = "--color=yes"
+addopts = "--color=yes --tb=short -x --maxfail=5"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+# Disable pytest-xdist for CI stability
+# addopts = "--color=yes --tb=short -x --maxfail=5 -n auto"

@@ -67,6 +67,7 @@ def test_execute_machine_task_dry_run(sample_task):
 @patch("warifuri.core.execution.machine.copy_directory_contents")
 @patch("warifuri.core.execution.machine.copy_input_files")
 @patch("warifuri.core.execution.machine.validate_task_inputs")
+@patch("warifuri.core.execution.core.log_failure")
 @patch("warifuri.core.execution.machine.validate_task_outputs")
 @patch("warifuri.core.execution.machine.setup_task_environment")
 def test_execute_machine_task_no_script(
@@ -77,6 +78,7 @@ def test_execute_machine_task_no_script(
     mock_copy_dir,
     mock_rmtree,
     mock_create_temp,
+    mock_log_failure,
     sample_task,
 ):
     """Test execute_machine_task when no execution script is found."""
@@ -88,6 +90,7 @@ def test_execute_machine_task_no_script(
     with patch("pathlib.Path.exists", return_value=False):
         result = execute_machine_task(sample_task, dry_run=False)
         assert result is False
+        mock_log_failure.assert_called_once()
 
     mock_rmtree.assert_called_once_with(temp_dir)
 

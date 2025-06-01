@@ -77,10 +77,10 @@ def test_copy_outputs_back_copy_error(
     # Mock output file exists and is a file
     mock_exists.return_value = True
     mock_is_file.return_value = True
-    mock_copy.side_effect = Exception("Copy failed")
+    mock_copy.side_effect = PermissionError("[Errno 13] Permission denied: '/test'")
 
     # This should raise an exception during copy
-    with pytest.raises(Exception, match="Copy failed"):
+    with pytest.raises(PermissionError, match=r"\[Errno 13\] Permission denied: '/test'"):
         copy_outputs_back(sample_task, temp_dir, execution_log)
 
 
@@ -109,10 +109,10 @@ def test_copy_outputs_back_success(
     assert "Copied outputs: File: output.txt" in execution_log
 
 
-@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-@patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.safe_write_file")
-def test_save_execution_log_success(mock_safe_write, mock_datetime, mock_git_sha, sample_task):
+@patch("warifuri.core.execution.core.datetime")
+@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
+def test_save_execution_log_success(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
     """Test save_execution_log with success=True."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()
@@ -135,10 +135,10 @@ def test_save_execution_log_success(mock_safe_write, mock_datetime, mock_git_sha
     assert "test123" in log_content
 
 
-@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-@patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.safe_write_file")
-def test_save_execution_log_failure(mock_safe_write, mock_datetime, mock_git_sha, sample_task):
+@patch("warifuri.core.execution.core.datetime")
+@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
+def test_save_execution_log_failure(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
     """Test save_execution_log with success=False."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()
@@ -165,10 +165,10 @@ def test_save_execution_log_failure(mock_safe_write, mock_datetime, mock_git_sha
 def test_save_execution_log_write_error(mock_safe_write, sample_task):
     """Test save_execution_log when file write fails."""
     execution_log = ["Test log"]
-    mock_safe_write.side_effect = IOError("Write failed")
+    mock_safe_write.side_effect = FileNotFoundError("[Errno 2] No such file or directory: '/test/project/test-task/logs'")
 
     # Should raise exception, not handle gracefully
-    with pytest.raises(IOError, match="Write failed"):
+    with pytest.raises(FileNotFoundError, match=r"\[Errno 2\] No such file or directory: '/test/project/test-task/logs'"):
         save_execution_log(sample_task, execution_log, success=True)
 
 
@@ -208,10 +208,10 @@ def test_create_done_file_write_error(mock_safe_write, sample_task):
         create_done_file(sample_task, message)
 
 
-@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
-@patch("warifuri.core.execution.core.datetime")
 @patch("warifuri.core.execution.core.safe_write_file")
-def test_log_failure_success(mock_safe_write, mock_datetime, mock_git_sha, sample_task):
+@patch("warifuri.core.execution.core.datetime")
+@patch("warifuri.core.execution.core.get_git_commit_sha", return_value="test123")
+def test_log_failure_success(mock_git_sha, mock_datetime, mock_safe_write, sample_task):
     """Test successful log_failure."""
     # Mock datetime to have consistent timestamp
     mock_now = Mock()
@@ -238,14 +238,17 @@ def test_log_failure_success(mock_safe_write, mock_datetime, mock_git_sha, sampl
     assert "test123" in log_content
 
 
-def test_log_failure_write_error(sample_task):
+@patch("warifuri.core.execution.core.safe_write_file")
+def test_log_failure_write_error(mock_safe_write, sample_task):
     """Test log_failure when file write fails."""
     error_msg = "Something went wrong"
     error_type = "ValidationError"
     execution_log = ["Step 1"]
 
-    with patch("builtins.open", side_effect=IOError("Write failed")):
-        # Should not raise exception, just handle gracefully
+    mock_safe_write.side_effect = FileNotFoundError("[Errno 2] No such file or directory: '/test/project/test-task/logs'")
+
+    # Should raise exception when writing fails
+    with pytest.raises(FileNotFoundError):
         log_failure(sample_task, error_msg, error_type, execution_log)
 
 

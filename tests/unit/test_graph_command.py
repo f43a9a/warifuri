@@ -17,7 +17,7 @@ def test_graph_command_no_projects():
 
         result = runner.invoke(graph)
 
-        assert result.exit_code == 0
+        assert result.exit_code == 0  # Command succeeds even with no projects
         assert "No tasks found." in result.output
 
 

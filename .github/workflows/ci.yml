@@ -57,6 +57,12 @@ jobs:
     - name: Run mypy type checking
       run: poetry run mypy src/warifuri --strict
 
+    - name: Apply Python 3.12 compatibility fix
+      if: matrix.python-version == '3.12'
+      run: |
+        echo "Applying Python 3.12 compatibility fix for snapshottest..."
+        python scripts/fix_snapshottest_python312.py
+
     - name: Run test suite with coverage
       run: |
         echo "Running comprehensive test suite..."

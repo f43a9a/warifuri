@@ -84,6 +84,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "--color=yes"
+required_plugins = ["snapshottest"]
 
 [tool.hypothesis]
 # Property-based testing configuration

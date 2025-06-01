@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>warifuri.core.discovery_optimized &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">warifuri.core.discovery_optimized</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for warifuri.core.discovery_optimized</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Optimized task discovery with performance enhancements.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils.filesystem</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_instruction_files</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TaskCache">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.TaskCache">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TaskCache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cache for task discovery results.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dependency_cache</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_modified</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="TaskCache.get_task">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.TaskCache.get_task">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get cached task if still valid.&quot;&quot;&quot;</span>
+        <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">task_path</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Check if instruction file was modified</span>
+        <span class="n">instruction_file</span> <span class="o">=</span> <span class="n">task_path</span> <span class="o">/</span> <span class="s2">&quot;instruction.yaml&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instruction_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">current_mtime</span> <span class="o">=</span> <span class="n">instruction_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span>
+        <span class="k">if</span> <span class="n">current_mtime</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_modified</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">path_str</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># Invalidate cache</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_task_cache</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">path_str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dependency_cache</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">path_str</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_cache</span><span class="p">[</span><span class="n">path_str</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="TaskCache.cache_task">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.TaskCache.cache_task">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cache_task</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cache task with modification time.&quot;&quot;&quot;</span>
+        <span class="n">path_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_cache</span><span class="p">[</span><span class="n">path_str</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+
+        <span class="n">instruction_file</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;instruction.yaml&quot;</span>
+        <span class="k">if</span> <span class="n">instruction_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_last_modified</span><span class="p">[</span><span class="n">path_str</span><span class="p">]</span> <span class="o">=</span> <span class="n">instruction_file</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span></div>
+</div>
+
+
+
+<span class="c1"># Global cache instance</span>
+<span class="n">_task_cache</span> <span class="o">=</span> <span class="n">TaskCache</span><span class="p">()</span>
+
+
+<span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_cached_find_instruction_files</span><span class="p">(</span><span class="n">workspace_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cached version of find_instruction_files.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">find_instruction_files</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">workspace_path</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="discover_tasks_optimized">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.discover_tasks_optimized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">discover_tasks_optimized</span><span class="p">(</span><span class="n">workspace_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Discover tasks with performance optimizations.&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discovering tasks in: </span><span class="si">{</span><span class="n">workspace_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">instruction_files</span> <span class="o">=</span> <span class="n">_cached_find_instruction_files</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">workspace_path</span><span class="p">))</span>
+
+    <span class="c1"># Batch process instruction files</span>
+    <span class="k">for</span> <span class="n">instruction_file_str</span> <span class="ow">in</span> <span class="n">instruction_files</span><span class="p">:</span>
+        <span class="n">instruction_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">instruction_file_str</span><span class="p">)</span>
+        <span class="n">task_path</span> <span class="o">=</span> <span class="n">instruction_file</span><span class="o">.</span><span class="n">parent</span>
+
+        <span class="c1"># Check cache first</span>
+        <span class="n">cached_task</span> <span class="o">=</span> <span class="n">_task_cache</span><span class="o">.</span><span class="n">get_task</span><span class="p">(</span><span class="n">task_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cached_task</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cached_task</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Load task (this could be further optimized with bulk YAML loading)</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">.discovery</span><span class="w"> </span><span class="kn">import</span> <span class="n">discover_task</span>
+
+            <span class="n">project_name</span> <span class="o">=</span> <span class="n">task_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">discover_task</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">task_path</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+                <span class="n">_task_cache</span><span class="o">.</span><span class="n">cache_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to load task from </span><span class="si">{</span><span class="n">task_path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discovered </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span><span class="si">}</span><span class="s2"> tasks in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">tasks</span></div>
+
+
+
+<div class="viewcode-block" id="build_dependency_graph_optimized">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.build_dependency_graph_optimized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_dependency_graph_optimized</span><span class="p">(</span><span class="n">tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Task</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build dependency graph with optimizations.&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Building optimized dependency graph&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Create task lookup for O(1) access</span>
+    <span class="n">task_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">:</span> <span class="n">task</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">}</span>
+
+    <span class="c1"># Build adjacency list representation</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+        <span class="n">task_deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c1"># Process dependencies efficiently</span>
+        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">task_lookup</span><span class="p">:</span>
+                <span class="n">task_deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Task </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="si">}</span><span class="s2"> depends on non-existent task: </span><span class="si">{</span><span class="n">dep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">graph</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_deps</span>
+
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Built dependency graph in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span></div>
+
+
+
+<div class="viewcode-block" id="find_ready_tasks_optimized">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.find_ready_tasks_optimized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_ready_tasks_optimized</span><span class="p">(</span>
+    <span class="n">tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Task</span><span class="p">],</span> <span class="n">dependency_graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Task</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find ready tasks using optimized algorithms.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tasks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Finding ready tasks with optimization&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1"># Create lookup sets for O(1) membership testing</span>
+    <span class="n">completed_tasks</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span> <span class="k">if</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;done.md&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()}</span>
+
+    <span class="n">ready_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+        <span class="c1"># Skip if already completed</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">full_name</span> <span class="ow">in</span> <span class="n">completed_tasks</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check if all dependencies are satisfied</span>
+        <span class="n">task_deps</span> <span class="o">=</span> <span class="n">dependency_graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">task_deps</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">completed_tasks</span><span class="p">):</span>
+            <span class="n">ready_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">ready_tasks</span><span class="p">)</span><span class="si">}</span><span class="s2"> ready tasks in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ready_tasks</span></div>
+
+
+
+<div class="viewcode-block" id="detect_cycles_optimized">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.detect_cycles_optimized">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_cycles_optimized</span><span class="p">(</span><span class="n">dependency_graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect cycles using optimized DFS with early termination.&quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Detecting cycles with optimization&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">WHITE</span><span class="p">,</span> <span class="n">GRAY</span><span class="p">,</span> <span class="n">BLACK</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="p">:</span> <span class="n">WHITE</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">dependency_graph</span><span class="p">}</span>
+    <span class="n">cycles</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">GRAY</span><span class="p">:</span>
+            <span class="c1"># Found cycle</span>
+            <span class="n">cycle_start</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">cycle</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="n">cycle_start</span><span class="p">:]</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+            <span class="n">cycles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cycle</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">BLACK</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">GRAY</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">dependency_graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">dependency_graph</span><span class="p">:</span>  <span class="c1"># Only visit existing nodes</span>
+                <span class="n">dfs</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="n">path</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">BLACK</span>
+
+    <span class="c1"># Process nodes in topological order hint for better performance</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dependency_graph</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">==</span> <span class="n">WHITE</span><span class="p">:</span>
+            <span class="n">dfs</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="c1"># Early termination if cycles found and we only need to detect existence</span>
+        <span class="k">if</span> <span class="n">cycles</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">cycles</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">:</span>  <span class="c1"># Limit cycle detection for performance</span>
+            <span class="k">break</span>
+
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cycle detection completed in </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cycles</span></div>
+
+
+
+<span class="c1"># Performance monitoring decorator</span>
+<div class="viewcode-block" id="monitor_performance">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.discovery_optimized.monitor_performance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">monitor_performance</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decorator to monitor function performance.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+        <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>  <span class="c1"># Log slow operations</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Slow operation detected: </span><span class="si">{</span><span class="n">func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> took </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+
+<span class="c1"># Apply performance monitoring to key functions</span>
+<span class="n">discover_tasks_optimized</span> <span class="o">=</span> <span class="n">monitor_performance</span><span class="p">(</span><span class="n">discover_tasks_optimized</span><span class="p">)</span>
+<span class="n">build_dependency_graph_optimized</span> <span class="o">=</span> <span class="n">monitor_performance</span><span class="p">(</span><span class="n">build_dependency_graph_optimized</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

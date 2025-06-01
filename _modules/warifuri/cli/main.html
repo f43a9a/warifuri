@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>warifuri.cli.main &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">warifuri.cli.main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for warifuri.cli.main</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Main CLI entry point.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">importlib.metadata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_workspace_root</span><span class="p">,</span> <span class="n">setup_logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.context</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">pass_context</span>
+
+
+<div class="viewcode-block" id="get_version">
+<a class="viewcode-back" href="../../../api/warifuri.cli.html#warifuri.cli.main.get_version">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get version from package metadata.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">version</span><span class="p">(</span><span class="s2">&quot;warifuri&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">importlib</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">PackageNotFoundError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;0.1.0&quot;</span>  <span class="c1"># fallback version</span></div>
+
+
+
+<span class="c1"># Import commands after defining Context to avoid circular imports</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.automation</span><span class="w"> </span><span class="kn">import</span> <span class="n">automation</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.init</span><span class="w"> </span><span class="kn">import</span> <span class="n">init</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.issue</span><span class="w"> </span><span class="kn">import</span> <span class="n">issue</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.list</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_cmd</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.mark_done</span><span class="w"> </span><span class="kn">import</span> <span class="n">mark_done</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.run</span><span class="w"> </span><span class="kn">import</span> <span class="n">run</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.show</span><span class="w"> </span><span class="kn">import</span> <span class="n">show</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.template</span><span class="w"> </span><span class="kn">import</span> <span class="n">template</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.commands.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate</span>  <span class="c1"># noqa: E402</span>
+
+
+<span class="nd">@click</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--log-level&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Choice</span><span class="p">([</span><span class="s2">&quot;DEBUG&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;CRITICAL&quot;</span><span class="p">]),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Set logging level&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">option</span><span class="p">(</span>
+    <span class="s2">&quot;--workspace&quot;</span><span class="p">,</span>
+    <span class="nb">type</span><span class="o">=</span><span class="n">click</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">exists</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">file_okay</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dir_okay</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">path_type</span><span class="o">=</span><span class="n">Path</span><span class="p">),</span>
+    <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Workspace directory path&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@click</span><span class="o">.</span><span class="n">version_option</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">get_version</span><span class="p">(),</span> <span class="n">prog_name</span><span class="o">=</span><span class="s2">&quot;warifuri&quot;</span><span class="p">)</span>
+<span class="nd">@pass_context</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cli</span><span class="p">(</span><span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">,</span> <span class="n">log_level</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">workspace</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;warifuri - A minimal CLI for task allocation.&quot;&quot;&quot;</span>
+    <span class="c1"># Setup logging</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">setup_logging</span><span class="p">(</span><span class="n">log_level</span><span class="p">)</span>
+
+    <span class="c1"># Find workspace</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">workspace_path</span> <span class="o">=</span> <span class="n">workspace</span> <span class="ow">or</span> <span class="n">find_workspace_root</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">:</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Error: Could not find workspace directory&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Please run from a directory containing &#39;workspace/&#39; or &#39;projects/&#39;&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">Abort</span><span class="p">()</span>
+
+    <span class="n">ctx</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using workspace: </span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">workspace_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Import and register commands</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">list_cmd</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;list&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">show</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">validate</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">mark_done</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;mark-done&quot;</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">issue</span><span class="p">)</span>
+<span class="n">cli</span><span class="o">.</span><span class="n">add_command</span><span class="p">(</span><span class="n">automation</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">cli</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

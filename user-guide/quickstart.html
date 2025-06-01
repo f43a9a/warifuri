@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Start Guide &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Command Reference" href="commands.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#create-your-first-project">1. Create Your First Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-your-first-task">2. Add Your First Task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#list-all-tasks">3. List All Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-your-task">4. Run Your Task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-dependencies">5. Create Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualize-dependencies">6. Visualize Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-next">What’s Next?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick Start Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user-guide/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start-guide">
+<h1>Quick Start Guide<a class="headerlink" href="#quick-start-guide" title="Link to this heading"></a></h1>
+<p>This guide will help you get started with warifuri in 5 minutes.</p>
+<section id="create-your-first-project">
+<h2>1. Create Your First Project<a class="headerlink" href="#create-your-first-project" title="Link to this heading"></a></h2>
+<p>Initialize a new warifuri project:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>my-project
+<span class="nb">cd</span><span class="w"> </span>my-project
+warifuri<span class="w"> </span>init<span class="w"> </span>project<span class="w"> </span>my-project
+</pre></div>
+</div>
+<p>This creates a <code class="docutils literal notranslate"><span class="pre">.warifuri/</span></code> directory with project configuration.</p>
+</section>
+<section id="add-your-first-task">
+<h2>2. Add Your First Task<a class="headerlink" href="#add-your-first-task" title="Link to this heading"></a></h2>
+<p>Create a simple task:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>init<span class="w"> </span>task<span class="w"> </span>hello-world
+</pre></div>
+</div>
+<p>Edit the generated task file to add your commands:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello-world</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">My first warifuri task</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shell</span>
+<span class="nt">commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo &quot;Hello, warifuri!&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="list-all-tasks">
+<h2>3. List All Tasks<a class="headerlink" href="#list-all-tasks" title="Link to this heading"></a></h2>
+<p>View all tasks in your project:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>list
+</pre></div>
+</div>
+</section>
+<section id="run-your-task">
+<h2>4. Run Your Task<a class="headerlink" href="#run-your-task" title="Link to this heading"></a></h2>
+<p>Execute the task:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>run<span class="w"> </span>hello-world
+</pre></div>
+</div>
+</section>
+<section id="create-dependencies">
+<h2>5. Create Dependencies<a class="headerlink" href="#create-dependencies" title="Link to this heading"></a></h2>
+<p>Create a task that depends on another:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>init<span class="w"> </span>task<span class="w"> </span>goodbye-world
+</pre></div>
+</div>
+<p>Edit the task to include dependencies:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">goodbye-world</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Task with dependency</span>
+<span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shell</span>
+<span class="nt">dependencies</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hello-world</span>
+<span class="nt">commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo &quot;Goodbye, warifuri!&quot;</span>
+</pre></div>
+</div>
+<p>When you run <code class="docutils literal notranslate"><span class="pre">goodbye-world</span></code>, warifuri will automatically run <code class="docutils literal notranslate"><span class="pre">hello-world</span></code> first.</p>
+</section>
+<section id="visualize-dependencies">
+<h2>6. Visualize Dependencies<a class="headerlink" href="#visualize-dependencies" title="Link to this heading"></a></h2>
+<p>Generate a dependency graph:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>warifuri<span class="w"> </span>graph<span class="w"> </span>--format<span class="w"> </span>mermaid
+</pre></div>
+</div>
+</section>
+<section id="what-s-next">
+<h2>What’s Next?<a class="headerlink" href="#what-s-next" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Learn about all available <a class="reference internal" href="commands.html"><span class="doc">Command Reference</span></a></p></li>
+<li><p>Explore <a class="reference internal" href="configuration.html"><span class="doc">Configuration</span></a> options</p></li>
+<li><p>Create reusable <a class="reference internal" href="templates.html"><span class="doc">Templates</span></a></p></li>
+<li><p>Set up GitHub integration</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="commands.html" class="btn btn-neutral float-right" title="Command Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

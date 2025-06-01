@@ -1,0 +1,713 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>warifuri.core.github &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">warifuri.core.github</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for warifuri.core.github</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;GitHub integration module for warifuri.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Project</span><span class="p">,</span> <span class="n">Task</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_github_repo">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.get_github_repo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_github_repo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get current GitHub repository from git remote.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Try to get from git remote</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;remote&quot;</span><span class="p">,</span> <span class="s2">&quot;get-url&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="n">remote_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Parse GitHub URL</span>
+        <span class="k">if</span> <span class="s2">&quot;github.com&quot;</span> <span class="ow">in</span> <span class="n">remote_url</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;https://github.com/&quot;</span><span class="p">):</span>
+                <span class="n">repo_path</span> <span class="o">=</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;https://github.com/&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.git&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;git@github.com:&quot;</span><span class="p">):</span>
+                <span class="n">repo_path</span> <span class="o">=</span> <span class="n">remote_url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;git@github.com:&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.git&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="k">return</span> <span class="n">repo_path</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Try environment variable</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GITHUB_REPOSITORY&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_github_cli">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.check_github_cli">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_github_cli</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if GitHub CLI is installed and authenticated.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Check if gh is installed</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;--version&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Check if authenticated</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="create_branch">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.create_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_branch</span><span class="p">(</span><span class="n">branch_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create and checkout a new git branch.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Check if branch already exists</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;branch&quot;</span><span class="p">,</span> <span class="s2">&quot;--list&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Branch </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2"> already exists, switching to it&quot;</span><span class="p">)</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;checkout&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating new branch: </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;checkout&quot;</span><span class="p">,</span> <span class="s2">&quot;-b&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create/checkout branch </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="commit_changes">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.commit_changes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">commit_changes</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">files</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Commit changes to the current branch.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Add files</span>
+        <span class="k">if</span> <span class="n">files</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="n">file_path</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Check if there are changes to commit</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;diff&quot;</span><span class="p">,</span> <span class="s2">&quot;--cached&quot;</span><span class="p">,</span> <span class="s2">&quot;--exit-code&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No changes to commit&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># Commit changes</span>
+        <span class="n">commit_result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">commit_result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Pre-commit hooks may have modified files, try adding and committing again</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Pre-commit hooks modified files, adding changes and retrying commit&quot;</span><span class="p">)</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Check again if there are changes after hook modifications</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;diff&quot;</span><span class="p">,</span> <span class="s2">&quot;--cached&quot;</span><span class="p">,</span> <span class="s2">&quot;--exit-code&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;No changes to commit after pre-commit hook modifications&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+            <span class="c1"># Try commit again</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">message</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Committed changes: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to commit changes: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="push_branch">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.push_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">push_branch</span><span class="p">(</span><span class="n">branch_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Push branch to remote repository.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;push&quot;</span><span class="p">,</span> <span class="s2">&quot;-u&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pushed branch: </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to push branch </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="create_pull_request">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.create_pull_request">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_pull_request</span><span class="p">(</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base_branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="n">draft</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">auto_merge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a pull request using GitHub CLI.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;pr&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="s2">&quot;--title&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="s2">&quot;--body&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="s2">&quot;--base&quot;</span><span class="p">,</span> <span class="n">base_branch</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">draft</span><span class="p">:</span>
+            <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--draft&quot;</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">pr_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Created pull request: </span><span class="si">{</span><span class="n">pr_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Enable auto-merge if requested</span>
+        <span class="k">if</span> <span class="n">auto_merge</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">draft</span><span class="p">:</span>
+            <span class="n">enable_auto_merge</span><span class="p">(</span><span class="n">pr_url</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pr_url</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to create pull request: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">stderr</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error details: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">stderr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="enable_auto_merge">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.enable_auto_merge">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">enable_auto_merge</span><span class="p">(</span><span class="n">pr_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">merge_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;squash&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enable auto-merge for a pull request.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;pr&quot;</span><span class="p">,</span> <span class="s2">&quot;merge&quot;</span><span class="p">,</span> <span class="n">pr_url</span><span class="p">,</span> <span class="s2">&quot;--auto&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">merge_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Enabled auto-merge for PR: </span><span class="si">{</span><span class="n">pr_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to enable auto-merge: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="merge_pull_request">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.merge_pull_request">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_pull_request</span><span class="p">(</span><span class="n">pr_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">merge_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;squash&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge a pull request immediately.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;pr&quot;</span><span class="p">,</span> <span class="s2">&quot;merge&quot;</span><span class="p">,</span> <span class="n">pr_url</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">merge_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;--delete-branch&quot;</span><span class="p">]</span>
+
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Merged pull request: </span><span class="si">{</span><span class="n">pr_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to merge pull request: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="get_current_branch">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.get_current_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_branch</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current git branch name.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;branch&quot;</span><span class="p">,</span> <span class="s2">&quot;--show-current&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="is_working_directory_clean">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.is_working_directory_clean">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_working_directory_clean</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the working directory has uncommitted changes.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;--porcelain&quot;</span><span class="p">],</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="ensure_labels_exist">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.ensure_labels_exist">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_labels_exist</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure GitHub labels exist, create if missing.&quot;&quot;&quot;</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="n">existing_labels</span> <span class="o">=</span> <span class="n">_get_existing_labels</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">existing_labels</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Label &#39;</span><span class="si">%s</span><span class="s2">&#39; already exists&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">_create_label</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_existing_labels</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get set of existing label names from repository.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">list_result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="s2">&quot;--repo&quot;</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="s2">&quot;--json&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">label_info</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">label_info</span> <span class="ow">in</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">list_result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not get existing labels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_label</span><span class="p">(</span><span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a single label and return success status.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Creating missing label: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+        <span class="n">create_result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;label&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;create&quot;</span><span class="p">,</span>
+                <span class="n">label</span><span class="p">,</span>
+                <span class="s2">&quot;--color&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;0969da&quot;</span><span class="p">,</span>  <span class="c1"># Blue color</span>
+                <span class="s2">&quot;--description&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;Auto-created by warifuri for </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--repo&quot;</span><span class="p">,</span>
+                <span class="n">repo</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">create_result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;✅ Created label: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to create label &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">create_result</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to process label &#39;</span><span class="si">%s</span><span class="s2">&#39;: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="create_issue_safe">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.create_issue_safe">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_issue_safe</span><span class="p">(</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">body</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">assignee</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create GitHub issue with safe label handling.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (success: bool, issue_url: Optional[str])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[DRY RUN] Would create issue: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Labels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">assignee</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Assignee: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">assignee</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># Check for duplicate issues</span>
+    <span class="k">if</span> <span class="n">check_issue_exists</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">repo</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;⚠️  Issue with similar title already exists: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="c1"># Ensure labels exist before creating issue</span>
+    <span class="n">safe_labels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="n">label_results</span> <span class="o">=</span> <span class="n">ensure_labels_exist</span><span class="p">(</span><span class="n">repo</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">safe_labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">exists</span> <span class="ow">in</span> <span class="n">label_results</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">exists</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">safe_labels</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">label</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">exists</span> <span class="ow">in</span> <span class="n">label_results</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">exists</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not create/verify labels: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">missing</span><span class="p">)</span>
+
+    <span class="c1"># Build command</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;issue&quot;</span><span class="p">,</span> <span class="s2">&quot;create&quot;</span><span class="p">,</span> <span class="s2">&quot;--title&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="s2">&quot;--body&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">safe_labels</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--label&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">safe_labels</span><span class="p">)])</span>
+
+    <span class="k">if</span> <span class="n">assignee</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--assignee&quot;</span><span class="p">,</span> <span class="n">assignee</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">repo</span><span class="p">:</span>
+        <span class="n">cmd</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--repo&quot;</span><span class="p">,</span> <span class="n">repo</span><span class="p">])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">issue_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;✅ Created issue: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;   </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">issue_url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="n">issue_url</span>
+
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">error_msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">stderr</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;❌ Failed to create issue: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;   Error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="check_issue_exists">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.check_issue_exists">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_issue_exists</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if an issue with similar title already exists.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;issue&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--repo&quot;</span><span class="p">,</span>
+                <span class="n">repo</span><span class="p">,</span>
+                <span class="s2">&quot;--search&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s1">&quot; in:title&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;--json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">issues</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+        <span class="c1"># Check for exact or similar titles</span>
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">issues</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">issue</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">title</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not check existing issues: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="format_task_issue_body">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.format_task_issue_body">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_task_issue_body</span><span class="p">(</span><span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">parent_issue_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format task issue body in Markdown with optional parent linking.&quot;&quot;&quot;</span>
+    <span class="n">full_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">project</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;project&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="n">body_lines</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;# Task: </span><span class="si">{</span><span class="n">full_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Add parent issue section</span>
+    <span class="n">_add_parent_issue_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">repo</span><span class="p">,</span> <span class="n">parent_issue_url</span><span class="p">)</span>
+
+    <span class="c1"># Add basic task information</span>
+    <span class="n">_add_task_info_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+    <span class="c1"># Add task dependencies</span>
+    <span class="n">_add_dependencies_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+    <span class="c1"># Add inputs and outputs</span>
+    <span class="n">_add_files_sections</span><span class="p">(</span><span class="n">body_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+
+    <span class="c1"># Add notes and execution info</span>
+    <span class="n">_add_notes_and_execution_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">full_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body_lines</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_parent_issue_section</span><span class="p">(</span>
+    <span class="n">body_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parent_issue_url</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add parent issue link section to task body.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parent_issue_url</span><span class="p">:</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;**Parent Project**: </span><span class="si">{</span><span class="n">parent_issue_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">repo</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">&quot;project&quot;</span><span class="p">):</span>
+        <span class="n">auto_parent</span> <span class="o">=</span> <span class="n">find_parent_issue</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">project</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">auto_parent</span><span class="p">:</span>
+            <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;**Parent Project**: </span><span class="si">{</span><span class="n">auto_parent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_task_info_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add basic task information section.&quot;&quot;&quot;</span>
+    <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;## Description&quot;</span><span class="p">,</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">description</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">description</span>
+            <span class="k">else</span> <span class="s2">&quot;No description provided&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;**Type**: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">task_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;**Status**: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;**Completed**: </span><span class="si">{</span><span class="s1">&#39;Yes&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">is_completed</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;No&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_dependencies_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add dependencies section if task has dependencies.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;## Dependencies&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- [ ] </span><span class="si">{</span><span class="n">dep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_files_sections</span><span class="p">(</span><span class="n">body_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add input and output files sections.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;## Input Files&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- `</span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;## Expected Outputs&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- `</span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">)</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_notes_and_execution_section</span><span class="p">(</span><span class="n">body_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">task</span><span class="p">:</span> <span class="s2">&quot;Task&quot;</span><span class="p">,</span> <span class="n">full_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add notes and execution information sections.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">note</span><span class="p">:</span>
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;## Notes&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">note</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">])</span>
+
+    <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;## Execution&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Run with: `warifuri run --task </span><span class="si">{</span><span class="n">full_name</span><span class="si">}</span><span class="s2">`&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--------&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Created by warifuri CLI&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="format_project_issue_body">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.format_project_issue_body">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_project_issue_body</span><span class="p">(</span><span class="n">project</span><span class="p">:</span> <span class="s2">&quot;Project&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format project issue body in Markdown.&quot;&quot;&quot;</span>
+    <span class="n">body_lines</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">&quot;# Project: </span><span class="si">{</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;## Overview&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;This is a parent issue for tracking the overall progress of the &#39;</span><span class="si">{</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; project.&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;## Tasks&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Add task list with status</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;completed&quot;</span><span class="p">:</span>
+            <span class="n">status_icon</span> <span class="o">=</span> <span class="s2">&quot;✅&quot;</span>
+        <span class="k">elif</span> <span class="n">task</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="s2">&quot;ready&quot;</span><span class="p">:</span>
+            <span class="n">status_icon</span> <span class="o">=</span> <span class="s2">&quot;🔄&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status_icon</span> <span class="o">=</span> <span class="s2">&quot;⏸️&quot;</span>
+
+        <span class="n">body_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;• </span><span class="si">{</span><span class="n">status_icon</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;No description&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">body_lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;## Usage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Use `warifuri run --task </span><span class="si">{</span><span class="n">project</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">` to run ready tasks from this project.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--------&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Created by warifuri CLI&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body_lines</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="find_parent_issue">
+<a class="viewcode-back" href="../../../api/warifuri.core.html#warifuri.core.github.find_parent_issue">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_parent_issue</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">repo</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find parent project issue URL if it exists.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parent_title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;[PROJECT] </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;issue&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;list&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--repo&quot;</span><span class="p">,</span>
+                <span class="n">repo</span><span class="p">,</span>
+                <span class="s2">&quot;--search&quot;</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">parent_title</span><span class="si">}</span><span class="s1">&quot; in:title&#39;</span><span class="p">,</span>
+                <span class="s2">&quot;--json&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;title,url&quot;</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">issues</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">issue</span> <span class="ow">in</span> <span class="n">issues</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">issue</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">parent_title</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">issue</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not find parent issue: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

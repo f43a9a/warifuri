@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>warifuri.cli.services.pr_service &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user-guide/templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">warifuri.cli.services.pr_service</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for warifuri.cli.services.pr_service</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;GitHub Pull Request Service for Warifuri automation.</span>
+
+<span class="sd">This module provides GitHub PR creation functionality following Unix philosophy:</span>
+<span class="sd">- Single responsibility: Handle only PR creation logic</span>
+<span class="sd">- Composition: Use service objects for different concerns</span>
+<span class="sd">- Testability: Each component can be tested independently</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">click</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">...core.github</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_github_cli</span><span class="p">,</span> <span class="n">get_github_repo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..context</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span>
+
+
+<div class="viewcode-block" id="PullRequestService">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.PullRequestService">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PullRequestService</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Service for creating GitHub pull requests.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">workspace_path</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span><span class="s2">&quot;Workspace path is required&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PullRequestService.create_pr">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.PullRequestService.create_pr">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_pr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">branch_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">commit_message</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pr_title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pr_body</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">base_branch</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+        <span class="n">draft</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">auto_merge</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">merge_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;merge&quot;</span><span class="p">,</span>
+        <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a pull request for automated task execution.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if PR was created successfully, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate GitHub environment</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_github_environment</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Get repository information</span>
+        <span class="n">repo</span> <span class="o">=</span> <span class="n">get_github_repo</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">repo</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;❌ Could not determine GitHub repository&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Prepare PR details</span>
+        <span class="n">pr_details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_pr_details</span><span class="p">(</span>
+            <span class="n">task_name</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">,</span> <span class="n">pr_title</span><span class="p">,</span> <span class="n">pr_body</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Create branch and commit changes</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_branch_and_commit</span><span class="p">(</span><span class="n">pr_details</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Create the pull request</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_github_pr</span><span class="p">(</span><span class="n">pr_details</span><span class="p">,</span> <span class="n">base_branch</span><span class="p">,</span> <span class="n">draft</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Handle auto-merge if requested</span>
+        <span class="k">if</span> <span class="n">auto_merge</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">draft</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_setup_auto_merge</span><span class="p">(</span><span class="n">pr_details</span><span class="p">[</span><span class="s2">&quot;branch_name&quot;</span><span class="p">],</span> <span class="n">merge_method</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_github_environment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate GitHub CLI and authentication.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">check_github_cli</span><span class="p">():</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;❌ GitHub CLI not found or not authenticated&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Please install and authenticate with: gh auth login&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_pr_details</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">branch_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">commit_message</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">pr_title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">pr_body</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare pull request details with defaults.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;task_name&quot;</span><span class="p">:</span> <span class="n">task_name</span><span class="p">,</span>
+            <span class="s2">&quot;branch_name&quot;</span><span class="p">:</span> <span class="n">branch_name</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;warifuri/automation/</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;commit_message&quot;</span><span class="p">:</span> <span class="n">commit_message</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;feat: automate task </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pr_title&quot;</span><span class="p">:</span> <span class="n">pr_title</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Automate task: </span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;pr_body&quot;</span><span class="p">:</span> <span class="n">pr_body</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">&quot;Automated execution of task `</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">` via Warifuri.&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_branch_and_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pr_details</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create branch and commit changes.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="n">branch_name</span> <span class="o">=</span> <span class="n">pr_details</span><span class="p">[</span><span class="s2">&quot;branch_name&quot;</span><span class="p">]</span>
+        <span class="n">commit_message</span> <span class="o">=</span> <span class="n">pr_details</span><span class="p">[</span><span class="s2">&quot;commit_message&quot;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🔍 Would create branch: </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🔍 Would commit with message: </span><span class="si">{</span><span class="n">commit_message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Create and switch to new branch</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;checkout&quot;</span><span class="p">,</span> <span class="s2">&quot;-b&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Add and commit changes</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="n">commit_message</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Push to remote</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;push&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Created and pushed branch: </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Git operation failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_github_pr</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">pr_details</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">base_branch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">draft</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dry_run</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the GitHub pull request.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="k">if</span> <span class="n">dry_run</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🔍 Would create PR: </span><span class="si">{</span><span class="n">pr_details</span><span class="p">[</span><span class="s1">&#39;pr_title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🔍 From branch: </span><span class="si">{</span><span class="n">pr_details</span><span class="p">[</span><span class="s1">&#39;branch_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">base_branch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;🔍 Draft: </span><span class="si">{</span><span class="n">draft</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="s2">&quot;gh&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;pr&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;create&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;--title&quot;</span><span class="p">,</span>
+                <span class="n">pr_details</span><span class="p">[</span><span class="s2">&quot;pr_title&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;--body&quot;</span><span class="p">,</span>
+                <span class="n">pr_details</span><span class="p">[</span><span class="s2">&quot;pr_body&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;--base&quot;</span><span class="p">,</span>
+                <span class="n">base_branch</span><span class="p">,</span>
+            <span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">draft</span><span class="p">:</span>
+                <span class="n">cmd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;--draft&quot;</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="n">cmd</span><span class="p">,</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">pr_url</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Created pull request: </span><span class="si">{</span><span class="n">pr_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Failed to create PR: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_setup_auto_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">merge_method</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup auto-merge for the pull request.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;gh&quot;</span><span class="p">,</span> <span class="s2">&quot;pr&quot;</span><span class="p">,</span> <span class="s2">&quot;merge&quot;</span><span class="p">,</span> <span class="n">branch_name</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;--</span><span class="si">{</span><span class="n">merge_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;--auto&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Enabled auto-merge with method: </span><span class="si">{</span><span class="n">merge_method</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️ Could not enable auto-merge: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="AutomationValidator">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.AutomationValidator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AutomationValidator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Service for validating automation prerequisites.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">workspace_path</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span><span class="s2">&quot;Workspace path is required&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AutomationValidator.validate_github_prerequisites">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.AutomationValidator.validate_github_prerequisites">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_github_prerequisites</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate GitHub prerequisites for PR creation.&quot;&quot;&quot;</span>
+        <span class="c1"># Check if git repository is configured</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Check if we&#39;re in a git repository</span>
+            <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;rev-parse&quot;</span><span class="p">,</span> <span class="s2">&quot;--git-dir&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;❌ Not in a git repository&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># TODO: Add more GitHub-specific checks (remote, auth, etc.)</span>
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;✅ GitHub prerequisites validated&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="AutomationValidator.validate_task_ready">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.AutomationValidator.validate_task_ready">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_task_ready</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that a task is ready for automation.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">...core.discovery</span><span class="w"> </span><span class="kn">import</span> <span class="n">discover_all_projects</span><span class="p">,</span> <span class="n">find_ready_tasks</span>
+
+        <span class="c1"># Discover all projects and their tasks</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">click</span><span class="o">.</span><span class="n">ClickException</span><span class="p">(</span><span class="s2">&quot;Workspace path is required&quot;</span><span class="p">)</span>
+
+        <span class="n">projects</span> <span class="o">=</span> <span class="n">discover_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">projects</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;❌ No projects found in workspace&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Find all tasks from all projects</span>
+        <span class="n">all_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">project</span> <span class="ow">in</span> <span class="n">projects</span><span class="p">:</span>
+            <span class="n">all_tasks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">project</span><span class="o">.</span><span class="n">tasks</span><span class="p">)</span>
+
+        <span class="c1"># Find the specific task</span>
+        <span class="n">target_task</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">all_tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">task_name</span><span class="p">:</span>
+                <span class="n">target_task</span> <span class="o">=</span> <span class="n">task</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">target_task</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Task &#39;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&#39; not found&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Check if task is ready</span>
+        <span class="n">ready_tasks</span> <span class="o">=</span> <span class="n">find_ready_tasks</span><span class="p">(</span><span class="n">projects</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target_task</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ready_tasks</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Task &#39;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&#39; is not ready (missing dependencies)&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;✅ Task &#39;</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">&#39; is ready for automation&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="AutomationValidator.validate_workspace_clean">
+<a class="viewcode-back" href="../../../../api/warifuri.cli.services.html#warifuri.cli.services.pr_service.AutomationValidator.validate_workspace_clean">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_workspace_clean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate that the workspace has no uncommitted changes.&quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">&quot;git&quot;</span><span class="p">,</span> <span class="s2">&quot;status&quot;</span><span class="p">,</span> <span class="s2">&quot;--porcelain&quot;</span><span class="p">],</span>
+                <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workspace_path</span><span class="p">,</span>
+                <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">capture_output</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">text</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;❌ Workspace has uncommitted changes&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;Please commit or stash changes before creating PR&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;✅ Workspace is clean&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">click</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Could not check git status: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

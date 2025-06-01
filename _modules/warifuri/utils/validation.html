@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>warifuri.utils.validation &mdash; warifuri 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            warifuri
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/quickstart.html">Quick Start Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/commands.html">Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user-guide/templates.html">Templates</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">warifuri</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/changelog.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">warifuri</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">warifuri.utils.validation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for warifuri.utils.validation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Validation utilities.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">jsonschema</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..core.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+
+
+<div class="viewcode-block" id="ValidationError">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.ValidationError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validation error.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="CircularDependencyError">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.CircularDependencyError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CircularDependencyError</span><span class="p">(</span><span class="n">ValidationError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Circular dependency error.&quot;&quot;&quot;</span>
+
+    <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="load_schema">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.load_schema">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_schema</span><span class="p">(</span><span class="n">workspace_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load instruction schema, preferring workspace-local version.&quot;&quot;&quot;</span>
+    <span class="c1"># Try workspace-local schema first</span>
+    <span class="n">local_schema_path</span> <span class="o">=</span> <span class="n">workspace_path</span> <span class="o">/</span> <span class="s2">&quot;schemas&quot;</span> <span class="o">/</span> <span class="s2">&quot;instruction.schema.json&quot;</span>
+    <span class="k">if</span> <span class="n">local_schema_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">local_schema_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="c1"># Fall back to embedded schema</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">embedded</span>
+
+    <span class="n">embedded_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">embedded</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;instruction.schema.json&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">embedded_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<div class="viewcode-block" id="validate_instruction_yaml">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.validate_instruction_yaml">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_instruction_yaml</span><span class="p">(</span>
+    <span class="n">instruction_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">schema</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate instruction.yaml data against schema.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">instruction_data</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Schema validation failed: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+        <span class="c1"># In non-strict mode, only fail on critical errors</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">validator</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">validator</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;required&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Critical validation error: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span></div>
+
+
+
+<div class="viewcode-block" id="detect_circular_dependencies">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.detect_circular_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_circular_dependencies</span><span class="p">(</span><span class="n">tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Task</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detect circular dependencies using DFS.&quot;&quot;&quot;</span>
+    <span class="c1"># Build task name mapping (task name -&gt; full name within same project)</span>
+    <span class="n">name_to_full_name</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+        <span class="n">task_name</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span>
+        <span class="c1"># Map both simple name and full name to full name</span>
+        <span class="n">name_to_full_name</span><span class="p">[</span><span class="n">task_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">full_name</span>
+        <span class="n">name_to_full_name</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">full_name</span>
+
+    <span class="c1"># Build dependency graph with full names</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">dep_name</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="c1"># Convert dependency name to full name if it exists in this project</span>
+            <span class="k">if</span> <span class="n">dep_name</span> <span class="ow">in</span> <span class="n">name_to_full_name</span><span class="p">:</span>
+                <span class="n">deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name_to_full_name</span><span class="p">[</span><span class="n">dep_name</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Keep external dependencies as-is (they might be from other projects)</span>
+                <span class="n">deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dep_name</span><span class="p">)</span>
+        <span class="n">graph</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">deps</span>
+
+    <span class="c1"># DFS to detect cycles</span>
+    <span class="n">WHITE</span><span class="p">,</span> <span class="n">GRAY</span><span class="p">,</span> <span class="n">BLACK</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span>
+    <span class="n">colors</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">task</span><span class="o">.</span><span class="n">full_name</span><span class="p">:</span> <span class="n">WHITE</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dfs</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dfs function.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">colors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">BLACK</span><span class="p">)</span> <span class="o">==</span> <span class="n">GRAY</span><span class="p">:</span>
+            <span class="c1"># Found cycle - return the cycle path</span>
+            <span class="n">cycle_start</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">path</span><span class="p">[</span><span class="n">cycle_start</span><span class="p">:]</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">colors</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">BLACK</span><span class="p">)</span> <span class="o">==</span> <span class="n">BLACK</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">GRAY</span>
+
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">set</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">colors</span><span class="p">:</span>  <span class="c1"># Only check dependencies that exist in this project</span>
+                <span class="n">cycle</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">(</span><span class="n">neighbor</span><span class="p">,</span> <span class="n">path</span> <span class="o">+</span> <span class="p">[</span><span class="n">node</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">cycle</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">cycle</span>
+
+        <span class="n">colors</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">=</span> <span class="n">BLACK</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">task_name</span> <span class="ow">in</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">colors</span><span class="p">[</span><span class="n">task_name</span><span class="p">]</span> <span class="o">==</span> <span class="n">WHITE</span><span class="p">:</span>
+            <span class="n">cycle</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">(</span><span class="n">task_name</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="n">cycle</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cycle</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="validate_file_references">
+<a class="viewcode-back" href="../../../api/warifuri.utils.html#warifuri.utils.validation.validate_file_references">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_file_references</span><span class="p">(</span>
+    <span class="n">task</span><span class="p">:</span> <span class="n">Task</span><span class="p">,</span> <span class="n">workspace_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">check_inputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">check_outputs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate input/output file references with cross-project support.&quot;&quot;&quot;</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">check_inputs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">input_file</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># Check workspace root first</span>
+            <span class="n">input_path</span> <span class="o">=</span> <span class="n">workspace_path</span> <span class="o">/</span> <span class="n">input_file</span>
+            <span class="k">if</span> <span class="n">input_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check if it&#39;s a relative path</span>
+                <span class="k">if</span> <span class="n">input_file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;../&quot;</span><span class="p">):</span>
+                    <span class="c1"># For cross-project references, resolve from projects directory</span>
+                    <span class="n">projects_base</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span>  <span class="c1"># Get to projects/ directory</span>
+                    <span class="n">clean_path</span> <span class="o">=</span> <span class="n">input_file</span>
+                    <span class="k">while</span> <span class="n">clean_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;../&quot;</span><span class="p">):</span>
+                        <span class="n">clean_path</span> <span class="o">=</span> <span class="n">clean_path</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+
+                    <span class="n">cross_project_input</span> <span class="o">=</span> <span class="n">projects_base</span> <span class="o">/</span> <span class="n">clean_path</span>
+                    <span class="k">if</span> <span class="n">cross_project_input</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Fallback: check in task directory</span>
+                    <span class="n">task_input</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">path</span> <span class="o">/</span> <span class="n">input_file</span>
+                    <span class="k">if</span> <span class="n">task_input</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input file not found: </span><span class="si">{</span><span class="n">input_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">check_outputs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">output_file</span> <span class="ow">in</span> <span class="n">task</span><span class="o">.</span><span class="n">instruction</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+            <span class="c1"># Output files are expected in the task directory</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">path</span> <span class="o">/</span> <span class="n">output_file</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">output_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file not found: </span><span class="si">{</span><span class="n">output_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">errors</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, warifuri team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

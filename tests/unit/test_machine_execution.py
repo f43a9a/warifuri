@@ -62,23 +62,23 @@ def test_execute_machine_task_dry_run(sample_task):
     assert result is True
 
 
-@patch("warifuri.core.execution.machine.create_temp_dir")
-@patch("warifuri.core.execution.machine.safe_rmtree")
-@patch("warifuri.core.execution.machine.copy_directory_contents")
-@patch("warifuri.core.execution.machine.copy_input_files")
-@patch("warifuri.core.execution.machine.validate_task_inputs")
-@patch("warifuri.core.execution.core.log_failure")
-@patch("warifuri.core.execution.machine.validate_task_outputs")
 @patch("warifuri.core.execution.machine.setup_task_environment")
+@patch("warifuri.core.execution.machine.validate_task_outputs")
+@patch("warifuri.core.execution.core.log_failure")
+@patch("warifuri.core.execution.machine.validate_task_inputs")
+@patch("warifuri.core.execution.machine.copy_input_files")
+@patch("warifuri.core.execution.machine.copy_directory_contents")
+@patch("warifuri.core.execution.machine.safe_rmtree")
+@patch("warifuri.core.execution.machine.create_temp_dir")
 def test_execute_machine_task_no_script(
-    mock_setup_env,
-    mock_validate_outputs,
-    mock_validate_inputs,
-    mock_copy_inputs,
-    mock_copy_dir,
-    mock_rmtree,
     mock_create_temp,
+    mock_rmtree,
+    mock_copy_dir,
+    mock_copy_inputs,
+    mock_validate_inputs,
     mock_log_failure,
+    mock_validate_outputs,
+    mock_setup_env,
     sample_task,
 ):
     """Test execute_machine_task when no execution script is found."""
@@ -92,11 +92,8 @@ def test_execute_machine_task_no_script(
         assert result is False
         mock_log_failure.assert_called_once()
 
-    # Verify cleanup was called with correct temp_dir
-    mock_rmtree.assert_called_once()
-    # The actual call will be with temp_dir returned by mock_create_temp
-    call_args = mock_rmtree.call_args[0]
-    assert len(call_args) == 1
+    # Verify cleanup was called with temp_dir
+    mock_rmtree.assert_called_once_with(temp_dir)
 
 
 @patch("warifuri.core.execution.machine.create_temp_dir")

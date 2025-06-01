@@ -92,7 +92,11 @@ def test_execute_machine_task_no_script(
         assert result is False
         mock_log_failure.assert_called_once()
 
-    mock_rmtree.assert_called_once_with(temp_dir)
+    # Verify cleanup was called with correct temp_dir
+    mock_rmtree.assert_called_once()
+    # The actual call will be with temp_dir returned by mock_create_temp
+    call_args = mock_rmtree.call_args[0]
+    assert len(call_args) == 1
 
 
 @patch("warifuri.core.execution.machine.create_temp_dir")

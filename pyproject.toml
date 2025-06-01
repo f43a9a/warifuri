@@ -36,6 +36,7 @@ jsonschema = ">=4.0.0"
 mypy = "*"
 ruff = "*"
 pytest = "*"
+pytest-cov = "*"
 types-PyYAML = "*"
 types-jsonschema = "*"
 

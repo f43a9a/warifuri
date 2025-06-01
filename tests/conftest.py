@@ -57,11 +57,6 @@ def pytest_sessionstart(session):
     _apply_snapshottest_python312_patch()
 
 
-def pytest_sessionstart(session):
-    """Pytest session start hook - apply patch if not already applied."""
-    _apply_snapshottest_python312_patch()
-
-
 @pytest.fixture
 def temp_workspace() -> Generator[Path, None, None]:
     """Create temporary workspace for testing."""

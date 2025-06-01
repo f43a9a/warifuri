@@ -3,6 +3,7 @@ Test comprehensive schema validation and cross-reference validation
 包括的スキーマ検証およびクロスリファレンス検証テスト
 """
 
+import json
 import yaml
 from pathlib import Path
 import pytest

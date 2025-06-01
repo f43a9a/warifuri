@@ -3,7 +3,7 @@
 import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, mock_open
 from warifuri.core.execution.machine import (
     execute_machine_task,
     _build_execution_command,

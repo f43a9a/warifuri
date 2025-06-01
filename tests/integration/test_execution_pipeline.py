@@ -1,6 +1,10 @@
 """Integration tests for task execution pipeline and error handling."""
 
 import pytest
+from pathlib import Path
+from unittest.mock import Mock, patch, MagicMock
+import tempfile
+import shutil
 
 from warifuri.core.discovery import discover_task, discover_project
 from warifuri.core.execution import execute_task

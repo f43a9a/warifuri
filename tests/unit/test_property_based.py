@@ -7,10 +7,11 @@ from typing import Any, Dict
 
 import pytest
 import yaml
-from hypothesis import assume, given, strategies as st
+from hypothesis import assume, given
+from hypothesis import strategies as st
 
-from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 from warifuri.core.execution.validation import _resolve_input_path_safely
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 from warifuri.utils.filesystem import find_workspace_root, list_projects
 from warifuri.utils.yaml_utils import load_yaml, save_yaml
 
@@ -74,7 +75,7 @@ class TestFilesystemProperties:
 
     @given(
         workspace_name=st.text(min_size=1, max_size=50).filter(
-            lambda x: x.strip() and not any(c in x for c in "/\\:*?\"<>|\0") and "\x00" not in x
+            lambda x: x.strip() and not any(c in x for c in '/\\:*?"<>|\0') and "\x00" not in x
         )
     )
     def test_workspace_root_finding_consistency(self, workspace_name: str) -> None:
@@ -100,7 +101,10 @@ class TestFilesystemProperties:
     @given(
         project_names=st.lists(
             st.text(min_size=1, max_size=30).filter(
-                lambda x: x.strip() and not x.startswith(".") and not any(c in x for c in "/\\:*?\"<>|\0") and "\x00" not in x
+                lambda x: x.strip()
+                and not x.startswith(".")
+                and not any(c in x for c in '/\\:*?"<>|\0')
+                and "\x00" not in x
             ),
             min_size=0,
             max_size=5,
@@ -239,7 +243,9 @@ class TestTaskTypeProperties:
 
     @given(
         data_dict=st.dictionaries(
-            keys=st.sampled_from(["name", "description", "dependencies", "inputs", "outputs", "note"]),
+            keys=st.sampled_from(
+                ["name", "description", "dependencies", "inputs", "outputs", "note"]
+            ),
             values=st.one_of(
                 st.text(max_size=100),
                 st.lists(st.text(max_size=50), max_size=5),
@@ -303,7 +309,7 @@ class TestStringProcessingProperties:
 
         # If we remove the prefix, we get back the original text
         if prefixed.startswith(prefix):
-            suffix = prefixed[len(prefix):]
+            suffix = prefixed[len(prefix) :]
             assert suffix == text
 
 

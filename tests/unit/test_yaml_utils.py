@@ -1,7 +1,7 @@
 """Tests for YAML utilities."""
 
 from pathlib import Path
-from unittest.mock import mock_open, patch, Mock
+from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
@@ -107,7 +107,7 @@ class TestSaveYaml:
             "name": "test",
             "value": 123,
             "items": ["item1", "item2"],
-            "nested": {"key": "value"}
+            "nested": {"key": "value"},
         }
 
         save_yaml(data, yaml_file)
@@ -157,15 +157,8 @@ class TestSaveYaml:
             "boolean": True,
             "null_value": None,
             "list": [1, 2, 3, "mixed", True],
-            "nested_dict": {
-                "level2": {
-                    "level3": "deep value"
-                }
-            },
-            "mixed_list": [
-                {"name": "item1", "value": 1},
-                {"name": "item2", "value": 2}
-            ]
+            "nested_dict": {"level2": {"level3": "deep value"}},
+            "mixed_list": [{"name": "item1", "value": 1}, {"name": "item2", "value": 2}],
         }
 
         save_yaml(data, yaml_file)
@@ -197,5 +190,5 @@ class TestSaveYaml:
             data,
             mock_file.return_value.__enter__.return_value,
             default_flow_style=False,
-            sort_keys=False
+            sort_keys=False,
         )

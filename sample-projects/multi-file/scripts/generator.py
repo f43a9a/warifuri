@@ -60,26 +60,22 @@ Log Level Summary:
         "metadata": {
             "generated_at": timestamp,
             "version": "1.0.0",
-            "generator": "multi-file-generator"
+            "generator": "multi-file-generator",
         },
         "processing": {
             "data1_file": "data1.txt",
             "data2_file": "data2.txt",
             "output_format": "summary",
             "compression": False,
-            "validation": True
+            "validation": True,
         },
         "parameters": {
             "max_records": 1000,
             "precision": 2,
             "timeout_seconds": 30,
-            "retry_count": 3
+            "retry_count": 3,
         },
-        "flags": {
-            "debug_mode": False,
-            "verbose_output": True,
-            "create_backup": False
-        }
+        "flags": {"debug_mode": False, "verbose_output": True, "create_backup": False},
     }
 
     # Write all files

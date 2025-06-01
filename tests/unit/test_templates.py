@@ -1,9 +1,9 @@
 """Test template expansion functionality."""
 
 from warifuri.utils.templates import (
-    expand_template_placeholders,
-    expand_template_file,
     expand_template_directory,
+    expand_template_file,
+    expand_template_placeholders,
 )
 
 

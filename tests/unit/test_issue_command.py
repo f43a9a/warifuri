@@ -1,13 +1,14 @@
 """Unit tests for CLI issue command."""
 
+from pathlib import Path
+from unittest.mock import Mock, patch
+
 import pytest
 from click.testing import CliRunner
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
 
 from warifuri.cli.commands.issue import issue
 from warifuri.cli.context import Context
-from warifuri.core.types import Project, Task, TaskInstruction, TaskType, TaskStatus
+from warifuri.core.types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestIssueCommand:
@@ -35,7 +36,7 @@ class TestIssueCommand:
             dependencies=[],
             inputs=[],
             outputs=["config.json"],
-            note="Setup configuration"
+            note="Setup configuration",
         )
 
         setup_task = Task(
@@ -44,14 +45,10 @@ class TestIssueCommand:
             path=Path("/workspace/projects/demo/setup"),
             instruction=setup_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="demo",
-            path=Path("/workspace/projects/demo"),
-            tasks=[setup_task]
-        )
+        project = Project(name="demo", path=Path("/workspace/projects/demo"), tasks=[setup_task])
         return [project]  # Return a list, not a dict
 
     def test_github_cli_not_available(self, runner, mock_context):
@@ -90,9 +87,7 @@ class TestIssueCommand:
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
                 with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
                     result = runner.invoke(
-                        issue,
-                        ["--project", "demo", "--task", "demo/setup"],
-                        obj=mock_context
+                        issue, ["--project", "demo", "--task", "demo/setup"], obj=mock_context
                     )
 
                     assert result.exit_code == 0
@@ -103,8 +98,12 @@ class TestIssueCommand:
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
                 with patch("warifuri.cli.commands.issue.discover_all_projects", return_value={}):
-                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
-                        result = runner.invoke(issue, ["--project", "nonexistent"], obj=mock_context)
+                    with patch(
+                        "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                    ):
+                        result = runner.invoke(
+                            issue, ["--project", "nonexistent"], obj=mock_context
+                        )
 
                         assert result.exit_code == 0
                         assert "Project 'nonexistent' not found" in result.output
@@ -113,10 +112,17 @@ class TestIssueCommand:
         """Test error when task is not found."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.find_task_by_name", return_value=None):
-                        with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
-                            result = runner.invoke(issue, ["--task", "demo/nonexistent"], obj=mock_context)
+                        with patch(
+                            "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                        ):
+                            result = runner.invoke(
+                                issue, ["--task", "demo/nonexistent"], obj=mock_context
+                            )
 
                             assert result.exit_code == 0
                             assert "Task 'demo/nonexistent' not found" in result.output
@@ -125,12 +131,15 @@ class TestIssueCommand:
         """Test creating project issue in dry-run mode."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                    ):
                         result = runner.invoke(
-                            issue,
-                            ["--project", "demo", "--dry-run"],
-                            obj=mock_context
+                            issue, ["--project", "demo", "--dry-run"], obj=mock_context
                         )
 
                         assert result.exit_code == 0
@@ -142,13 +151,18 @@ class TestIssueCommand:
 
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task):
-                        with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task
+                    ):
+                        with patch(
+                            "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                        ):
                             result = runner.invoke(
-                                issue,
-                                ["--task", "demo/setup", "--dry-run"],
-                                obj=mock_context
+                                issue, ["--task", "demo/setup", "--dry-run"], obj=mock_context
                             )
 
                             assert result.exit_code == 0
@@ -158,12 +172,15 @@ class TestIssueCommand:
         """Test creating all tasks issues in dry-run mode."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                    ):
                         result = runner.invoke(
-                            issue,
-                            ["--all-tasks", "demo", "--dry-run"],
-                            obj=mock_context
+                            issue, ["--all-tasks", "demo", "--dry-run"], obj=mock_context
                         )
 
                         assert result.exit_code == 0
@@ -173,14 +190,20 @@ class TestIssueCommand:
         """Test actually creating project issue."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
-                        with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/123")) as mock_create:
-                            with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                        with patch(
+                            "warifuri.cli.commands.issue.create_issue_safe",
+                            return_value=(True, "https://github.com/owner/repo/issues/123"),
+                        ) as mock_create:
+                            with patch(
+                                "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                            ):
                                 result = runner.invoke(
-                                    issue,
-                                    ["--project", "demo"],
-                                    obj=mock_context
+                                    issue, ["--project", "demo"], obj=mock_context
                                 )
 
                                 assert result.exit_code == 0
@@ -193,16 +216,28 @@ class TestIssueCommand:
 
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task
+                    ):
                         with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
-                            with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/124")) as mock_create:
-                                with patch("warifuri.cli.commands.issue.format_task_issue_body", return_value="Task body"):
-                                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                            with patch(
+                                "warifuri.cli.commands.issue.create_issue_safe",
+                                return_value=(True, "https://github.com/owner/repo/issues/124"),
+                            ) as mock_create:
+                                with patch(
+                                    "warifuri.cli.commands.issue.format_task_issue_body",
+                                    return_value="Task body",
+                                ):
+                                    with patch(
+                                        "warifuri.cli.commands.issue.pass_context",
+                                        return_value=lambda f: f,
+                                    ):
                                         result = runner.invoke(
-                                            issue,
-                                            ["--task", "demo/setup"],
-                                            obj=mock_context
+                                            issue, ["--task", "demo/setup"], obj=mock_context
                                         )
 
                                         assert result.exit_code == 0
@@ -213,14 +248,27 @@ class TestIssueCommand:
         """Test proper parsing of comma-separated labels."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.ensure_labels_exist") as mock_labels:
-                        with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/123")):
-                            with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                        with patch(
+                            "warifuri.cli.commands.issue.create_issue_safe",
+                            return_value=(True, "https://github.com/owner/repo/issues/123"),
+                        ):
+                            with patch(
+                                "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                            ):
                                 result = runner.invoke(
                                     issue,
-                                    ["--project", "demo", "--label", "enhancement,bug,high-priority"],
-                                    obj=mock_context
+                                    [
+                                        "--project",
+                                        "demo",
+                                        "--label",
+                                        "enhancement,bug,high-priority",
+                                    ],
+                                    obj=mock_context,
                                 )
 
                                 assert result.exit_code == 0
@@ -229,7 +277,9 @@ class TestIssueCommand:
                                 mock_labels.assert_called_once()
                                 call_args = mock_labels.call_args[0]
                                 assert call_args[0] == "owner/repo"  # First arg is repo
-                                assert set(call_args[1]) == set(expected_labels)  # Second arg is labels
+                                assert set(call_args[1]) == set(
+                                    expected_labels
+                                )  # Second arg is labels
 
     def test_assignee_option(self, runner, mock_context, sample_projects):
         """Test assignee option is handled correctly."""
@@ -237,16 +287,30 @@ class TestIssueCommand:
 
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task
+                    ):
                         with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
-                            with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/125")) as mock_create:
-                                with patch("warifuri.cli.commands.issue.format_task_issue_body", return_value="Task body"):
-                                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                            with patch(
+                                "warifuri.cli.commands.issue.create_issue_safe",
+                                return_value=(True, "https://github.com/owner/repo/issues/125"),
+                            ) as mock_create:
+                                with patch(
+                                    "warifuri.cli.commands.issue.format_task_issue_body",
+                                    return_value="Task body",
+                                ):
+                                    with patch(
+                                        "warifuri.cli.commands.issue.pass_context",
+                                        return_value=lambda f: f,
+                                    ):
                                         result = runner.invoke(
                                             issue,
                                             ["--task", "demo/setup", "--assignee", "john_doe"],
-                                            obj=mock_context
+                                            obj=mock_context,
                                         )
 
                                         assert result.exit_code == 0
@@ -258,8 +322,13 @@ class TestIssueCommand:
         """Test handling of discovery errors."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", side_effect=Exception("Discovery failed")):
-                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    side_effect=Exception("Discovery failed"),
+                ):
+                    with patch(
+                        "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                    ):
                         result = runner.invoke(issue, ["--project", "demo"], obj=mock_context)
 
                         assert result.exit_code == 0
@@ -269,11 +338,21 @@ class TestIssueCommand:
         """Test handling of issue creation errors."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
-                        with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(False, None)):
-                            with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
-                                result = runner.invoke(issue, ["--project", "demo"], obj=mock_context)
+                        with patch(
+                            "warifuri.cli.commands.issue.create_issue_safe",
+                            return_value=(False, None),
+                        ):
+                            with patch(
+                                "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                            ):
+                                result = runner.invoke(
+                                    issue, ["--project", "demo"], obj=mock_context
+                                )
 
                                 assert result.exit_code == 0
                                 assert "Failed to create project issue" in result.output
@@ -283,8 +362,12 @@ class TestIssueCommand:
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
                 with patch("warifuri.cli.commands.issue.discover_all_projects", return_value={}):
-                    with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
-                        result = runner.invoke(issue, ["--all-tasks", "nonexistent"], obj=mock_context)
+                    with patch(
+                        "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                    ):
+                        result = runner.invoke(
+                            issue, ["--all-tasks", "nonexistent"], obj=mock_context
+                        )
 
                         assert result.exit_code == 0
                         assert "Project 'nonexistent' not found" in result.output
@@ -293,14 +376,20 @@ class TestIssueCommand:
         """Test handling of empty labels string."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.ensure_labels_exist") as mock_labels:
-                        with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/123")):
-                            with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                        with patch(
+                            "warifuri.cli.commands.issue.create_issue_safe",
+                            return_value=(True, "https://github.com/owner/repo/issues/123"),
+                        ):
+                            with patch(
+                                "warifuri.cli.commands.issue.pass_context", return_value=lambda f: f
+                            ):
                                 result = runner.invoke(
-                                    issue,
-                                    ["--project", "demo", "--label", ""],
-                                    obj=mock_context
+                                    issue, ["--project", "demo", "--label", ""], obj=mock_context
                                 )
 
                                 assert result.exit_code == 0
@@ -311,18 +400,31 @@ class TestIssueCommand:
         """Test actually creating all task issues for a project."""
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
-                with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
+                with patch(
+                    "warifuri.cli.commands.issue.discover_all_projects",
+                    return_value=sample_projects,
+                ):
                     with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
-                        with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/126")) as mock_create:
-                            with patch("warifuri.cli.commands.issue.format_task_issue_body", return_value="Task body"):
-                                with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
+                        with patch(
+                            "warifuri.cli.commands.issue.create_issue_safe",
+                            return_value=(True, "https://github.com/owner/repo/issues/126"),
+                        ) as mock_create:
+                            with patch(
+                                "warifuri.cli.commands.issue.format_task_issue_body",
+                                return_value="Task body",
+                            ):
+                                with patch(
+                                    "warifuri.cli.commands.issue.pass_context",
+                                    return_value=lambda f: f,
+                                ):
                                     result = runner.invoke(
-                                        issue,
-                                        ["--all-tasks", "demo"],
-                                        obj=mock_context
+                                        issue, ["--all-tasks", "demo"], obj=mock_context
                                     )
 
                                     assert result.exit_code == 0
-                                    assert "Successfully created 1/1 task issues for project 'demo'" in result.output
+                                    assert (
+                                        "Successfully created 1/1 task issues for project 'demo'"
+                                        in result.output
+                                    )
                                     # Should be called once for each task
                                     assert mock_create.call_count == 1

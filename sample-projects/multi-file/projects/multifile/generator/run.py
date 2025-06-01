@@ -4,6 +4,7 @@
 import json
 from datetime import datetime
 
+
 def main():
     print("Running generator task...")
 
@@ -24,16 +25,14 @@ def main():
         "version": "1.0",
         "generated_at": datetime.now().isoformat(),
         "data_files": ["data1.txt", "data2.txt"],
-        "settings": {
-            "debug": True,
-            "max_lines": 100
-        }
+        "settings": {"debug": True, "max_lines": 100},
     }
 
     with open("config.json", "w") as f:
         json.dump(config_data, f, indent=2)
 
     print("Generated files: data1.txt, data2.txt, config.json")
+
 
 if __name__ == "__main__":
     main()

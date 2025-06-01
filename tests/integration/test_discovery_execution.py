@@ -1,12 +1,14 @@
 """Test task discovery and execution functionality."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from warifuri.core.discovery import (
-    discover_task,
-    discover_project,
-    discover_all_projects,
     determine_task_type,
+    discover_all_projects,
+    discover_project,
+    discover_task,
     find_ready_tasks,
 )
 from warifuri.core.execution import execute_task
@@ -25,7 +27,9 @@ class TestTaskDiscovery:
         # Create machine task
         machine_task = project_dir / "extract"
         machine_task.mkdir(parents=True)
-        safe_write_file(machine_task / "instruction.yaml", """
+        safe_write_file(
+            machine_task / "instruction.yaml",
+            """
 name: extract
 task_type: machine
 description: Extract data
@@ -33,14 +37,17 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [data.json]
-""")
+""",
+        )
         safe_write_file(machine_task / "run.sh", "#!/bin/bash\necho 'extracted' > data.json")
         (machine_task / "run.sh").chmod(0o755)
 
         # Create AI task depending on machine task
         ai_task = project_dir / "transform"
         ai_task.mkdir(parents=True)
-        safe_write_file(ai_task / "instruction.yaml", """
+        safe_write_file(
+            ai_task / "instruction.yaml",
+            """
 name: transform
 task_type: ai
 description: Transform data
@@ -48,18 +55,24 @@ auto_merge: false
 dependencies: [extract]
 inputs: [../extract/data.json]
 outputs: [transformed.json]
-""")
-        safe_write_file(ai_task / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            ai_task / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are a data transformation assistant."
 user_prompt: "Transform the data from {input} to {output}"
-""")
+""",
+        )
 
         # Create human task
         human_task = project_dir / "review"
         human_task.mkdir(parents=True)
-        safe_write_file(human_task / "instruction.yaml", """
+        safe_write_file(
+            human_task / "instruction.yaml",
+            """
 name: review
 task_type: human
 description: Review results
@@ -67,7 +80,8 @@ auto_merge: false
 dependencies: [transform]
 inputs: [../transform/transformed.json]
 outputs: []
-""")
+""",
+        )
 
         return temp_workspace
 
@@ -100,7 +114,9 @@ outputs: []
 
     def test_discover_task(self, project_with_tasks):
         """Test task discovery."""
-        task = discover_task("test-project", project_with_tasks / "projects" / "test-project" / "extract")
+        task = discover_task(
+            "test-project", project_with_tasks / "projects" / "test-project" / "extract"
+        )
 
         assert task.name == "extract"
         assert task.project == "test-project"
@@ -146,7 +162,9 @@ class TestTaskExecution:
         task_dir = temp_workspace / "projects" / "test" / "simple"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: simple
 task_type: machine
 description: Simple test task
@@ -154,7 +172,8 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
+""",
+        )
         safe_write_file(task_dir / "run.sh", "#!/bin/bash\necho 'success' > result.txt")
         (task_dir / "run.sh").chmod(0o755)
 
@@ -167,7 +186,9 @@ outputs: [result.txt]
         task_dir = temp_workspace / "projects" / "test" / "ai"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: ai
 task_type: ai
 description: Simple AI task
@@ -175,13 +196,17 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [ai_result.txt]
-""")
-        safe_write_file(task_dir / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            task_dir / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are a helpful assistant."
 user_prompt: "Generate a test output for file {output}"
-""")
+""",
+        )
 
         task = discover_task("test", task_dir)
         return task
@@ -196,7 +221,9 @@ user_prompt: "Generate a test output for file {output}"
         input_file = task_dir / "input.txt"
         safe_write_file(input_file, "This is test input data for AI processing.")
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: ai_with_input
 task_type: ai
 description: AI task with input
@@ -204,13 +231,17 @@ auto_merge: false
 dependencies: []
 inputs: [input.txt]
 outputs: [output.txt]
-""")
-        safe_write_file(task_dir / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            task_dir / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are a text processor."
 user_prompt: "Process this input: {input_content} and generate output file {output}"
-""")
+""",
+        )
 
         task = discover_task("test", task_dir)
         return task
@@ -243,7 +274,7 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         result = execute_task(simple_ai_task, dry_run=True)
         assert result is True
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_execute_ai_task_success(self, mock_llm_class, simple_ai_task):
         """Test successful AI task execution with mocked LLM."""
         # Mock LLM client
@@ -269,12 +300,14 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         content = response_file.read_text()
         assert "Generated AI content" in content
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_execute_ai_task_with_inputs(self, mock_llm_class, ai_task_with_inputs):
         """Test AI task execution with input file processing."""
         # Mock LLM client
         mock_client = MagicMock()
-        mock_client.generate_response.return_value = "Processed: This is test input data for AI processing."
+        mock_client.generate_response.return_value = (
+            "Processed: This is test input data for AI processing."
+        )
         mock_llm_class.return_value = mock_client
 
         # Execute task
@@ -288,7 +321,7 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         response_file = ai_task_with_inputs.path / "output" / "response.md"
         assert response_file.exists()
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_execute_ai_task_llm_error(self, mock_llm_class, simple_ai_task):
         """Test AI task execution when LLM fails."""
         from warifuri.utils.llm import LLMError
@@ -306,8 +339,8 @@ user_prompt: "Process this input: {input_content} and generate output file {outp
         done_file = simple_ai_task.path / "done.md"
         assert not done_file.exists()
 
-    @patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key-123'})
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key-123"})
+    @patch("warifuri.utils.llm.LLMClient")
     def test_execute_ai_task_with_env_vars(self, mock_llm_class, simple_ai_task):
         """Test AI task execution with environment variables."""
         # Mock LLM client
@@ -351,7 +384,9 @@ class TestAITaskExecution:
         task_dir = temp_workspace / "projects" / "test" / "ai"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: ai
 task_type: ai
 description: Simple AI task
@@ -359,13 +394,17 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [ai_result.txt]
-""")
-        safe_write_file(task_dir / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            task_dir / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are a helpful assistant."
 user_prompt: "Generate a test output for file {output}"
-""")
+""",
+        )
 
         task = discover_task("test", task_dir)
         return task
@@ -380,7 +419,9 @@ user_prompt: "Generate a test output for file {output}"
         safe_write_file(task_dir / "data1.txt", "First input data")
         safe_write_file(task_dir / "data2.json", '{"key": "value"}')
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: complex_ai
 task_type: ai
 description: Complex AI task with multiple inputs
@@ -388,8 +429,11 @@ auto_merge: false
 dependencies: []
 inputs: [data1.txt, data2.json]
 outputs: [summary.txt, analysis.json]
-""")
-        safe_write_file(task_dir / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            task_dir / "prompt.yaml",
+            """
 model: gpt-4
 temperature: 0.3
 system_prompt: "You are a data analyst."
@@ -401,12 +445,13 @@ user_prompt: |
   Generate:
   1. A summary in {summary.txt}
   2. Analysis results in {analysis.json}
-""")
+""",
+        )
 
         task = discover_task("test", task_dir)
         return task
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_basic_execution(self, mock_llm_class, simple_ai_task, mock_llm_response):
         """Test basic AI task execution with mocked LLM."""
         mock_client = MagicMock()
@@ -424,8 +469,10 @@ user_prompt: |
         assert "helpful assistant" in system_prompt
         assert "Simple AI task" in user_prompt
 
-    @patch('warifuri.utils.llm.LLMClient')
-    def test_ai_task_prompt_template_expansion(self, mock_llm_class, complex_ai_task, mock_llm_response):
+    @patch("warifuri.utils.llm.LLMClient")
+    def test_ai_task_prompt_template_expansion(
+        self, mock_llm_class, complex_ai_task, mock_llm_response
+    ):
         """Test that AI task properly expands prompt templates with input content."""
         mock_client = MagicMock()
         mock_client.generate_response.return_value = mock_llm_response
@@ -437,7 +484,7 @@ user_prompt: |
         # Verify LLM was called with expanded prompt
         mock_client.generate_response.assert_called_once()
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_output_generation(self, mock_llm_class, simple_ai_task):
         """Test that AI task generates expected output files."""
         mock_client = MagicMock()
@@ -454,7 +501,7 @@ user_prompt: |
         content = response_file.read_text()
         assert "Generated content for ai_result.txt" in content
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_model_configuration(self, mock_llm_class, complex_ai_task):
         """Test that AI task respects model configuration from prompt.yaml."""
         mock_client = MagicMock()
@@ -467,7 +514,7 @@ user_prompt: |
         # Verify LLM client was created with correct model and temperature
         mock_llm_class.assert_called_once_with(model="gpt-4", temperature=0.3)
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_llm_error_handling(self, mock_llm_class, simple_ai_task):
         """Test AI task handling when LLM fails."""
         from warifuri.utils.llm import LLMError
@@ -485,8 +532,8 @@ user_prompt: |
         done_file = simple_ai_task.path / "done.md"
         assert not done_file.exists()
 
-    @patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key-123'})
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-key-123"})
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_with_env_vars(self, mock_llm_class, simple_ai_task):
         """Test AI task execution with environment variables."""
         mock_client = MagicMock()
@@ -504,13 +551,15 @@ user_prompt: |
         result = execute_task(simple_ai_task, dry_run=True)
         assert result is True
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_missing_inputs_error(self, mock_llm_class, temp_workspace):
         """Test AI task handling when input files are missing."""
         task_dir = temp_workspace / "projects" / "test" / "missing_input"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: missing_input
 task_type: ai
 description: AI task with missing input
@@ -518,13 +567,17 @@ auto_merge: false
 dependencies: []
 inputs: [nonexistent.txt]
 outputs: [output.txt]
-""")
-        safe_write_file(task_dir / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            task_dir / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are an assistant."
 user_prompt: "Process {nonexistent.txt}"
-""")
+""",
+        )
 
         task = discover_task("test", task_dir)
 
@@ -536,13 +589,15 @@ user_prompt: "Process {nonexistent.txt}"
         execute_task(task, dry_run=False)
         # Should succeed even with missing input (depends on implementation)
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_empty_prompt_config(self, mock_llm_class, temp_workspace):
         """Test AI task with empty or invalid prompt configuration."""
         task_dir = temp_workspace / "projects" / "test" / "empty_prompt"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: empty_prompt
 task_type: ai
 description: AI task with empty prompt
@@ -550,7 +605,8 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [output.txt]
-""")
+""",
+        )
         safe_write_file(task_dir / "prompt.yaml", "")  # Empty prompt config
 
         task = discover_task("test", task_dir)
@@ -574,7 +630,9 @@ class TestDependencyResolution:
         # Create task A depending on B
         task_a = project_dir / "task_a"
         task_a.mkdir(parents=True)
-        safe_write_file(task_a / "instruction.yaml", """
+        safe_write_file(
+            task_a / "instruction.yaml",
+            """
 name: task_a
 task_type: human
 description: Task A
@@ -582,12 +640,15 @@ auto_merge: false
 dependencies: [task_b]
 inputs: []
 outputs: []
-""")
+""",
+        )
 
         # Create task B depending on A (circular)
         task_b = project_dir / "task_b"
         task_b.mkdir(parents=True)
-        safe_write_file(task_b / "instruction.yaml", """
+        safe_write_file(
+            task_b / "instruction.yaml",
+            """
 name: task_b
 task_type: human
 description: Task B
@@ -595,7 +656,8 @@ auto_merge: false
 dependencies: [task_a]
 inputs: []
 outputs: []
-""")
+""",
+        )
 
         # This should be detected during project discovery
         from warifuri.utils.validation import CircularDependencyError

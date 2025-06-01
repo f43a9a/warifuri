@@ -7,7 +7,7 @@ Uses core shared configuration and library for main processing.
 import datetime
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def check_input_files() -> None:
@@ -27,11 +27,11 @@ def parse_config_value(value: str) -> Any:
     """Parse configuration value from string."""
     value = value.strip()
 
-    if value.lower() in ('true', 'false'):
-        return value.lower() == 'true'
+    if value.lower() in ("true", "false"):
+        return value.lower() == "true"
     elif value.isdigit():
         return int(value)
-    elif value.replace('.', '').isdigit():
+    elif value.replace(".", "").isdigit():
         return float(value)
     else:
         return value
@@ -46,14 +46,14 @@ def load_shared_config() -> Dict[str, Any]:
     for line in config_content.splitlines():
         line = line.strip()
 
-        if not line or line.startswith('#'):
+        if not line or line.startswith("#"):
             continue
 
-        if line.startswith('[') and line.endswith(']'):
+        if line.startswith("[") and line.endswith("]"):
             current_section = line[1:-1]
             config[current_section] = {}
-        elif '=' in line and current_section:
-            key, value = line.split('=', 1)
+        elif "=" in line and current_section:
+            key, value = line.split("=", 1)
             config[current_section][key.strip()] = parse_config_value(value)
 
     return config
@@ -83,12 +83,14 @@ def main() -> None:
         "core_library_integration": "SUCCESS",
         "business_logic": "SUCCESS",
         "data_processing": "SUCCESS",
-        "output_generation": "SUCCESS"
+        "output_generation": "SUCCESS",
     }
 
     # Calculate metrics
     total_features = len(core_lib.get("features", {}))
-    enabled_features = sum(1 for feature, enabled in core_lib.get("features", {}).items() if enabled)
+    enabled_features = sum(
+        1 for feature, enabled in core_lib.get("features", {}).items() if enabled
+    )
 
     # Generate application output
     app_output = f"""Application Processing Report
@@ -102,25 +104,25 @@ Debug Mode: {debug_mode}
 === Configuration Summary ===
 
 Shared Config Sections: {len(shared_config)}
-Core Library Version: {core_lib['metadata']['version']}
-Core Generated At: {core_lib['metadata']['generated_at']}
+Core Library Version: {core_lib["metadata"]["version"]}
+Core Generated At: {core_lib["metadata"]["generated_at"]}
 
 System Configuration:
-- Database: {core_lib['database_config']['connection_string']}
-- API Base URL: {core_lib['api_config']['base_url']}
-- API Timeout: {core_lib['api_config']['timeout']}s
-- Rate Limit: {core_lib['api_config']['rate_limit']} req/min
+- Database: {core_lib["database_config"]["connection_string"]}
+- API Base URL: {core_lib["api_config"]["base_url"]}
+- API Timeout: {core_lib["api_config"]["timeout"]}s
+- Rate Limit: {core_lib["api_config"]["rate_limit"]} req/min
 
 Feature Status:
 - Total Features: {total_features}
 - Enabled Features: {enabled_features}
-- Feature Flags: {', '.join(name for name, enabled in core_lib.get('features', {}).items() if enabled)}
+- Feature Flags: {", ".join(name for name, enabled in core_lib.get("features", {}).items() if enabled)}
 
 Performance Settings:
-- Max Workers: {core_lib['performance'].get('max_workers', 'N/A')}
-- Batch Size: {core_lib['performance'].get('batch_size', 'N/A')}
-- Cache Size: {core_lib['performance'].get('cache_size', 'N/A')}
-- Memory Limit: {core_lib['performance'].get('memory_limit', 'N/A')}
+- Max Workers: {core_lib["performance"].get("max_workers", "N/A")}
+- Batch Size: {core_lib["performance"].get("batch_size", "N/A")}
+- Cache Size: {core_lib["performance"].get("cache_size", "N/A")}
+- Memory Limit: {core_lib["performance"].get("memory_limit", "N/A")}
 
 === Processing Results ===
 
@@ -129,12 +131,12 @@ Performance Settings:
 === Application Metrics ===
 
 Total Processing Steps: {len(processing_results)}
-Successful Steps: {sum(1 for result in processing_results.values() if result == 'SUCCESS')}
-Failed Steps: {sum(1 for result in processing_results.values() if result != 'SUCCESS')}
-Success Rate: {(sum(1 for result in processing_results.values() if result == 'SUCCESS') / len(processing_results) * 100):.1f}%
+Successful Steps: {sum(1 for result in processing_results.values() if result == "SUCCESS")}
+Failed Steps: {sum(1 for result in processing_results.values() if result != "SUCCESS")}
+Success Rate: {(sum(1 for result in processing_results.values() if result == "SUCCESS") / len(processing_results) * 100):.1f}%
 
-Configuration Validation: {'PASSED' if core_lib['validation']['config_valid'] else 'FAILED'}
-Missing Sections: {', '.join(core_lib['validation']['missing_sections']) if core_lib['validation']['missing_sections'] else 'None'}
+Configuration Validation: {"PASSED" if core_lib["validation"]["config_valid"] else "FAILED"}
+Missing Sections: {", ".join(core_lib["validation"]["missing_sections"]) if core_lib["validation"]["missing_sections"] else "None"}
 
 === Resource Usage ===
 

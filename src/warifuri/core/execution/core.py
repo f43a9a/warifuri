@@ -4,13 +4,13 @@ import datetime
 import logging
 import shutil
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from ...utils.filesystem import get_git_commit_sha, safe_write_file
-from .errors import ExecutionError
-from .machine import execute_machine_task
 from .ai import execute_ai_task
+from .errors import ExecutionError
 from .human import execute_human_task
+from .machine import execute_machine_task
 
 if TYPE_CHECKING:
     from ...core.types import Task

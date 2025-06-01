@@ -1,19 +1,19 @@
 """Unit tests for automation service module."""
 
 import json
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 import click
+import pytest
 
-from warifuri.cli.services.automation_service import (
-    AutomationListService,
-    AutomationCheckService,
-    TaskExecutionService
-)
 from warifuri.cli.context import Context
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus, Project
+from warifuri.cli.services.automation_service import (
+    AutomationCheckService,
+    AutomationListService,
+    TaskExecutionService,
+)
+from warifuri.core.types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestAutomationListService:
@@ -51,11 +51,7 @@ class TestAutomationListService:
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     def test_list_tasks_no_tasks(self, mock_discover: Mock) -> None:
         """Test list_tasks when projects exist but no tasks."""
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[])
         mock_discover.return_value = [project]
 
         with patch("click.echo") as mock_echo:
@@ -68,11 +64,7 @@ class TestAutomationListService:
         """Test list_tasks with table format."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -80,14 +72,10 @@ class TestAutomationListService:
             path=Path("/test/workspace/project/test-task"),  # Path under workspace
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = [task]
@@ -102,11 +90,7 @@ class TestAutomationListService:
         """Test list_tasks with JSON format."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -114,14 +98,10 @@ class TestAutomationListService:
             path=Path("/test/workspace/project/test-task"),  # Path under workspace
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = [task]
@@ -140,12 +120,7 @@ class TestAutomationListService:
     def test_print_table_with_tasks(self) -> None:
         """Test _print_table method with task data."""
         task_info = [
-            {
-                "project": "test-project",
-                "task": "test-task",
-                "status": "ready",
-                "dependencies": 2
-            }
+            {"project": "test-project", "task": "test-task", "status": "ready", "dependencies": 2}
         ]
 
         with patch("click.echo") as mock_echo:
@@ -168,11 +143,7 @@ class TestAutomationListService:
         """Test list_automation_tasks method."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -180,15 +151,11 @@ class TestAutomationListService:
             path=Path("/test/workspace/project/task.yaml"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
         # full_name is computed automatically from project and name
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
 
@@ -208,14 +175,10 @@ class TestAutomationListService:
             name="ready-task",
             path=Path("/test/path1"),
             instruction=TaskInstruction(
-                name="ready-task",
-                description="Ready task",
-                dependencies=[],
-                inputs=[],
-                outputs=[]
+                name="ready-task", description="Ready task", dependencies=[], inputs=[], outputs=[]
             ),
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         pending_task = Task(
@@ -227,16 +190,14 @@ class TestAutomationListService:
                 description="Pending task",
                 dependencies=["ready-task"],
                 inputs=[],
-                outputs=[]
+                outputs=[],
             ),
             task_type=TaskType.MACHINE,
-            status=TaskStatus.PENDING
+            status=TaskStatus.PENDING,
         )
 
         project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[ready_task, pending_task]
+            name="test-project", path=Path("/test/project"), tasks=[ready_task, pending_task]
         )
 
         mock_discover.return_value = [project]
@@ -259,10 +220,10 @@ class TestAutomationListService:
                 description="Machine task",
                 dependencies=[],
                 inputs=[],
-                outputs=[]
+                outputs=[],
             ),
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         human_task = Task(
@@ -270,20 +231,14 @@ class TestAutomationListService:
             name="human-task",
             path=Path("/test/path2"),
             instruction=TaskInstruction(
-                name="human-task",
-                description="Human task",
-                dependencies=[],
-                inputs=[],
-                outputs=[]
+                name="human-task", description="Human task", dependencies=[], inputs=[], outputs=[]
             ),
             task_type=TaskType.HUMAN,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[machine_task, human_task]
+            name="test-project", path=Path("/test/project"), tasks=[machine_task, human_task]
         )
 
         mock_discover.return_value = [project]
@@ -296,11 +251,7 @@ class TestAutomationListService:
     def test_output_results_json(self) -> None:
         """Test output_results with JSON format."""
         automation_tasks = [
-            {
-                "project": "test-project",
-                "name": "test-task",
-                "automation_ready": True
-            }
+            {"project": "test-project", "name": "test-task", "automation_ready": True}
         ]
 
         with patch("click.echo") as mock_echo:
@@ -324,7 +275,7 @@ class TestAutomationListService:
                 "task_type": "machine",
                 "status": "ready",
                 "automation_ready": True,
-                "auto_merge_config": "/path/to/config.yaml"
+                "auto_merge_config": "/path/to/config.yaml",
             }
         ]
 
@@ -347,7 +298,9 @@ class TestAutomationListService:
             self.service.list_tasks("table")
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_list_automation_tasks_workspace_path_none_raises_error(self, mock_discover: Mock) -> None:
+    def test_list_automation_tasks_workspace_path_none_raises_error(
+        self, mock_discover: Mock
+    ) -> None:
         """Test list_automation_tasks when workspace_path is None."""
         # Create service with context that has None workspace_path after initialization
         self.service.workspace_path = None
@@ -414,7 +367,9 @@ class TestAutomationListService:
         assert result[0]["auto_merge_config"] == "/test/project/task1/auto_merge.yaml"
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_list_automation_tasks_auto_merge_config_project_level(self, mock_discover: Mock) -> None:
+    def test_list_automation_tasks_auto_merge_config_project_level(
+        self, mock_discover: Mock
+    ) -> None:
         """Test list_automation_tasks with auto_merge config at project level."""
 
         # Create mock task with proper path handling
@@ -455,7 +410,9 @@ class TestAutomationListService:
 
         mock_project_auto_merge_yaml = MagicMock()
         mock_project_auto_merge_yaml.exists.return_value = True
-        mock_project_auto_merge_yaml.__str__ = MagicMock(return_value="/test/project/auto_merge.yaml")
+        mock_project_auto_merge_yaml.__str__ = MagicMock(
+            return_value="/test/project/auto_merge.yaml"
+        )
         mock_project_auto_merge_yml = MagicMock()
         mock_project_auto_merge_yml.exists.return_value = False
 
@@ -493,7 +450,7 @@ class TestAutomationListService:
         project.tasks = [task]
 
         # Mock the exists() method to return False for all paths
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             mock_discover.return_value = [project]
 
             result = self.service.list_automation_tasks()
@@ -529,7 +486,9 @@ class TestAutomationCheckService:
         """Test check_task with invalid task name format."""
         with patch("click.echo") as mock_echo, pytest.raises(click.Abort):
             self.service.check_task("invalid-task-name", verbose=False)
-            mock_echo.assert_called_with("Error: Task name must be in format 'project/task'", err=True)
+            mock_echo.assert_called_with(
+                "Error: Task name must be in format 'project/task'", err=True
+            )
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     def test_check_task_project_not_found(self, mock_discover: Mock) -> None:
@@ -543,16 +502,14 @@ class TestAutomationCheckService:
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     def test_check_task_task_not_found(self, mock_discover: Mock) -> None:
         """Test check_task when task is not found in project."""
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[])
         mock_discover.return_value = [project]
 
         with patch("click.echo") as mock_echo, pytest.raises(click.Abort):
             self.service.check_task("test-project/nonexistent", verbose=False)
-            mock_echo.assert_called_with("❌ Task 'nonexistent' not found in project 'test-project'", err=True)
+            mock_echo.assert_called_with(
+                "❌ Task 'nonexistent' not found in project 'test-project'", err=True
+            )
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
@@ -560,11 +517,7 @@ class TestAutomationCheckService:
         """Test check_task for a ready task."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -572,14 +525,10 @@ class TestAutomationCheckService:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = [task]
@@ -598,7 +547,7 @@ class TestAutomationCheckService:
             description="Test task",
             dependencies=["other-task"],
             inputs=[],
-            outputs=[]
+            outputs=[],
         )
         task = Task(
             project="test-project",
@@ -606,21 +555,19 @@ class TestAutomationCheckService:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.PENDING
+            status=TaskStatus.PENDING,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = []  # No ready tasks
 
         with patch("click.echo") as mock_echo:
             self.service.check_task("test-project/test-task", verbose=False)
-            mock_echo.assert_called_with("⏳ Task 'test-project/test-task' is not ready for automation")
+            mock_echo.assert_called_with(
+                "⏳ Task 'test-project/test-task' is not ready for automation"
+            )
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
@@ -632,7 +579,7 @@ class TestAutomationCheckService:
             description="Test task",
             dependencies=["other-task"],
             inputs=[],
-            outputs=[]
+            outputs=[],
         )
         task = Task(
             project="test-project",
@@ -640,14 +587,10 @@ class TestAutomationCheckService:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.PENDING
+            status=TaskStatus.PENDING,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = []
@@ -660,11 +603,7 @@ class TestAutomationCheckService:
     def test_check_task_automation_machine_ready(self, mock_discover: Mock) -> None:
         """Test check_task_automation for machine task that's ready."""
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -672,20 +611,18 @@ class TestAutomationCheckService:
             path=Path("/test/workspace/project/task"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
 
         # Mock auto_merge config file existence
         with patch.object(Path, "exists", return_value=True):
-            can_automate, issues, config = self.service.check_task_automation("test-project/test-task")
+            can_automate, issues, config = self.service.check_task_automation(
+                "test-project/test-task"
+            )
 
             assert can_automate is True
             assert len(issues) == 0
@@ -695,11 +632,7 @@ class TestAutomationCheckService:
     def test_check_task_automation_human_task(self, mock_discover: Mock) -> None:
         """Test check_task_automation for human task."""
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -707,14 +640,10 @@ class TestAutomationCheckService:
             path=Path("/test/workspace/project/task"),
             instruction=task_instruction,
             task_type=TaskType.HUMAN,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
 
@@ -727,11 +656,7 @@ class TestAutomationCheckService:
         """Test output_check_results with JSON format."""
         with patch("click.echo") as mock_echo:
             self.service.output_check_results(
-                "test-project/test-task",
-                True,
-                [],
-                "/path/to/config.yaml",
-                check_only=True
+                "test-project/test-task", True, [], "/path/to/config.yaml", check_only=True
             )
 
             json_output = mock_echo.call_args[0][0]
@@ -747,7 +672,7 @@ class TestAutomationCheckService:
                 False,
                 ["Task not ready", "No config found"],
                 None,
-                check_only=False
+                check_only=False,
             )
 
             # Should print multiple lines for table format
@@ -755,7 +680,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_workspace_path_none(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_workspace_path_none(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info when workspace_path is None."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -774,7 +701,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_with_dependencies_workspace_path_none(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_with_dependencies_workspace_path_none(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info with dependencies when workspace_path is None inside dependency loop."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -817,7 +746,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_dependency_not_found(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_dependency_not_found(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info with dependency not found."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -841,7 +772,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_dependency_found_ready(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_dependency_found_ready(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info with dependency found and ready."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -869,7 +802,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_dependency_found_not_ready(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_dependency_found_not_ready(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info with dependency found but not ready."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -897,7 +832,9 @@ class TestAutomationCheckService:
 
     @patch("warifuri.cli.services.automation_service.find_ready_tasks")
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_show_verbose_info_task_blocked_with_dependencies(self, mock_discover: Mock, mock_find_ready: Mock) -> None:
+    def test_show_verbose_info_task_blocked_with_dependencies(
+        self, mock_discover: Mock, mock_find_ready: Mock
+    ) -> None:
         """Test _show_verbose_info with task blocked and having dependencies."""
         task = Mock(spec=Task)
         task.name = "test_task"
@@ -918,7 +855,9 @@ class TestAutomationCheckService:
             # Verify that the blocking message was displayed
             calls = [call[0][0] for call in mock_echo.call_args_list]
             assert any("⚠️  Task is blocked by unfinished dependencies" in call for call in calls)
-            assert any("Run 'warifuri graph' to see the full dependency tree" in call for call in calls)
+            assert any(
+                "Run 'warifuri graph' to see the full dependency tree" in call for call in calls
+            )
 
 
 class TestTaskExecutionService:
@@ -963,11 +902,7 @@ class TestTaskExecutionService:
         """Test execute_task_safely with successful execution."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -975,14 +910,10 @@ class TestTaskExecutionService:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_execute.return_value = True
@@ -992,15 +923,13 @@ class TestTaskExecutionService:
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     @patch("warifuri.cli.services.automation_service.execute_task")
-    def test_execute_task_safely_execution_fails(self, mock_execute: Mock, mock_discover: Mock) -> None:
+    def test_execute_task_safely_execution_fails(
+        self, mock_execute: Mock, mock_discover: Mock
+    ) -> None:
         """Test execute_task_safely when execution raises exception."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -1008,14 +937,10 @@ class TestTaskExecutionService:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_execute.side_effect = Exception("Execution failed")
@@ -1038,11 +963,7 @@ class TestTaskExecutionService:
         """Test that TaskExecutionService also has list_automation_tasks method."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -1050,15 +971,11 @@ class TestTaskExecutionService:
             path=Path("/test/workspace/project/task.yaml"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
         # full_name is computed automatically from project and name
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/workspace/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/workspace/project"), tasks=[task])
 
         mock_discover.return_value = [project]
 
@@ -1069,7 +986,9 @@ class TestTaskExecutionService:
         assert result[0]["name"] == "test-task"
 
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
-    def test_list_automation_tasks_duplicate_method_workspace_path_none(self, mock_discover: Mock) -> None:
+    def test_list_automation_tasks_duplicate_method_workspace_path_none(
+        self, mock_discover: Mock
+    ) -> None:
         """Test TaskExecutionService list_automation_tasks when workspace_path is None."""
         # Set workspace_path to None
         self.service.workspace_path = None
@@ -1110,7 +1029,7 @@ class TestTaskExecutionService:
         mock_discover.return_value = [project]
 
         # Mock Path.exists to return False for all auto_merge configs
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             # Test with ready_only=True, machine_only=True
             result = self.service.list_automation_tasks(ready_only=True, machine_only=True)
 
@@ -1134,15 +1053,15 @@ class TestTaskExecutionService:
                 "task_type": "machine",
                 "status": "ready",
                 "automation_ready": True,
-                "auto_merge_config": "/path/to/config.yaml"
+                "auto_merge_config": "/path/to/config.yaml",
             },
             {
                 "full_name": "project1/task2",
                 "task_type": "human",
                 "status": "pending",
                 "automation_ready": False,
-                "auto_merge_config": None
-            }
+                "auto_merge_config": None,
+            },
         ]
 
         with patch("click.echo") as mock_echo:
@@ -1164,13 +1083,7 @@ class TestTaskExecutionService:
 
     def test_output_results_json_format(self) -> None:
         """Test output_results with JSON format."""
-        tasks = [
-            {
-                "full_name": "project1/task1",
-                "task_type": "machine",
-                "status": "ready"
-            }
-        ]
+        tasks = [{"full_name": "project1/task1", "task_type": "machine", "status": "ready"}]
 
         with patch("click.echo") as mock_echo:
             self.service.output_results(tasks, "json")

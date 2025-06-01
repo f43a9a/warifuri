@@ -18,7 +18,7 @@ def execute_ai_task(task: "Task", dry_run: bool = False) -> bool:
         return True
 
     try:
-        from ...utils.llm import LLMClient, load_prompt_config, save_ai_response, log_ai_error
+        from ...utils.llm import LLMClient, load_prompt_config, log_ai_error, save_ai_response
 
         # Load prompt configuration
         prompt_config = load_prompt_config(task.path)

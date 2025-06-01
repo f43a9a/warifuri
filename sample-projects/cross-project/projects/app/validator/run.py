@@ -4,6 +4,7 @@
 from datetime import datetime
 from pathlib import Path
 
+
 def main():
     print("Running validator task...")
 
@@ -48,7 +49,7 @@ def main():
         ("Configuration Summary", "Configuration Summary:" in app_content),
         ("Features Section", "Available Features:" in app_content),
         ("Dependencies Section", "Dependencies:" in app_content),
-        ("Success Message", "successfully!" in app_content)
+        ("Success Message", "successfully!" in app_content),
     ]
 
     all_passed = True
@@ -87,6 +88,7 @@ def main():
 
     print("Generated validation_report.txt")
     return 0 if all_passed else 1
+
 
 if __name__ == "__main__":
     exit(main())

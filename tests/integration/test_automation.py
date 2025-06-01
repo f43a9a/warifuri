@@ -41,11 +41,7 @@ class TestAutomationListCommand:
         mock_discover.return_value = []
 
         runner = CliRunner()
-        result = runner.invoke(
-            automation_list,
-            [],
-            obj=Context(workspace_path=tmp_path)
-        )
+        result = runner.invoke(automation_list, [], obj=Context(workspace_path=tmp_path))
 
         assert result.exit_code == 0
         assert "No tasks found matching criteria." in result.output
@@ -60,11 +56,7 @@ class TestAutomationListCommand:
             mock_exists.return_value = True
 
             runner = CliRunner()
-            result = runner.invoke(
-                automation_list,
-                [],
-                obj=Context(workspace_path=tmp_path)
-            )
+            result = runner.invoke(automation_list, [], obj=Context(workspace_path=tmp_path))
 
             assert result.exit_code == 0
             assert "Automation-Ready Tasks:" in result.output
@@ -95,9 +87,7 @@ class TestAutomationListCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                automation_list,
-                ["--ready-only"],
-                obj=Context(workspace_path=tmp_path)
+                automation_list, ["--ready-only"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 0
@@ -127,9 +117,7 @@ class TestAutomationListCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                automation_list,
-                ["--machine-only"],
-                obj=Context(workspace_path=tmp_path)
+                automation_list, ["--machine-only"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 0
@@ -151,9 +139,7 @@ class TestAutomationListCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                automation_list,
-                ["--project", "test-project"],
-                obj=Context(workspace_path=tmp_path)
+                automation_list, ["--project", "test-project"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 0
@@ -169,14 +155,13 @@ class TestAutomationListCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                automation_list,
-                ["--format", "json"],
-                obj=Context(workspace_path=tmp_path)
+                automation_list, ["--format", "json"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 0
             # Should output valid JSON
             import json
+
             output_data = json.loads(result.output)
             assert len(output_data) == 1
             assert output_data[0]["project"] == "test-project"
@@ -186,11 +171,7 @@ class TestAutomationListCommand:
         """Test when workspace path is None."""
         runner = CliRunner()
 
-        result = runner.invoke(
-            automation_list,
-            [],
-            obj=Context(workspace_path=None)
-        )
+        result = runner.invoke(automation_list, [], obj=Context(workspace_path=None))
 
         # Should fail due to assertion
         assert result.exit_code != 0
@@ -225,9 +206,7 @@ class TestCheckAutomationCommand:
         """Test check automation with invalid task name format."""
         runner = CliRunner()
         result = runner.invoke(
-            check_automation,
-            ["invalid-task-name"],
-            obj=Context(workspace_path=tmp_path)
+            check_automation, ["invalid-task-name"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 1  # click.Abort() exits with code 1
@@ -242,7 +221,7 @@ class TestCheckAutomationCommand:
         result = runner.invoke(
             check_automation,
             ["test-project/nonexistent-task"],
-            obj=Context(workspace_path=tmp_path)
+            obj=Context(workspace_path=tmp_path),
         )
 
         assert result.exit_code == 1
@@ -257,7 +236,7 @@ class TestCheckAutomationCommand:
         result = runner.invoke(
             check_automation,
             ["nonexistent-project/test-task"],
-            obj=Context(workspace_path=tmp_path)
+            obj=Context(workspace_path=tmp_path),
         )
 
         assert result.exit_code == 1
@@ -273,9 +252,7 @@ class TestCheckAutomationCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                check_automation,
-                ["test-project/test-task"],
-                obj=Context(workspace_path=tmp_path)
+                check_automation, ["test-project/test-task"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 0
@@ -304,9 +281,7 @@ class TestCheckAutomationCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                check_automation,
-                ["test-project/test-task"],
-                obj=Context(workspace_path=tmp_path)
+                check_automation, ["test-project/test-task"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 1
@@ -335,9 +310,7 @@ class TestCheckAutomationCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                check_automation,
-                ["test-project/test-task"],
-                obj=Context(workspace_path=tmp_path)
+                check_automation, ["test-project/test-task"], obj=Context(workspace_path=tmp_path)
             )
         assert result.exit_code == 1
         assert "Can automate: ❌ No" in result.output
@@ -353,9 +326,7 @@ class TestCheckAutomationCommand:
 
             runner = CliRunner()
             result = runner.invoke(
-                check_automation,
-                ["test-project/test-task"],
-                obj=Context(workspace_path=tmp_path)
+                check_automation, ["test-project/test-task"], obj=Context(workspace_path=tmp_path)
             )
 
             assert result.exit_code == 1
@@ -374,12 +345,13 @@ class TestCheckAutomationCommand:
             result = runner.invoke(
                 check_automation,
                 ["test-project/test-task", "--check-only"],
-                obj=Context(workspace_path=tmp_path)
+                obj=Context(workspace_path=tmp_path),
             )
 
             assert result.exit_code == 0
             # Should output valid JSON
             import json
+
             output_data = json.loads(result.output)
             assert output_data["task"] == "test-project/test-task"
             assert output_data["can_automate"] is True
@@ -390,9 +362,7 @@ class TestCheckAutomationCommand:
         runner = CliRunner()
 
         result = runner.invoke(
-            check_automation,
-            ["test-project/test-task"],
-            obj=Context(workspace_path=None)
+            check_automation, ["test-project/test-task"], obj=Context(workspace_path=None)
         )
 
         # Should fail due to assertion

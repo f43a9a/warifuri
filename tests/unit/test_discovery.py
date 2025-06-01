@@ -1,35 +1,36 @@
 """Corrected unit tests for discovery module with proper mocking strategies."""
 
-import pytest
 from pathlib import Path
 from typing import List
 from unittest.mock import Mock, patch
 
+import pytest
+
 from warifuri.core.discovery import (
-    determine_task_type,
     determine_task_status,
-    load_task_instruction,
-    discover_task,
-    discover_project,
-    discover_project_safe,
+    determine_task_type,
     discover_all_projects,
     discover_all_projects_safe,
+    discover_project,
+    discover_project_safe,
+    discover_task,
     find_ready_tasks,
     find_task_by_name,
+    load_task_instruction,
 )
 from warifuri.core.types import (
+    Project,
     Task,
     TaskInstruction,
-    Project,
-    TaskType,
     TaskStatus,
+    TaskType,
 )
 
 
 class TestDetermineTaskType:
     """Test determine_task_type function."""
 
-    @patch('pathlib.Path.glob')
+    @patch("pathlib.Path.glob")
     def test_determine_task_type_machine_with_shell_script(self, mock_glob: Mock) -> None:
         """Test task type determination for machine task with shell script."""
         task_path = Path("/test/project/task")
@@ -42,7 +43,7 @@ class TestDetermineTaskType:
         result = determine_task_type(task_path)
         assert result == TaskType.MACHINE
 
-    @patch('pathlib.Path.glob')
+    @patch("pathlib.Path.glob")
     def test_determine_task_type_machine_with_python_script(self, mock_glob: Mock) -> None:
         """Test task type determination for machine task with Python script."""
         task_path = Path("/test/project/task")
@@ -56,9 +57,11 @@ class TestDetermineTaskType:
         result = determine_task_type(task_path)
         assert result == TaskType.MACHINE
 
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.glob')
-    def test_determine_task_type_ai_with_prompt_yaml(self, mock_glob: Mock, mock_exists: Mock) -> None:
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.glob")
+    def test_determine_task_type_ai_with_prompt_yaml(
+        self, mock_glob: Mock, mock_exists: Mock
+    ) -> None:
         """Test task type determination for AI task with prompt.yaml."""
         task_path = Path("/test/project/task")
 
@@ -74,8 +77,8 @@ class TestDetermineTaskType:
         result = determine_task_type(task_path)
         assert result == TaskType.AI
 
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.glob')
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.glob")
     def test_determine_task_type_human_default(self, mock_glob: Mock, mock_exists: Mock) -> None:
         """Test task type determination defaults to human."""
         task_path = Path("/test/project/task")
@@ -100,17 +103,13 @@ class TestDetermineTaskStatus:
         """Test task status determination for completed task."""
         # Create a real Task object with is_completed=True
         mock_instruction = TaskInstruction(
-            name="test-task",
-            description="Test description",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test description", dependencies=[], inputs=[], outputs=[]
         )
 
         # Create task with a path that has done.md
         task_path = Path("/test/project/task")
 
-        with patch('pathlib.Path.exists') as mock_exists:
+        with patch("pathlib.Path.exists") as mock_exists:
             mock_exists.return_value = True  # done.md exists
 
             task = Task(
@@ -128,16 +127,12 @@ class TestDetermineTaskStatus:
     def test_determine_task_status_ready_when_not_completed(self) -> None:
         """Test task status determination for non-completed task."""
         mock_instruction = TaskInstruction(
-            name="test-task",
-            description="Test description",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test description", dependencies=[], inputs=[], outputs=[]
         )
 
         task_path = Path("/test/project/task")
 
-        with patch('pathlib.Path.exists') as mock_exists:
+        with patch("pathlib.Path.exists") as mock_exists:
             mock_exists.return_value = False  # done.md doesn't exist
 
             task = Task(
@@ -156,7 +151,7 @@ class TestDetermineTaskStatus:
 class TestLoadTaskInstruction:
     """Test load_task_instruction function."""
 
-    @patch('warifuri.core.discovery.load_yaml')
+    @patch("warifuri.core.discovery.load_yaml")
     def test_load_task_instruction_success(self, mock_load_yaml: Mock) -> None:
         """Test successful task instruction loading."""
         instruction_path = Path("/test/project/task/instruction.yaml")
@@ -179,7 +174,7 @@ class TestLoadTaskInstruction:
         assert result.inputs == ["input1"]
         assert result.outputs == ["output1"]
 
-    @patch('warifuri.core.discovery.load_yaml')
+    @patch("warifuri.core.discovery.load_yaml")
     def test_load_task_instruction_minimal_data(self, mock_load_yaml: Mock) -> None:
         """Test task instruction loading with minimal data."""
         instruction_path = Path("/test/project/task/instruction.yaml")
@@ -203,10 +198,10 @@ class TestLoadTaskInstruction:
 class TestDiscoverTask:
     """Test discover_task function."""
 
-    @patch('warifuri.core.discovery.determine_task_status')
-    @patch('warifuri.core.discovery.determine_task_type')
-    @patch('warifuri.core.discovery.load_task_instruction')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.core.discovery.determine_task_status")
+    @patch("warifuri.core.discovery.determine_task_type")
+    @patch("warifuri.core.discovery.load_task_instruction")
+    @patch("pathlib.Path.exists")
     def test_discover_task_success(
         self,
         mock_exists: Mock,
@@ -246,7 +241,7 @@ class TestDiscoverTask:
         assert result.task_type == TaskType.MACHINE
         assert result.status == TaskStatus.READY
 
-    @patch('pathlib.Path.exists')
+    @patch("pathlib.Path.exists")
     def test_discover_task_missing_instruction_file(self, mock_exists: Mock) -> None:
         """Test task discovery with missing instruction file."""
         project_name = "test-project"
@@ -262,10 +257,10 @@ class TestDiscoverTask:
 class TestDiscoverProject:
     """Test discover_project function."""
 
-    @patch('warifuri.utils.validation.detect_circular_dependencies')
-    @patch('warifuri.core.discovery.discover_task')
-    @patch('pathlib.Path.iterdir')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.utils.validation.detect_circular_dependencies")
+    @patch("warifuri.core.discovery.discover_task")
+    @patch("pathlib.Path.iterdir")
+    @patch("pathlib.Path.exists")
     def test_discover_project_success(
         self,
         mock_exists: Mock,
@@ -304,7 +299,7 @@ class TestDiscoverProject:
         assert result.name == project_name
         assert len(result.tasks) == 2
 
-    @patch('pathlib.Path.exists')
+    @patch("pathlib.Path.exists")
     def test_discover_project_not_found(self, mock_exists: Mock) -> None:
         """Test project discovery with non-existent project."""
         workspace_path = Path("/test/workspace")
@@ -316,10 +311,10 @@ class TestDiscoverProject:
         with pytest.raises(FileNotFoundError, match="Project not found"):
             discover_project(workspace_path, project_name)
 
-    @patch('warifuri.utils.validation.detect_circular_dependencies')
-    @patch('warifuri.core.discovery.discover_task')
-    @patch('pathlib.Path.iterdir')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.utils.validation.detect_circular_dependencies")
+    @patch("warifuri.core.discovery.discover_task")
+    @patch("pathlib.Path.iterdir")
+    @patch("pathlib.Path.exists")
     def test_discover_project_with_task_discovery_error(
         self,
         mock_exists: Mock,
@@ -353,9 +348,9 @@ class TestDiscoverProject:
 class TestDiscoverProjectSafe:
     """Test discover_project_safe function."""
 
-    @patch('warifuri.core.discovery.discover_task')
-    @patch('pathlib.Path.iterdir')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.core.discovery.discover_task")
+    @patch("pathlib.Path.iterdir")
+    @patch("pathlib.Path.exists")
     def test_discover_project_safe_success(
         self,
         mock_exists: Mock,
@@ -384,7 +379,7 @@ class TestDiscoverProjectSafe:
         assert result.name == project_name
         assert len(result.tasks) == 1
 
-    @patch('pathlib.Path.exists')
+    @patch("pathlib.Path.exists")
     def test_discover_project_safe_with_exception(self, mock_exists: Mock) -> None:
         """Test safe project discovery with exception."""
         workspace_path = Path("/test/workspace")
@@ -400,8 +395,8 @@ class TestDiscoverProjectSafe:
 class TestDiscoverAllProjects:
     """Test discover_all_projects function."""
 
-    @patch('warifuri.core.discovery.discover_project')
-    @patch('warifuri.core.discovery.list_projects')
+    @patch("warifuri.core.discovery.discover_project")
+    @patch("warifuri.core.discovery.list_projects")
     def test_discover_all_projects_success(
         self,
         mock_list_projects: Mock,
@@ -426,7 +421,7 @@ class TestDiscoverAllProjects:
         # Verify discover_project was called for each project
         assert mock_discover_project.call_count == 2
 
-    @patch('warifuri.utils.filesystem.list_projects')
+    @patch("warifuri.utils.filesystem.list_projects")
     def test_discover_all_projects_empty_workspace(self, mock_list_projects: Mock) -> None:
         """Test discovery with empty workspace."""
         workspace_path = Path("/test/workspace")
@@ -441,9 +436,9 @@ class TestDiscoverAllProjects:
 class TestDiscoverAllProjectsSafe:
     """Test discover_all_projects_safe function."""
 
-    @patch('warifuri.core.discovery.discover_project_safe')
-    @patch('pathlib.Path.iterdir')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.core.discovery.discover_project_safe")
+    @patch("pathlib.Path.iterdir")
+    @patch("pathlib.Path.exists")
     def test_discover_all_projects_safe_success(
         self,
         mock_exists: Mock,
@@ -476,9 +471,9 @@ class TestDiscoverAllProjectsSafe:
 
         assert len(result) == 2
 
-    @patch('warifuri.core.discovery.discover_project_safe')
-    @patch('pathlib.Path.iterdir')
-    @patch('pathlib.Path.exists')
+    @patch("warifuri.core.discovery.discover_project_safe")
+    @patch("pathlib.Path.iterdir")
+    @patch("pathlib.Path.exists")
     def test_discover_all_projects_safe_with_failures(
         self,
         mock_exists: Mock,
@@ -552,32 +547,38 @@ class TestFindReadyTasks:
 
         return mock_project
 
-    @patch('warifuri.utils.validation.validate_file_references')
+    @patch("warifuri.utils.validation.validate_file_references")
     def test_find_ready_tasks_no_dependencies(self, mock_validate_files: Mock) -> None:
         """Test finding ready tasks with no dependencies."""
         # Mock file validation to always pass
         mock_validate_files.return_value = []
 
-        project = self.create_mock_project_with_tasks("test-project", [
-            ("task1", [], False),
-            ("task2", [], False),
-        ])
+        project = self.create_mock_project_with_tasks(
+            "test-project",
+            [
+                ("task1", [], False),
+                ("task2", [], False),
+            ],
+        )
 
         result = find_ready_tasks([project])
 
         # All tasks should be ready (no dependencies)
         assert len(result) == 2
 
-    @patch('warifuri.utils.validation.validate_file_references')
+    @patch("warifuri.utils.validation.validate_file_references")
     def test_find_ready_tasks_with_completed_dependencies(self, mock_validate_files: Mock) -> None:
         """Test finding ready tasks with completed dependencies."""
         # Mock file validation to always pass
         mock_validate_files.return_value = []
 
-        project = self.create_mock_project_with_tasks("test-project", [
-            ("task1", [], True),  # completed dependency
-            ("task2", ["test-project/task1"], False),  # depends on completed task
-        ])
+        project = self.create_mock_project_with_tasks(
+            "test-project",
+            [
+                ("task1", [], True),  # completed dependency
+                ("task2", ["test-project/task1"], False),  # depends on completed task
+            ],
+        )
 
         result = find_ready_tasks([project])
 
@@ -585,16 +586,19 @@ class TestFindReadyTasks:
         assert len(result) == 1
         assert result[0].name == "task2"
 
-    @patch('warifuri.utils.validation.validate_file_references')
+    @patch("warifuri.utils.validation.validate_file_references")
     def test_find_ready_tasks_with_incomplete_dependencies(self, mock_validate_files: Mock) -> None:
         """Test finding ready tasks with incomplete dependencies."""
         # Mock file validation to always pass
         mock_validate_files.return_value = []
 
-        project = self.create_mock_project_with_tasks("test-project", [
-            ("task1", [], False),  # incomplete dependency
-            ("task2", ["test-project/task1"], False),  # depends on incomplete task
-        ])
+        project = self.create_mock_project_with_tasks(
+            "test-project",
+            [
+                ("task1", [], False),  # incomplete dependency
+                ("task2", ["test-project/task1"], False),  # depends on incomplete task
+            ],
+        )
 
         result = find_ready_tasks([project])
 
@@ -602,19 +606,25 @@ class TestFindReadyTasks:
         assert len(result) == 1
         assert result[0].name == "task1"
 
-    @patch('warifuri.utils.validation.validate_file_references')
+    @patch("warifuri.utils.validation.validate_file_references")
     def test_find_ready_tasks_cross_project_dependencies(self, mock_validate_files: Mock) -> None:
         """Test finding ready tasks with cross-project dependencies."""
         # Mock file validation to always pass
         mock_validate_files.return_value = []
 
-        project1 = self.create_mock_project_with_tasks("project1", [
-            ("task1", [], True),  # completed task in project1
-        ])
+        project1 = self.create_mock_project_with_tasks(
+            "project1",
+            [
+                ("task1", [], True),  # completed task in project1
+            ],
+        )
 
-        project2 = self.create_mock_project_with_tasks("project2", [
-            ("task2", ["project1/task1"], False),  # depends on task in project1
-        ])
+        project2 = self.create_mock_project_with_tasks(
+            "project2",
+            [
+                ("task2", ["project1/task1"], False),  # depends on task in project1
+            ],
+        )
 
         result = find_ready_tasks([project1, project2])
 
@@ -622,16 +632,19 @@ class TestFindReadyTasks:
         ready_names = [task.name for task in result]
         assert "task2" in ready_names
 
-    @patch('warifuri.utils.validation.validate_file_references')
+    @patch("warifuri.utils.validation.validate_file_references")
     def test_find_ready_tasks_exclude_completed(self, mock_validate_files: Mock) -> None:
         """Test that completed tasks are excluded from ready tasks."""
         # Mock file validation to always pass
         mock_validate_files.return_value = []
 
-        project = self.create_mock_project_with_tasks("test-project", [
-            ("task1", [], True),  # completed task
-            ("task2", [], False),  # incomplete task
-        ])
+        project = self.create_mock_project_with_tasks(
+            "test-project",
+            [
+                ("task1", [], True),  # completed task
+                ("task2", [], False),  # incomplete task
+            ],
+        )
 
         result = find_ready_tasks([project])
 

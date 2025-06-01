@@ -2,8 +2,9 @@
 
 import pytest
 from click.testing import CliRunner
+
 from warifuri.cli.main import cli
-from warifuri.utils import safe_write_file, ensure_directory
+from warifuri.utils import ensure_directory, safe_write_file
 
 
 class TestEndToEndWorkflow:
@@ -24,10 +25,7 @@ class TestEndToEndWorkflow:
         assert "Created project: workflow-test" in result.output
 
         # 2. Create first task
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "init", "workflow-test/prepare"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "init", "workflow-test/prepare"])
         assert result.exit_code == 0
 
         # 3. Create second task with dependency
@@ -42,11 +40,11 @@ dependencies: [prepare]
 inputs: [../prepare/data.txt]
 outputs: [result.txt]
 note: Process task
-"""
+""",
         )
         safe_write_file(
             temp_workspace / "projects" / "workflow-test" / "process" / "run.sh",
-            "#!/bin/bash\ncp ../prepare/data.txt result.txt"
+            "#!/bin/bash\ncp ../prepare/data.txt result.txt",
         )
         (temp_workspace / "projects" / "workflow-test" / "process" / "run.sh").chmod(0o755)
 
@@ -76,17 +74,23 @@ note: Process task
         task_dir = template_dir / "task"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """name: task
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """name: task
 task_type: machine
 description: Template task for {{PROJECT_NAME}}
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [{{OUTPUT_FILE}}]
-""")
-        safe_write_file(task_dir / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task_dir / "run.sh",
+            """#!/bin/bash
 echo "Processing {{PROJECT_NAME}}" > {{OUTPUT_FILE}}
-""")
+""",
+        )
         (task_dir / "run.sh").chmod(0o755)
 
         # 2. List templates
@@ -96,10 +100,15 @@ echo "Processing {{PROJECT_NAME}}" > {{OUTPUT_FILE}}
 
         # 3. Create project from template (skip user input for testing)
         # We'll test template expansion functionality separately
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "init", "templated-project"  # Create project without template for now
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                workspace,
+                "init",
+                "templated-project",  # Create project without template for now
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Created project" in result.output
@@ -116,29 +125,37 @@ echo "Processing {{PROJECT_NAME}}" > {{OUTPUT_FILE}}
         # Create task 1 (no dependencies)
         task1_dir = project_dir / "step1"
         task1_dir.mkdir(parents=True)
-        safe_write_file(task1_dir / "instruction.yaml", """name: step1
+        safe_write_file(
+            task1_dir / "instruction.yaml",
+            """name: step1
 task_type: machine
 description: First step
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [data.txt]
-""")
+""",
+        )
         safe_write_file(task1_dir / "run.sh", "#!/bin/bash\necho 'step1 data' > data.txt")
         (task1_dir / "run.sh").chmod(0o755)
 
         # Create task 2 (depends on task 1)
         task2_dir = project_dir / "step2"
         task2_dir.mkdir(parents=True)
-        safe_write_file(task2_dir / "instruction.yaml", """name: step2
+        safe_write_file(
+            task2_dir / "instruction.yaml",
+            """name: step2
 task_type: machine
 description: Second step
 auto_merge: false
 dependencies: [step1]
 inputs: [../step1/data.txt]
 outputs: [processed.txt]
-""")
-        safe_write_file(task2_dir / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task2_dir / "run.sh",
+            """#!/bin/bash
 if [ -f ../step1/data.txt ]; then
     echo "processed: $(cat ../step1/data.txt)" > processed.txt
 else
@@ -147,7 +164,8 @@ else
     ls -la >> processed.txt
     ls -la ../ >> processed.txt
 fi
-""")
+""",
+        )
         (task2_dir / "run.sh").chmod(0o755)
 
         # 1. List tasks - step2 should be pending
@@ -158,10 +176,7 @@ fi
         # assert "step2" in result.output
 
         # 2. Run step1
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "chain-test/step1"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run", "--task", "chain-test/step1"])
         assert result.exit_code == 0
         assert "completed" in result.output.lower()
 
@@ -175,10 +190,7 @@ fi
         # assert result.exit_code == 0
 
         # 5. Run step2
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "chain-test/step2"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run", "--task", "chain-test/step2"])
         # For now, just check that it doesn't crash
         # The file path issue is a separate problem
         # assert result.exit_code == 0
@@ -197,11 +209,14 @@ fi
         # Create task with invalid instruction.yaml
         task_dir = project_dir / "invalid"
         task_dir.mkdir(parents=True)
-        safe_write_file(task_dir / "instruction.yaml", """# Invalid YAML
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """# Invalid YAML
 name: invalid
 missing_required_fields: true
 dependencies: invalid_format
-""")
+""",
+        )
 
         # Validation should catch this
         result = runner.invoke(cli, ["--workspace", workspace, "validate"])

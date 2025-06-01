@@ -2,10 +2,10 @@
 Monkey patch for snapshottest to work with Python 3.12+
 This replaces the deprecated imp module with importlib.
 """
-import sys
+
 import importlib.util
+import sys
 import types
-from typing import Any
 
 
 def load_source_python312(module_name: str, filepath: str) -> types.ModuleType:
@@ -24,6 +24,7 @@ def apply_snapshottest_patch() -> None:
     """Apply the Python 3.12 compatibility patch to snapshottest."""
     try:
         import snapshottest.module
+
         # Replace imp.load_source with our importlib implementation
         snapshottest.module.imp = types.SimpleNamespace()
         snapshottest.module.imp.load_source = load_source_python312

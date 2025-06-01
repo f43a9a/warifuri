@@ -2,9 +2,10 @@
 
 import threading
 import time
-import pytest
 from pathlib import Path
 from unittest import mock
+
+import pytest
 
 from warifuri.utils.atomic import (
     AtomicWriter,

@@ -32,8 +32,14 @@ class TestSubprocessCLI:
 
         # Initialize git repository to avoid git errors
         subprocess.run(["git", "init"], cwd=temp_workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=temp_workspace, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test User"], cwd=temp_workspace, capture_output=True)
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=temp_workspace,
+            capture_output=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"], cwd=temp_workspace, capture_output=True
+        )
 
         # Create demo project with machine task
         demo_dir = projects_dir / "demo"
@@ -48,7 +54,7 @@ class TestSubprocessCLI:
             "dependencies": [],
             "inputs": [],
             "outputs": ["config.json"],
-            "note": "Setup configuration"
+            "note": "Setup configuration",
         }
         safe_write_file(setup_dir / "instruction.yaml", yaml.dump(setup_instruction))
         safe_write_file(setup_dir / "run.sh", "#!/bin/bash\necho '{\"setup\": true}' > config.json")
@@ -67,7 +73,7 @@ class TestSubprocessCLI:
             "dependencies": [],  # No dependencies to make it ready
             "inputs": [],
             "outputs": ["review.md"],
-            "note": "Manual code review"
+            "note": "Manual code review",
         }
         safe_write_file(review_dir / "instruction.yaml", yaml.dump(review_instruction))
 
@@ -84,30 +90,21 @@ class TestSubprocessCLI:
             "dependencies": [],
             "inputs": [],
             "outputs": ["analysis.json"],
-            "note": "Automated analysis"
+            "note": "Automated analysis",
         }
         safe_write_file(analyze_dir / "instruction.yaml", yaml.dump(analyze_instruction))
 
         return temp_workspace
 
     def run_cli_command(
-        self,
-        warifuri_command: List[str],
-        args: List[str],
-        workspace: Path,
-        check: bool = True
+        self, warifuri_command: List[str], args: List[str], workspace: Path, check: bool = True
     ) -> subprocess.CompletedProcess[str]:
         """Run warifuri CLI command via subprocess."""
         cmd = warifuri_command + args
         env = {"PYTHONPATH": str(Path(__file__).parent.parent.parent)}
 
         result = subprocess.run(
-            cmd,
-            cwd=str(workspace),
-            capture_output=True,
-            text=True,
-            env=env,
-            check=check
+            cmd, cwd=str(workspace), capture_output=True, text=True, env=env, check=check
         )
         return result
 
@@ -133,9 +130,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test list command with JSON output via subprocess."""
         result = self.run_cli_command(
-            warifuri_command,
-            ["list", "--format", "json"],
-            workspace_with_projects
+            warifuri_command, ["list", "--format", "json"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -161,9 +156,7 @@ class TestSubprocessCLI:
         """Test list command with various filters via subprocess."""
         # Test ready tasks filter
         result = self.run_cli_command(
-            warifuri_command,
-            ["list", "--ready", "--format", "json"],
-            workspace_with_projects
+            warifuri_command, ["list", "--ready", "--format", "json"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -179,7 +172,7 @@ class TestSubprocessCLI:
         result = self.run_cli_command(
             warifuri_command,
             ["show", "--task", "demo/setup", "--format", "yaml"],
-            workspace_with_projects
+            workspace_with_projects,
         )
 
         assert result.returncode == 0
@@ -197,11 +190,7 @@ class TestSubprocessCLI:
         self, warifuri_command: List[str], workspace_with_projects: Path
     ) -> None:
         """Test validate command via subprocess."""
-        result = self.run_cli_command(
-            warifuri_command,
-            ["validate"],
-            workspace_with_projects
-        )
+        result = self.run_cli_command(warifuri_command, ["validate"], workspace_with_projects)
 
         assert result.returncode == 0
         assert "Validation passed" in result.stdout
@@ -211,9 +200,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test graph command with Mermaid format via subprocess."""
         result = self.run_cli_command(
-            warifuri_command,
-            ["graph", "--format", "mermaid"],
-            workspace_with_projects
+            warifuri_command, ["graph", "--format", "mermaid"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -225,9 +212,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test run command with dry-run via subprocess."""
         result = self.run_cli_command(
-            warifuri_command,
-            ["run", "--task", "demo/setup", "--dry-run"],
-            workspace_with_projects
+            warifuri_command, ["run", "--task", "demo/setup", "--dry-run"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -241,7 +226,7 @@ class TestSubprocessCLI:
             warifuri_command,
             ["run", "--task", "demo/setup", "--force"],
             workspace_with_projects,
-            check=False  # Allow failure due to git requirements
+            check=False,  # Allow failure due to git requirements
         )
 
         # Should either succeed or fail gracefully
@@ -256,9 +241,7 @@ class TestSubprocessCLI:
         """Test automation command suite via subprocess."""
         # Test automation list
         result = self.run_cli_command(
-            warifuri_command,
-            ["automation", "list"],
-            workspace_with_projects
+            warifuri_command, ["automation", "list"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -268,7 +251,7 @@ class TestSubprocessCLI:
             warifuri_command,
             ["automation", "check", "demo/setup"],
             workspace_with_projects,
-            check=False
+            check=False,
         )
 
         # Should return with info about automation capability
@@ -280,9 +263,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test template command via subprocess."""
         result = self.run_cli_command(
-            warifuri_command,
-            ["template", "list"],
-            workspace_with_projects
+            warifuri_command, ["template", "list"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -295,7 +276,7 @@ class TestSubprocessCLI:
             warifuri_command,
             ["mark-done", "ai-task/analyze", "--message", "Completed via E2E test"],
             workspace_with_projects,
-            check=False  # Allow failure due to git requirements
+            check=False,  # Allow failure due to git requirements
         )
 
         # Should either succeed or fail gracefully
@@ -311,10 +292,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test error handling for invalid commands via subprocess."""
         result = self.run_cli_command(
-            warifuri_command,
-            ["invalid-command"],
-            temp_workspace,
-            check=False
+            warifuri_command, ["invalid-command"], temp_workspace, check=False
         )
 
         assert result.returncode != 0
@@ -325,12 +303,7 @@ class TestSubprocessCLI:
         import tempfile
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            result = self.run_cli_command(
-                warifuri_command,
-                ["list"],
-                Path(temp_dir),
-                check=False
-            )
+            result = self.run_cli_command(warifuri_command, ["list"], Path(temp_dir), check=False)
 
             assert result.returncode != 0
             assert "Could not find workspace" in result.stderr
@@ -346,7 +319,7 @@ class TestSubprocessCLI:
             result = self.run_cli_command(
                 warifuri_command + ["--workspace", str(workspace_with_projects)],
                 ["list", "--format", "json"],
-                Path(temp_dir)
+                Path(temp_dir),
             )
 
             assert result.returncode == 0
@@ -358,9 +331,7 @@ class TestSubprocessCLI:
     ) -> None:
         """Test log level option via subprocess."""
         result = self.run_cli_command(
-            warifuri_command + ["--log-level", "DEBUG"],
-            ["list"],
-            workspace_with_projects
+            warifuri_command + ["--log-level", "DEBUG"], ["list"], workspace_with_projects
         )
 
         assert result.returncode == 0
@@ -374,11 +345,7 @@ class TestSubprocessCLI:
         projects_dir.mkdir(exist_ok=True)
 
         # Test project initialization
-        result = self.run_cli_command(
-            warifuri_command,
-            ["init", "new-project"],
-            temp_workspace
-        )
+        result = self.run_cli_command(warifuri_command, ["init", "new-project"], temp_workspace)
 
         assert result.returncode == 0
 
@@ -395,7 +362,7 @@ class TestSubprocessCLI:
             warifuri_command,
             ["issue", "--project", "nonexistent-project"],
             workspace_with_projects,
-            check=False
+            check=False,
         )
 
         # Should handle gracefully (might succeed with warning or fail cleanly)
@@ -407,9 +374,7 @@ class TestSubprocessCLI:
         """Test complex workflow via multiple subprocess calls."""
         # 1. List ready tasks
         result = self.run_cli_command(
-            warifuri_command,
-            ["list", "--ready", "--format", "json"],
-            workspace_with_projects
+            warifuri_command, ["list", "--ready", "--format", "json"], workspace_with_projects
         )
         assert result.returncode == 0
         ready_tasks = json.loads(result.stdout)
@@ -420,23 +385,17 @@ class TestSubprocessCLI:
             result = self.run_cli_command(
                 warifuri_command,
                 ["show", "--task", task_name, "--format", "yaml"],
-                workspace_with_projects
+                workspace_with_projects,
             )
             assert result.returncode == 0
 
             # 3. Validate workspace
-            result = self.run_cli_command(
-                warifuri_command,
-                ["validate"],
-                workspace_with_projects
-            )
+            result = self.run_cli_command(warifuri_command, ["validate"], workspace_with_projects)
             assert result.returncode == 0
 
             # 4. Generate graph
             result = self.run_cli_command(
-                warifuri_command,
-                ["graph", "--format", "ascii"],
-                workspace_with_projects
+                warifuri_command, ["graph", "--format", "ascii"], workspace_with_projects
             )
             assert result.returncode == 0
 
@@ -449,10 +408,7 @@ class TestSubprocessCLI:
         def run_list_command() -> int:
             """Run list command and return exit code."""
             result = self.run_cli_command(
-                warifuri_command,
-                ["list"],
-                workspace_with_projects,
-                check=False
+                warifuri_command, ["list"], workspace_with_projects, check=False
             )
             return result.returncode
 

@@ -3,10 +3,10 @@ Test comprehensive schema validation and cross-reference validation
 包括的スキーマ検証およびクロスリファレンス検証テスト
 """
 
-import json
-import yaml
 from pathlib import Path
+
 import pytest
+import yaml
 
 
 class DataLoader:
@@ -52,7 +52,7 @@ class TestSchemaValidation:
     def test_task_schema_against_simple_task(self, data_loader):
         """シンプルタスクに対するタスクスキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -67,7 +67,7 @@ class TestSchemaValidation:
     def test_task_schema_against_complex_task(self, data_loader):
         """複雑タスクに対するタスクスキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -82,7 +82,7 @@ class TestSchemaValidation:
     def test_task_schema_against_dependency_chain(self, data_loader):
         """依存関係チェーンに対するタスクスキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -101,7 +101,7 @@ class TestSchemaValidation:
     def test_project_schema_against_single_project(self, data_loader):
         """単一プロジェクトに対するプロジェクトスキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -116,7 +116,7 @@ class TestSchemaValidation:
     def test_project_schema_against_multi_project(self, data_loader):
         """複数プロジェクトに対するプロジェクトスキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -135,7 +135,7 @@ class TestSchemaValidation:
     def test_workflow_schema_against_automation_basic(self, data_loader):
         """基本自動化ワークフローに対するワークフロースキーマ検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -163,25 +163,27 @@ class TestCrossReference:
         valid_tasks = [doc for doc in dependency_documents if doc and isinstance(doc, dict)]
 
         # タスクIDとタスクの対応を作成
-        task_map = {task.get('id'): task for task in valid_tasks if task.get('id')}
+        task_map = {task.get("id"): task for task in valid_tasks if task.get("id")}
         task_ids = set(task_map.keys())
 
         # 各タスクの依存関係をチェック
         for task in valid_tasks:
-            task_id = task.get('id', 'unknown')
-            dependencies = task.get('dependencies', [])
+            task_id = task.get("id", "unknown")
+            dependencies = task.get("dependencies", [])
 
             for dep in dependencies:
                 # 依存関係は辞書形式（id, typeフィールドを持つ）またはstring形式
                 if isinstance(dep, dict):
-                    dep_id = dep.get('id')
+                    dep_id = dep.get("id")
                 elif isinstance(dep, str):
                     dep_id = dep
                 else:
                     continue
 
                 if dep_id:
-                    assert dep_id in task_ids, f"Task {task_id} depends on non-existent task: {dep_id}"
+                    assert dep_id in task_ids, (
+                        f"Task {task_id} depends on non-existent task: {dep_id}"
+                    )
 
     def test_no_circular_dependencies(self, data_loader):
         """循環依存関係の検証"""
@@ -191,14 +193,14 @@ class TestCrossReference:
         # タスクIDと依存関係の対応を作成
         dependencies = {}
         for task in valid_tasks:
-            task_id = task.get('id')
+            task_id = task.get("id")
             if task_id:
-                task_deps = task.get('dependencies', [])
+                task_deps = task.get("dependencies", [])
                 # 依存関係を正規化（辞書形式からIDのリストに変換）
                 dep_ids = []
                 for dep in task_deps:
                     if isinstance(dep, dict):
-                        dep_id = dep.get('id')
+                        dep_id = dep.get("id")
                         if dep_id:
                             dep_ids.append(dep_id)
                     elif isinstance(dep, str):
@@ -229,12 +231,14 @@ class TestCrossReference:
 
         # すべてのタスクについて循環依存をチェック
         for task_id in dependencies.keys():
-            assert not has_circular_dependency(task_id), f"Circular dependency detected involving task: {task_id}"
+            assert not has_circular_dependency(task_id), (
+                f"Circular dependency detected involving task: {task_id}"
+            )
 
     def test_error_case_intentional_failures(self, data_loader):
         """エラーケースの意図的な失敗検証"""
         try:
-            from jsonschema import validate, ValidationError
+            from jsonschema import ValidationError, validate
         except ImportError:
             pytest.skip("jsonschema not available")
 
@@ -250,8 +254,8 @@ class TestCrossReference:
             try:
                 validate(instance=doc, schema=schema)
                 # 検証が通った場合（エラーケースでない可能性）
-                doc_id = doc.get('id', 'unknown')
-                if doc_id not in ['invalid-yaml-syntax']:  # 一部の有効なケースは除外
+                doc_id = doc.get("id", "unknown")
+                if doc_id not in ["invalid-yaml-syntax"]:  # 一部の有効なケースは除外
                     print(f"Warning: Error case document {doc_id} passed validation unexpectedly")
             except ValidationError:
                 invalid_count += 1
@@ -302,7 +306,7 @@ class TestDataIntegrity:
             "workflows/automation_basic.yaml",
             "schemas/task_schema.yaml",
             "schemas/project_schema.yaml",
-            "schemas/workflow_schema.yaml"
+            "schemas/workflow_schema.yaml",
         ]
 
         data_path = Path(__file__).parent.parent / "data"
@@ -332,7 +336,7 @@ class TestDataIntegrity:
                 dependencies=task_data.get("dependencies", []),
                 inputs=task_data.get("inputs", []),
                 outputs=task_data.get("outputs", []),
-                note=task_data.get("note")
+                note=task_data.get("note"),
             )
             assert task_instruction.name == task_data["title"]
         except Exception as e:

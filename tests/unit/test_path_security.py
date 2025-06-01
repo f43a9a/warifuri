@@ -1,8 +1,10 @@
 """Test path security and traversal attack prevention."""
 
-import pytest
 import tempfile
 from pathlib import Path
+
+import pytest
+
 from warifuri.core.execution import _resolve_input_path_safely
 
 
@@ -90,7 +92,9 @@ class TestPathSecurity:
                 malicious_link = task_path / "malicious_link.txt"
                 malicious_link.symlink_to(sensitive_file)
 
-                result, message = _resolve_input_path_safely("malicious_link.txt", task_path, projects_base)
+                result, message = _resolve_input_path_safely(
+                    "malicious_link.txt", task_path, projects_base
+                )
 
                 # Should either reject the symlink or ensure it stays within bounds
                 if result is not None:

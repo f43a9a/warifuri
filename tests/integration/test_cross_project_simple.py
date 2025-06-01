@@ -1,9 +1,10 @@
 """Simple tests for cross-project functionality."""
 
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
+
+import pytest
 import yaml
 
 from warifuri.core.discovery import discover_all_projects, find_ready_tasks
@@ -32,14 +33,16 @@ class TestCrossProjectBasic:
             "description": "Task 1 in project A",
             "dependencies": [],
             "inputs": [],
-            "outputs": ["output.txt"]
+            "outputs": ["output.txt"],
         }
         with open(task_a1_dir / "instruction.yaml", "w") as f:
             yaml.dump(task_a1_instruction, f)
 
         # Task A1 run script
         with open(task_a1_dir / "run.py", "w") as f:
-            f.write('print("Task A1 output")\nwith open("output.txt", "w") as f: f.write("A1 output")')
+            f.write(
+                'print("Task A1 output")\nwith open("output.txt", "w") as f: f.write("A1 output")'
+            )
 
         # Project B
         project_b_dir = projects_dir / "b"
@@ -52,14 +55,16 @@ class TestCrossProjectBasic:
             "description": "Task 1 in project B",
             "dependencies": ["a/task1"],
             "inputs": ["../a/task1/output.txt"],
-            "outputs": ["result.txt"]
+            "outputs": ["result.txt"],
         }
         with open(task_b1_dir / "instruction.yaml", "w") as f:
             yaml.dump(task_b1_instruction, f)
 
         # Task B1 run script
         with open(task_b1_dir / "run.py", "w") as f:
-            f.write('print("Task B1 output")\nwith open("result.txt", "w") as f: f.write("B1 result")')
+            f.write(
+                'print("Task B1 output")\nwith open("result.txt", "w") as f: f.write("B1 result")'
+            )
 
         yield temp_dir
 
@@ -136,6 +141,7 @@ class TestCrossProjectBasic:
     def test_command_availability(self):
         """Test that warifuri command is available."""
         import subprocess
+
         result = subprocess.run(["warifuri", "--help"], capture_output=True, text=True)
         assert result.returncode == 0
         assert "warifuri" in result.stdout.lower()

@@ -45,24 +45,27 @@ class MutationTestRunner:
                 ["python", "-m", "pytest", "tests/", "-x", "--tb=short", "--no-cov"],
                 cwd=self.workspace_root,
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if test_result.returncode != 0:
-                return False, f"❌ Normal tests failed, cannot proceed:\n{test_result.stdout}\n{test_result.stderr}"
+                return (
+                    False,
+                    f"❌ Normal tests failed, cannot proceed:\n{test_result.stdout}\n{test_result.stderr}",
+                )
 
             print("✅ Normal tests passed, proceeding with mutation testing...")
 
             # Run mutation tests
             print("\n🧬 2. Running mutation tests...")
             mutmut_result = subprocess.run(
-                ["mutmut", "run"],
-                cwd=self.workspace_root,
-                capture_output=True,
-                text=True
+                ["mutmut", "run"], cwd=self.workspace_root, capture_output=True, text=True
             )
 
-            return True, f"Mutation testing completed.\nOutput:\n{mutmut_result.stdout}\n{mutmut_result.stderr}"
+            return (
+                True,
+                f"Mutation testing completed.\nOutput:\n{mutmut_result.stdout}\n{mutmut_result.stderr}",
+            )
 
         except Exception as e:
             return False, f"❌ Error running mutation tests: {e}"
@@ -72,16 +75,16 @@ class MutationTestRunner:
         try:
             # Use mutmut results to get status information
             result = subprocess.run(
-                ["mutmut", "results"],
-                cwd=self.workspace_root,
-                capture_output=True,
-                text=True
+                ["mutmut", "results"], cwd=self.workspace_root, capture_output=True, text=True
             )
 
             if result.returncode == 0:
                 return True, f"Mutation test cache found:\n{result.stdout.strip()}"
             else:
-                return False, "No mutation test data found. Run 'python scripts/mutation_test.py run' first."
+                return (
+                    False,
+                    "No mutation test data found. Run 'python scripts/mutation_test.py run' first.",
+                )
 
         except Exception as e:
             return False, f"Error getting status: {e}"
@@ -90,37 +93,34 @@ class MutationTestRunner:
         """Get detailed mutation test results"""
         try:
             result = subprocess.run(
-                ["mutmut", "results"],
-                cwd=self.workspace_root,
-                capture_output=True,
-                text=True
+                ["mutmut", "results"], cwd=self.workspace_root, capture_output=True, text=True
             )
 
             if result.returncode != 0:
                 return False, {"error": "No results available"}
 
             # Parse mutmut results output
-            lines = result.stdout.strip().split('\n')
+            lines = result.stdout.strip().split("\n")
             results = {}
 
             for line in lines:
-                if 'killed' in line.lower():
+                if "killed" in line.lower():
                     # Extract numbers from lines like "123 killed"
                     parts = line.split()
-                    if len(parts) >= 2 and parts[1] == 'killed':
-                        results['killed'] = int(parts[0])
-                elif 'survived' in line.lower():
+                    if len(parts) >= 2 and parts[1] == "killed":
+                        results["killed"] = int(parts[0])
+                elif "survived" in line.lower():
                     parts = line.split()
-                    if len(parts) >= 2 and parts[1] == 'survived':
-                        results['survived'] = int(parts[0])
-                elif 'timeout' in line.lower():
+                    if len(parts) >= 2 and parts[1] == "survived":
+                        results["survived"] = int(parts[0])
+                elif "timeout" in line.lower():
                     parts = line.split()
-                    if len(parts) >= 2 and parts[1] == 'timeout':
-                        results['timeout'] = int(parts[0])
-                elif 'suspicious' in line.lower():
+                    if len(parts) >= 2 and parts[1] == "timeout":
+                        results["timeout"] = int(parts[0])
+                elif "suspicious" in line.lower():
                     parts = line.split()
-                    if len(parts) >= 2 and parts[1] == 'suspicious':
-                        results['suspicious'] = int(parts[0])
+                    if len(parts) >= 2 and parts[1] == "suspicious":
+                        results["suspicious"] = int(parts[0])
 
             return True, results
 
@@ -134,11 +134,11 @@ class MutationTestRunner:
         if not success:
             return False, "❌ No mutation test results available", None
 
-        if 'error' in results:
+        if "error" in results:
             return False, f"❌ Error getting results: {results['error']}", None
 
-        killed = results.get('killed', 0)
-        survived = results.get('survived', 0)
+        killed = results.get("killed", 0)
+        survived = results.get("survived", 0)
         total = killed + survived
 
         if total == 0:
@@ -157,6 +157,7 @@ class MutationTestRunner:
         try:
             if self.mutmut_cache.exists():
                 import shutil
+
                 shutil.rmtree(self.mutmut_cache)
                 return True, "✅ Mutation test cache cleaned"
             else:
@@ -192,16 +193,16 @@ def main() -> None:
 
     elif command == "results":
         success, results = runner.get_results()
-        if success and 'error' not in results:
+        if success and "error" not in results:
             print("🧬 Mutation Test Results:")
             print(f"  Killed: {results.get('killed', 0)}")
             print(f"  Survived: {results.get('survived', 0)}")
             print(f"  Timeout: {results.get('timeout', 0)}")
             print(f"  Suspicious: {results.get('suspicious', 0)}")
 
-            total = results.get('killed', 0) + results.get('survived', 0)
+            total = results.get("killed", 0) + results.get("survived", 0)
             if total > 0:
-                score = (results.get('killed', 0) / total) * 100
+                score = (results.get("killed", 0) / total) * 100
                 print(f"  Score: {score:.1f}%")
         else:
             print(f"❌ {results.get('error', 'Unknown error')}")

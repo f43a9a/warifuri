@@ -8,10 +8,10 @@ Implements refactoring based on Unix philosophy analysis:
 """
 
 import ast
+import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
-import json
+from typing import Any, Dict, List
 
 
 class FunctionExtractor:
@@ -23,7 +23,7 @@ class FunctionExtractor:
     def analyze_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Analyze a file for Unix philosophy violations."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -57,7 +57,7 @@ class FunctionExtractor:
                 "start_line": node.lineno,
                 "end_line": node.end_lineno,
                 "args_count": len(node.args.args),
-                "type": "large_function"
+                "type": "large_function",
             }
 
             # Add refactoring suggestions
@@ -77,19 +77,14 @@ class FunctionExtractor:
 def create_refactoring_plan(analysis_file: str = "unix_philosophy_analysis.json") -> Dict[str, Any]:
     """Create a refactoring plan from analysis results."""
     try:
-        with open(analysis_file, 'r') as f:
+        with open(analysis_file, "r") as f:
             analysis = json.load(f)
     except FileNotFoundError:
         print(f"Analysis file {analysis_file} not found. Run analyze_unix_philosophy.py first.")
         return {}
 
     extractor = FunctionExtractor()
-    plan = {
-        "high_priority": [],
-        "medium_priority": [],
-        "low_priority": [],
-        "file_splits": []
-    }
+    plan = {"high_priority": [], "medium_priority": [], "low_priority": [], "file_splits": []}
 
     for file_result in analysis:
         if "error" in file_result:
@@ -104,12 +99,14 @@ def create_refactoring_plan(analysis_file: str = "unix_philosophy_analysis.json"
 
         # Check for large files that should be split
         if file_result.get("line_count", 0) > 300:
-            plan["file_splits"].append({
-                "file": file_result["file"],
-                "lines": file_result["line_count"],
-                "classes": len(file_result.get("classes", [])),
-                "functions": len(file_result.get("functions", []))
-            })
+            plan["file_splits"].append(
+                {
+                    "file": file_result["file"],
+                    "lines": file_result["line_count"],
+                    "classes": len(file_result.get("classes", [])),
+                    "functions": len(file_result.get("functions", [])),
+                }
+            )
 
     return plan
 
@@ -123,10 +120,10 @@ def generate_refactoring_suggestions(plan: Dict[str, Any]) -> List[str]:
         suggestions.append("## High Priority Function Refactoring")
         for violation in plan["high_priority"]:
             suggestions.append(f"""
-### {violation['function']} in {Path(violation['file']).name}
-- **Lines**: {violation['lines']} (starts at line {violation['start_line']})
-- **Class**: {violation.get('class', 'module level')}
-- **Suggestion**: {violation['suggestion']}
+### {violation["function"]} in {Path(violation["file"]).name}
+- **Lines**: {violation["lines"]} (starts at line {violation["start_line"]})
+- **Class**: {violation.get("class", "module level")}
+- **Suggestion**: {violation["suggestion"]}
 
 **Refactoring approach**:
 1. Extract logical sections into private methods
@@ -139,10 +136,10 @@ def generate_refactoring_suggestions(plan: Dict[str, Any]) -> List[str]:
         suggestions.append("\n## File Splitting Recommendations")
         for file_info in plan["file_splits"]:
             suggestions.append(f"""
-### {Path(file_info['file']).name}
-- **Lines**: {file_info['lines']}
-- **Classes**: {file_info['classes']}
-- **Functions**: {file_info['functions']}
+### {Path(file_info["file"]).name}
+- **Lines**: {file_info["lines"]}
+- **Classes**: {file_info["classes"]}
+- **Functions**: {file_info["functions"]}
 
 **Split strategy**:
 1. Extract related classes into separate modules
@@ -189,7 +186,9 @@ def main():
     if plan["high_priority"]:
         print("\n🚨 Top priority refactoring:")
         for violation in plan["high_priority"][:3]:
-            print(f"  - {violation['function']}() in {Path(violation['file']).name} ({violation['lines']} lines)")
+            print(
+                f"  - {violation['function']}() in {Path(violation['file']).name} ({violation['lines']} lines)"
+            )
 
 
 if __name__ == "__main__":

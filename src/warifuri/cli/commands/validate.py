@@ -2,7 +2,6 @@
 
 import click
 
-from ..context import Context, pass_context
 from ...core.discovery import discover_all_projects
 from ...utils import (
     ValidationError,
@@ -11,6 +10,7 @@ from ...utils import (
     validate_file_references,
     validate_instruction_yaml,
 )
+from ..context import Context, pass_context
 
 
 @click.command()

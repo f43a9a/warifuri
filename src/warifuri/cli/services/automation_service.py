@@ -5,12 +5,14 @@ extracted from CLI commands.
 """
 
 import json
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 import click
-from ..context import Context
+
 from ...core.discovery import discover_all_projects, find_ready_tasks
 from ...core.execution import execute_task
-from ...core.types import Task, TaskType, TaskStatus
+from ...core.types import Task, TaskStatus, TaskType
+from ..context import Context
 
 
 class AutomationListService:

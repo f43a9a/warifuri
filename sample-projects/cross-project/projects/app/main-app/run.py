@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Main App: Uses core library functionality"""
 
-import json
 import configparser
+import json
 from datetime import datetime
 from pathlib import Path
+
 
 def main():
     print("Running main-app task...")
@@ -44,7 +45,9 @@ def main():
     app_output.append("")
     app_output.append("Configuration Summary:")
     if "database" in config:
-        app_output.append(f"  Database: {config['database']['name']}@{config['database']['host']}:{config['database']['port']}")
+        app_output.append(
+            f"  Database: {config['database']['name']}@{config['database']['host']}:{config['database']['port']}"
+        )
     if "api" in config:
         app_output.append(f"  API Version: {config['api']['version']}")
         app_output.append(f"  API Timeout: {config['api']['timeout']}s")
@@ -52,13 +55,13 @@ def main():
     # Features
     app_output.append("")
     app_output.append("Available Features:")
-    for feature in core_lib.get('features', []):
+    for feature in core_lib.get("features", []):
         app_output.append(f"  - {feature}")
 
     # Dependencies
     app_output.append("")
     app_output.append("Dependencies:")
-    for dep in core_lib.get('dependencies', []):
+    for dep in core_lib.get("dependencies", []):
         app_output.append(f"  - {dep}")
 
     app_output.append("")
@@ -70,6 +73,7 @@ def main():
 
     print("Generated app_output.txt with application results")
     return 0
+
 
 if __name__ == "__main__":
     exit(main())

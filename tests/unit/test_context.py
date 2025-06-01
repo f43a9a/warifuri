@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 import click
+import pytest
 
 from warifuri.cli.context import Context
 
@@ -51,7 +51,7 @@ class TestContext:
         projects_dir.mkdir()
         sub_dir.mkdir()
 
-        with patch('pathlib.Path.cwd', return_value=sub_dir):
+        with patch("pathlib.Path.cwd", return_value=sub_dir):
             ctx = Context()
             result = ctx.ensure_workspace_path()
 
@@ -68,7 +68,7 @@ class TestContext:
         inner_workspace_dir.mkdir()
         sub_dir.mkdir()
 
-        with patch('pathlib.Path.cwd', return_value=sub_dir):
+        with patch("pathlib.Path.cwd", return_value=sub_dir):
             ctx = Context()
             result = ctx.ensure_workspace_path()
 
@@ -76,10 +76,10 @@ class TestContext:
 
     def test_ensure_workspace_path_not_found(self):
         """Test workspace discovery failure."""
-        with patch('pathlib.Path.cwd') as mock_cwd:
+        with patch("pathlib.Path.cwd") as mock_cwd:
             mock_cwd.return_value = Path("/tmp/no_workspace")
 
-            with patch.object(Path, 'exists', return_value=False):
+            with patch.object(Path, "exists", return_value=False):
                 ctx = Context()
 
                 with pytest.raises(click.ClickException) as exc_info:

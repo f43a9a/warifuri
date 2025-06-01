@@ -1,12 +1,13 @@
 """Test machine task sandboxing and isolation features."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli
-from warifuri.core.execution import execute_machine_task
 from warifuri.core.discovery import discover_task
+from warifuri.core.execution import execute_machine_task
 from warifuri.utils import safe_write_file
 
 
@@ -26,35 +27,46 @@ class TestMachineSandboxing:
         # Test 1: Basic file isolation
         task1 = projects_dir / "file-isolation"
         task1.mkdir(parents=True)
-        safe_write_file(task1 / "instruction.yaml", """name: file-isolation
+        safe_write_file(
+            task1 / "instruction.yaml",
+            """name: file-isolation
 task_type: machine
 description: Test file isolation
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
-        safe_write_file(task1 / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task1 / "run.sh",
+            """#!/bin/bash
 # Create file in current directory (should be temp)
 echo "temp output" > result.txt
 echo "Working directory: $(pwd)" > debug.txt
 echo "Should not affect original task directory"
-""")
+""",
+        )
         (task1 / "run.sh").chmod(0o755)
 
         # Test 2: Input/output handling
         task2 = projects_dir / "input-output"
         task2.mkdir(parents=True)
-        safe_write_file(task2 / "instruction.yaml", """name: input-output
+        safe_write_file(
+            task2 / "instruction.yaml",
+            """name: input-output
 task_type: machine
 description: Test input/output handling
 auto_merge: false
 dependencies: []
 inputs: [input.txt]
 outputs: [processed.txt, data/result.json]
-""")
+""",
+        )
         safe_write_file(task2 / "input.txt", "input data")
-        safe_write_file(task2 / "run.sh", """#!/bin/bash
+        safe_write_file(
+            task2 / "run.sh",
+            """#!/bin/bash
 # Process input file
 if [ -f input.txt ]; then
     cat input.txt | tr '[:lower:]' '[:upper:]' > processed.txt
@@ -64,59 +76,77 @@ else
     echo "Input file not found" > error.txt
     exit 1
 fi
-""")
+""",
+        )
         (task2 / "run.sh").chmod(0o755)
 
         # Test 3: Environment variables
         task3 = projects_dir / "env-vars"
         task3.mkdir(parents=True)
-        safe_write_file(task3 / "instruction.yaml", """name: env-vars
+        safe_write_file(
+            task3 / "instruction.yaml",
+            """name: env-vars
 task_type: machine
 description: Test environment variables
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [env-info.txt]
-""")
-        safe_write_file(task3 / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task3 / "run.sh",
+            """#!/bin/bash
 echo "PROJECT_NAME: $WARIFURI_PROJECT_NAME" > env-info.txt
 echo "TASK_NAME: $WARIFURI_TASK_NAME" >> env-info.txt
 echo "WORKSPACE_DIR: $WARIFURI_WORKSPACE_DIR" >> env-info.txt
 echo "INPUT_DIR: $WARIFURI_INPUT_DIR" >> env-info.txt
 echo "OUTPUT_DIR: $WARIFURI_OUTPUT_DIR" >> env-info.txt
 echo "CURRENT_DIR: $(pwd)" >> env-info.txt
-""")
+""",
+        )
         (task3 / "run.sh").chmod(0o755)
 
         # Test 4: Error handling and logging
         task4 = projects_dir / "error-handling"
         task4.mkdir(parents=True)
-        safe_write_file(task4 / "instruction.yaml", """name: error-handling
+        safe_write_file(
+            task4 / "instruction.yaml",
+            """name: error-handling
 task_type: machine
 description: Test error handling
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [should-not-exist.txt]
-""")
-        safe_write_file(task4 / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task4 / "run.sh",
+            """#!/bin/bash
 echo "This script will fail"
 exit 1
-""")
+""",
+        )
         (task4 / "run.sh").chmod(0o755)
 
         # Test 5: Python script execution
         task5 = projects_dir / "python-script"
         task5.mkdir(parents=True)
-        safe_write_file(task5 / "instruction.yaml", """name: python-script
+        safe_write_file(
+            task5 / "instruction.yaml",
+            """name: python-script
 task_type: machine
 description: Test Python script execution
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [python-result.txt]
-""")
-        safe_write_file(task5 / "run.py", """#!/usr/bin/env python3
+""",
+        )
+        safe_write_file(
+            task5 / "run.py",
+            """#!/usr/bin/env python3
 import os
 import json
 
@@ -133,7 +163,8 @@ with open('python-result.txt', 'w') as f:
     f.write(f"Environment: {json.dumps(env_info, indent=2)}\\n")
 
 print("Python script completed")
-""")
+""",
+        )
         (task5 / "run.py").chmod(0o755)
 
         return temp_workspace
@@ -142,10 +173,9 @@ print("Python script completed")
         """Test that files are created in temp directory and copied back."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/file-isolation"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "sandbox-test/file-isolation"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -168,10 +198,9 @@ print("Python script completed")
         """Test input file availability and output file copying."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/input-output"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "sandbox-test/input-output"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -192,10 +221,9 @@ print("Python script completed")
         """Test that environment variables are properly set."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/env-vars"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "sandbox-test/env-vars"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -216,10 +244,9 @@ print("Python script completed")
         """Test error handling and failure logging."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/error-handling"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "sandbox-test/error-handling"]
+        )
 
         assert result.exit_code == 1  # CLI exits with error code when task fails
         assert "❌ Task failed" in result.output
@@ -245,10 +272,9 @@ print("Python script completed")
         """Test Python script execution in sandbox."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/python-script"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "sandbox-test/python-script"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -266,10 +292,10 @@ print("Python script completed")
         """Test that dry run doesn't execute scripts."""
         workspace = str(workspace_with_sandbox_tests)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "sandbox-test/file-isolation", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli,
+            ["--workspace", workspace, "run", "--task", "sandbox-test/file-isolation", "--dry-run"],
+        )
 
         assert result.exit_code == 0
         assert "[DRY RUN]" in result.output
@@ -290,25 +316,30 @@ print("Python script completed")
         # Create task that would fail with safety flags
         task = projects_dir / "bash-safety"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: bash-safety
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: bash-safety
 task_type: machine
 description: Test bash safety flags
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 # This should fail due to undefined variable (with -u flag)
 echo "Value: $UNDEFINED_VAR" > result.txt
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "safety-test/bash-safety"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "safety-test/bash-safety"]
+        )
 
         assert result.exit_code == 1  # CLI exits with error code when task fails
         assert "❌ Task failed" in result.output  # Task fails due to safety
@@ -325,17 +356,23 @@ echo "Value: $UNDEFINED_VAR" > result.txt
         task_dir = temp_workspace / "projects" / "cleanup-test" / "temp-cleanup"
         task_dir.mkdir(parents=True)
 
-        safe_write_file(task_dir / "instruction.yaml", """name: temp-cleanup
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """name: temp-cleanup
 task_type: machine
 description: Test temp cleanup
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
-        safe_write_file(task_dir / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task_dir / "run.sh",
+            """#!/bin/bash
 echo "executed" > result.txt
-""")
+""",
+        )
         (task_dir / "run.sh").chmod(0o755)
 
         # Discover and execute task
@@ -343,6 +380,7 @@ echo "executed" > result.txt
 
         # Count temp directories before execution
         import tempfile
+
         temp_base = Path(tempfile.gettempdir())
         before_count = len(list(temp_base.glob("warifuri_*")))
 
@@ -360,29 +398,34 @@ echo "executed" > result.txt
 
         task = projects_dir / "file-permissions"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: file-permissions
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: file-permissions
 task_type: machine
 description: Test file permissions
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [permissions.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 # Check if we can execute this script (should have +x)
 if [ -x "run.sh" ]; then
     echo "Script is executable" > permissions.txt
 else
     echo "Script is not executable" > permissions.txt
 fi
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "permission-test/file-permissions"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "permission-test/file-permissions"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -397,29 +440,34 @@ fi
 
         task = projects_dir / "complex-output"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: complex-output
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: complex-output
 task_type: machine
 description: Test complex output structure
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [data/, report.txt, logs/debug.log]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 # Create complex output structure
 mkdir -p data/raw data/processed logs
 echo "raw data" > data/raw/input.csv
 echo "processed data" > data/processed/output.csv
 echo "Summary report" > report.txt
 echo "Debug information" > logs/debug.log
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "complex-test/complex-output"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "complex-test/complex-output"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -440,15 +488,20 @@ echo "Debug information" > logs/debug.log
         # Create task with execution steps
         task = projects_dir / "logging-task"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: logging-task
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: logging-task
 task_type: machine
 description: Test execution logging
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 echo "Starting execution"
 echo "Step 1: Creating file"
 echo "Hello World" > result.txt
@@ -456,14 +509,14 @@ echo "Step 2: Processing"
 sleep 0.1
 echo "Step 3: Finalizing"
 echo "Execution completed successfully"
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "logging-test/logging-task"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "logging-test/logging-task"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -490,24 +543,29 @@ echo "Execution completed successfully"
         # Create task that requires missing input file
         task = projects_dir / "missing-input"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: missing-input
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: missing-input
 task_type: machine
 description: Test missing input validation
 auto_merge: false
 dependencies: []
 inputs: [missing-file.txt]
 outputs: [result.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 cat missing-file.txt > result.txt
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "validation-test/missing-input"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "validation-test/missing-input"]
+        )
 
         assert result.exit_code != 0
         assert "Input validation failed" in result.output
@@ -529,28 +587,36 @@ cat missing-file.txt > result.txt
         # Create task that doesn't create expected output
         task = projects_dir / "missing-output"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: missing-output
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: missing-output
 task_type: machine
 description: Test missing output validation
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [expected-output.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 # Script doesn't create the expected output file
 echo "This script runs but doesn't create the expected output"
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
         workspace = str(workspace_with_sandbox_tests)
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "output-validation/missing-output"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "output-validation/missing-output"]
+        )
 
         assert result.exit_code != 0
-        assert "Expected output files not created" in result.output or "Missing expected output" in result.output
+        assert (
+            "Expected output files not created" in result.output
+            or "Missing expected output" in result.output
+        )
 
         # Check that failure log was created
         logs_dir = task / "logs"
@@ -575,4 +641,5 @@ echo "This script runs but doesn't create the expected output"
         finally:
             # Clean up
             import shutil
+
             shutil.rmtree(temp_dir, ignore_errors=True)

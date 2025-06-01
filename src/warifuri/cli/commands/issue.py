@@ -1,18 +1,19 @@
 """Issue command for GitHub integration."""
 
+from typing import List, Optional
+
 import click
 
-from ..context import Context, pass_context
-from typing import List, Optional
 from ...core.discovery import discover_all_projects, find_task_by_name
-from ...core.types import Project
 from ...core.github import (
     check_github_cli,
     create_issue_safe,
     ensure_labels_exist,
-    get_github_repo,
     format_task_issue_body,
+    get_github_repo,
 )
+from ...core.types import Project
+from ..context import Context, pass_context
 
 
 @click.command()

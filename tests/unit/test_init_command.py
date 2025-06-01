@@ -32,7 +32,7 @@ class TestInitCommand:
     def test_init_no_target_no_template_error(self, runner, temp_workspace):
         """Test init with no target and no template shows error."""
         # Test line 47-50: Error case when no target and no template
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
@@ -40,17 +40,22 @@ class TestInitCommand:
             result = runner.invoke(init, [], obj=mock_context)
 
             assert result.exit_code == 0
-            assert "Error: TARGET is required unless using --template for workspace expansion." in result.output
+            assert (
+                "Error: TARGET is required unless using --template for workspace expansion."
+                in result.output
+            )
 
     def test_create_project_template_not_found(self, runner, temp_workspace):
         """Test creating project with non-existent template."""
         # Test lines 76-79: Template not found error
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, ["test-project", "--template", "nonexistent"], obj=mock_context)
+            result = runner.invoke(
+                init, ["test-project", "--template", "nonexistent"], obj=mock_context
+            )
 
             assert result.exit_code == 0
             assert "Error: Template 'nonexistent' not found." in result.output
@@ -62,24 +67,32 @@ class TestInitCommand:
         template_dir = temp_workspace / "templates" / "test-template"
         ensure_directory(template_dir / "task1")
         ensure_directory(template_dir / "task2")
-        safe_write_file(template_dir / "task1" / "instruction.yaml", "name: task1\ntask_type: human")
-        safe_write_file(template_dir / "task2" / "instruction.yaml", "name: task2\ntask_type: human")
+        safe_write_file(
+            template_dir / "task1" / "instruction.yaml", "name: task1\ntask_type: human"
+        )
+        safe_write_file(
+            template_dir / "task2" / "instruction.yaml", "name: task2\ntask_type: human"
+        )
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                result = runner.invoke(init, [
-                    "test-project",
-                    "--template", "test-template",
-                    "--non-interactive"
-                ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                result = runner.invoke(
+                    init,
+                    ["test-project", "--template", "test-template", "--non-interactive"],
+                    obj=mock_context,
+                )
 
                 assert result.exit_code == 0
                 assert "Using template: test-template" in result.output
-                assert "Created project 'test-project' from template 'test-template'" in result.output
+                assert (
+                    "Created project 'test-project' from template 'test-template'" in result.output
+                )
                 assert "Created tasks:" in result.output
                 assert "- task1" in result.output
                 assert "- task2" in result.output
@@ -91,18 +104,23 @@ class TestInitCommand:
         ensure_directory(template_dir)
         safe_write_file(template_dir / "some_file.txt", "content")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                with patch('warifuri.cli.commands.init.expand_template_directory', side_effect=Exception("Template error")):
-                    result = runner.invoke(init, [
-                        "test-project",
-                        "--template", "test-template",
-                        "--non-interactive"
-                    ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                with patch(
+                    "warifuri.cli.commands.init.expand_template_directory",
+                    side_effect=Exception("Template error"),
+                ):
+                    result = runner.invoke(
+                        init,
+                        ["test-project", "--template", "test-template", "--non-interactive"],
+                        obj=mock_context,
+                    )
 
                     assert result.exit_code == 0
                     assert "Error expanding template: Template error" in result.output
@@ -114,7 +132,7 @@ class TestInitCommand:
         task_path = temp_workspace / "projects" / "test-project" / "existing-task"
         ensure_directory(task_path)
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
@@ -122,21 +140,24 @@ class TestInitCommand:
             result = runner.invoke(init, ["test-project/existing-task"], obj=mock_context)
 
             assert result.exit_code == 0
-            assert "Error: Task 'test-project/existing-task' already exists. Use --force to overwrite." in result.output
+            assert (
+                "Error: Task 'test-project/existing-task' already exists. Use --force to overwrite."
+                in result.output
+            )
 
     def test_show_dry_run_task_creation_with_template(self, runner, temp_workspace):
         """Test dry run task creation with template."""
         # Test lines 142-143: Show template usage in dry run
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, [
-                "test-project/new-task",
-                "--dry-run",
-                "--template", "test-template"
-            ], obj=mock_context)
+            result = runner.invoke(
+                init,
+                ["test-project/new-task", "--dry-run", "--template", "test-template"],
+                obj=mock_context,
+            )
 
             assert result.exit_code == 0
             assert "Would create task:" in result.output
@@ -153,21 +174,31 @@ class TestInitCommand:
         # Create project directory first
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                result = runner.invoke(init, [
-                    "test-project/new-task",
-                    "--template", "task-template/sample-task",
-                    "--non-interactive"
-                ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                result = runner.invoke(
+                    init,
+                    [
+                        "test-project/new-task",
+                        "--template",
+                        "task-template/sample-task",
+                        "--non-interactive",
+                    ],
+                    obj=mock_context,
+                )
 
                 assert result.exit_code == 0
                 assert "Using template: task-template/sample-task" in result.output
-                assert "Created task 'test-project/new-task' from template 'task-template/sample-task'" in result.output
+                assert (
+                    "Created task 'test-project/new-task' from template 'task-template/sample-task'"
+                    in result.output
+                )
 
     def test_create_task_from_template_expansion_error(self, runner, temp_workspace):
         """Test task creation from template with expansion error."""
@@ -179,18 +210,28 @@ class TestInitCommand:
         # Create project directory first
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                with patch('warifuri.cli.commands.init.expand_template_directory', side_effect=Exception("Expansion failed")):
-                    result = runner.invoke(init, [
-                        "test-project/new-task",
-                        "--template", "task-template/sample-task",
-                        "--non-interactive"
-                    ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                with patch(
+                    "warifuri.cli.commands.init.expand_template_directory",
+                    side_effect=Exception("Expansion failed"),
+                ):
+                    result = runner.invoke(
+                        init,
+                        [
+                            "test-project/new-task",
+                            "--template",
+                            "task-template/sample-task",
+                            "--non-interactive",
+                        ],
+                        obj=mock_context,
+                    )
 
                     assert result.exit_code == 0
                     assert "Error expanding template: Expansion failed" in result.output
@@ -207,17 +248,19 @@ class TestInitCommand:
         # Create project directory first
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                result = runner.invoke(init, [
-                    "test-project/new-task",
-                    "--template", "simple-template",
-                    "--non-interactive"
-                ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                result = runner.invoke(
+                    init,
+                    ["test-project/new-task", "--template", "simple-template", "--non-interactive"],
+                    obj=mock_context,
+                )
 
                 assert result.exit_code == 0
                 assert "Using template: simple-template" in result.output
@@ -235,18 +278,20 @@ class TestInitCommand:
         # Create project directory first
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, [
-                "test-project/new-task",
-                "--template", "multi-template"
-            ], obj=mock_context)
+            result = runner.invoke(
+                init, ["test-project/new-task", "--template", "multi-template"], obj=mock_context
+            )
 
             assert result.exit_code == 0
-            assert "Error: Template 'multi-template' contains multiple tasks. Specify as 'template/task'." in result.output
+            assert (
+                "Error: Template 'multi-template' contains multiple tasks. Specify as 'template/task'."
+                in result.output
+            )
 
     def test_resolve_template_path_task_not_found(self, runner, temp_workspace):
         """Test resolving template path when task not found."""
@@ -259,18 +304,21 @@ class TestInitCommand:
         # Create project directory first
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, [
-                "test-project/new-task",
-                "--template", "test-template/nonexistent-task"
-            ], obj=mock_context)
+            result = runner.invoke(
+                init,
+                ["test-project/new-task", "--template", "test-template/nonexistent-task"],
+                obj=mock_context,
+            )
 
             assert result.exit_code == 0
-            assert "Error: Template task 'test-template/nonexistent-task' not found." in result.output
+            assert (
+                "Error: Template task 'test-template/nonexistent-task' not found." in result.output
+            )
 
     def test_expand_template_to_workspace_expansion_error(self, runner, temp_workspace):
         """Test workspace template expansion with error."""
@@ -279,17 +327,23 @@ class TestInitCommand:
         ensure_directory(template_dir)
         safe_write_file(template_dir / "some_file.txt", "content")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init.get_template_variables_from_user', return_value={}):
-                with patch('warifuri.cli.commands.init.expand_template_directory', side_effect=Exception("Workspace expansion failed")):
-                    result = runner.invoke(init, [
-                        "--template", "workspace-template",
-                        "--non-interactive"
-                    ], obj=mock_context)
+            with patch(
+                "warifuri.cli.commands.init.get_template_variables_from_user", return_value={}
+            ):
+                with patch(
+                    "warifuri.cli.commands.init.expand_template_directory",
+                    side_effect=Exception("Workspace expansion failed"),
+                ):
+                    result = runner.invoke(
+                        init,
+                        ["--template", "workspace-template", "--non-interactive"],
+                        obj=mock_context,
+                    )
 
                     assert result.exit_code == 0
                     assert "Error expanding template: Workspace expansion failed" in result.output
@@ -302,15 +356,14 @@ class TestInitCommand:
         safe_write_file(template_dir / "file1.txt", "content1")
         safe_write_file(template_dir / "subdir" / "file2.txt", "content2")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, [
-                "--template", "workspace-template",
-                "--dry-run"
-            ], obj=mock_context)
+            result = runner.invoke(
+                init, ["--template", "workspace-template", "--dry-run"], obj=mock_context
+            )
 
             assert result.exit_code == 0
             assert "Would expand template 'workspace-template' as project:" in result.output
@@ -325,17 +378,18 @@ class TestInitCommand:
         existing_project = temp_workspace / "projects" / "workspace-template"
         ensure_directory(existing_project)
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, [
-                "--template", "workspace-template"
-            ], obj=mock_context)
+            result = runner.invoke(init, ["--template", "workspace-template"], obj=mock_context)
 
             assert result.exit_code == 0
-            assert "Error: Project 'workspace-template' already exists. Use --force to overwrite." in result.output
+            assert (
+                "Error: Project 'workspace-template' already exists. Use --force to overwrite."
+                in result.output
+            )
 
     def test_expand_template_to_workspace_success(self, runner, temp_workspace):
         """Test successful expansion of template to workspace."""
@@ -347,12 +401,12 @@ class TestInitCommand:
         (template_dir / "task.yaml").write_text("name: test-task\nrun: echo 'test'")
         (template_dir / "README.md").write_text("# Test Project")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            with patch('warifuri.cli.commands.init._expand_template_to_workspace') as mock_expand:
+            with patch("warifuri.cli.commands.init._expand_template_to_workspace") as mock_expand:
                 mock_expand.return_value = None  # Success
 
                 result = runner.invoke(init, ["--template", "test-template"], obj=mock_context)
@@ -366,7 +420,7 @@ class TestInitCommand:
         project_dir = temp_workspace / "projects" / "test-project"
         project_dir.mkdir(parents=True)
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
@@ -374,7 +428,10 @@ class TestInitCommand:
             result = runner.invoke(init, ["test-project"], obj=mock_context)
 
             assert result.exit_code == 0
-            assert "Error: Project 'test-project' already exists. Use --force to overwrite." in result.output
+            assert (
+                "Error: Project 'test-project' already exists. Use --force to overwrite."
+                in result.output
+            )
 
     def test_create_project_dry_run_with_template(self, runner, temp_workspace):
         """Test dry run for project creation with template."""
@@ -383,12 +440,14 @@ class TestInitCommand:
         template_dir.mkdir(parents=True)
         (template_dir / "task.yaml").write_text("name: test-task")
 
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context
 
-            result = runner.invoke(init, ["test-project", "--dry-run", "--template", "test-template"], obj=mock_context)
+            result = runner.invoke(
+                init, ["test-project", "--dry-run", "--template", "test-template"], obj=mock_context
+            )
 
             assert result.exit_code == 0
             assert "Would create project:" in result.output
@@ -397,7 +456,7 @@ class TestInitCommand:
     def test_resolve_template_path_template_not_found_final(self, runner, temp_workspace):
         """Test template resolution when template not found in final check."""
         # Test lines 223-224: Final template not found error
-        with patch('warifuri.cli.commands.init.Context') as mock_context_class:
+        with patch("warifuri.cli.commands.init.Context") as mock_context_class:
             mock_context = Mock(spec=Context)
             mock_context.ensure_workspace_path.return_value = temp_workspace
             mock_context_class.return_value = mock_context

@@ -7,7 +7,7 @@ Reads multiple input files and creates a comprehensive summary.
 import datetime
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 def check_input_files() -> None:
@@ -41,7 +41,7 @@ def parse_data1(content: str) -> Dict[str, Any]:
         "record_count": len(records),
         "records": records,
         "total_value": sum(r["value"] for r in records),
-        "average_value": sum(r["value"] for r in records) / len(records) if records else 0
+        "average_value": sum(r["value"] for r in records) / len(records) if records else 0,
     }
 
 
@@ -59,7 +59,7 @@ def parse_data2(content: str) -> Dict[str, Any]:
     return {
         "total_lines": len(lines),
         "log_levels": log_levels,
-        "total_messages": sum(log_levels.values())
+        "total_messages": sum(log_levels.values()),
     }
 
 
@@ -87,42 +87,42 @@ def main() -> None:
 ============================
 
 Processing Timestamp: {timestamp}
-Configuration Version: {config['metadata']['version']}
-Generated At: {config['metadata']['generated_at']}
+Configuration Version: {config["metadata"]["version"]}
+Generated At: {config["metadata"]["generated_at"]}
 
 === Input Files Analysis ===
 
 Data1.txt Analysis:
-- Record Count: {data1_analysis['record_count']}
-- Total Value: {data1_analysis['total_value']:.2f}
-- Average Value: {data1_analysis['average_value']:.2f}
-- Records: {len(data1_analysis['records'])} entries
+- Record Count: {data1_analysis["record_count"]}
+- Total Value: {data1_analysis["total_value"]:.2f}
+- Average Value: {data1_analysis["average_value"]:.2f}
+- Records: {len(data1_analysis["records"])} entries
 
 Data2.txt Analysis:
-- Total Lines: {data2_analysis['total_lines']}
-- Log Messages: {data2_analysis['total_messages']}
-- INFO messages: {data2_analysis['log_levels']['INFO']}
-- DEBUG messages: {data2_analysis['log_levels']['DEBUG']}
-- ERROR messages: {data2_analysis['log_levels']['ERROR']}
-- WARN messages: {data2_analysis['log_levels']['WARN']}
+- Total Lines: {data2_analysis["total_lines"]}
+- Log Messages: {data2_analysis["total_messages"]}
+- INFO messages: {data2_analysis["log_levels"]["INFO"]}
+- DEBUG messages: {data2_analysis["log_levels"]["DEBUG"]}
+- ERROR messages: {data2_analysis["log_levels"]["ERROR"]}
+- WARN messages: {data2_analysis["log_levels"]["WARN"]}
 
 Config.json Analysis:
-- Processing parameters: {len(config['parameters'])} items
-- Feature flags: {len(config['flags'])} items
-- Max records setting: {config['parameters']['max_records']}
-- Validation enabled: {config['processing']['validation']}
+- Processing parameters: {len(config["parameters"])} items
+- Feature flags: {len(config["flags"])} items
+- Max records setting: {config["parameters"]["max_records"]}
+- Validation enabled: {config["processing"]["validation"]}
 
 === File Statistics ===
 
-data1.txt: {Path('data1.txt').stat().st_size} bytes
-data2.txt: {Path('data2.txt').stat().st_size} bytes
-config.json: {Path('config.json').stat().st_size} bytes
+data1.txt: {Path("data1.txt").stat().st_size} bytes
+data2.txt: {Path("data2.txt").stat().st_size} bytes
+config.json: {Path("config.json").stat().st_size} bytes
 
 === Processing Results ===
 
 Total input files processed: 3
-Total data records analyzed: {data1_analysis['record_count']}
-Total log messages analyzed: {data2_analysis['total_messages']}
+Total data records analyzed: {data1_analysis["record_count"]}
+Total log messages analyzed: {data2_analysis["total_messages"]}
 Configuration validation: PASSED
 Processing status: COMPLETED
 

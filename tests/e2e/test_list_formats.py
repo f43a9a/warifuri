@@ -1,6 +1,7 @@
 """Test list command format options."""
 
 import json
+
 import pytest
 from click.testing import CliRunner
 
@@ -24,7 +25,7 @@ task_type: machine
 description: This is a ready machine task
 dependencies: []
 outputs: ["output.txt"]
-"""
+""",
     )
     safe_write_file(ready_task / "run.sh", "#!/bin/bash\necho 'ready'")
     # Create the required input file to make task ready
@@ -39,7 +40,7 @@ outputs: ["output.txt"]
 task_type: ai
 description: This is a completed AI task
 dependencies: []
-"""
+""",
     )
     safe_write_file(completed_task / "prompt.yaml", "model: gpt-3.5-turbo")
     safe_write_file(completed_task / "done.md", "Task completed")
@@ -53,7 +54,7 @@ dependencies: []
 task_type: human
 description: This is a pending human task
 dependencies: ["ready-task"]
-"""
+""",
     )
 
     # Create project B with one task
@@ -66,7 +67,7 @@ dependencies: ["ready-task"]
 task_type: machine
 description: Task in project B
 dependencies: []
-"""
+""",
     )
     safe_write_file(task_b / "run.sh", "#!/bin/bash\necho 'project-b'")
 
@@ -79,10 +80,7 @@ class TestListFormatOptions:
     def test_list_plain_format_default(self, list_test_workspace):
         """Test default plain format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list"
-        ])
+        result = runner.invoke(cli, ["--workspace", str(list_test_workspace), "list"])
 
         assert result.exit_code == 0
         assert "[READY] project-a/ready-task" in result.output
@@ -94,10 +92,9 @@ class TestListFormatOptions:
     def test_list_json_format(self, list_test_workspace):
         """Test JSON format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(list_test_workspace), "list", "--format", "json"]
+        )
 
         assert result.exit_code == 0
 
@@ -120,33 +117,29 @@ class TestListFormatOptions:
     def test_list_tsv_format(self, list_test_workspace):
         """Test TSV format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--format", "tsv"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(list_test_workspace), "list", "--format", "tsv"]
+        )
 
         assert result.exit_code == 0
 
-        lines = result.output.strip().split('\n')
+        lines = result.output.strip().split("\n")
         assert len(lines) == 5  # Header + 4 tasks
 
         # Check header
-        headers = lines[0].split('\t')
+        headers = lines[0].split("\t")
         assert "name" in headers
         assert "description" in headers
         assert "status" in headers
 
         # Check data
-        task_line = lines[1].split('\t')
+        task_line = lines[1].split("\t")
         assert len(task_line) == len(headers)
 
     def test_list_ready_filter(self, list_test_workspace):
         """Test --ready filter."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--ready"
-        ])
+        result = runner.invoke(cli, ["--workspace", str(list_test_workspace), "list", "--ready"])
 
         assert result.exit_code == 0
         assert "[READY] project-a/ready-task" in result.output
@@ -157,10 +150,9 @@ class TestListFormatOptions:
     def test_list_completed_filter(self, list_test_workspace):
         """Test --completed filter."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--completed"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(list_test_workspace), "list", "--completed"]
+        )
 
         assert result.exit_code == 0
         assert "[COMPLETED] project-a/completed-task" in result.output
@@ -170,10 +162,9 @@ class TestListFormatOptions:
     def test_list_project_filter(self, list_test_workspace):
         """Test --project filter."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--project", "project-a"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(list_test_workspace), "list", "--project", "project-a"]
+        )
 
         assert result.exit_code == 0
         assert "project-a/ready-task" in result.output
@@ -184,10 +175,18 @@ class TestListFormatOptions:
     def test_list_fields_selection(self, list_test_workspace):
         """Test --fields option for custom field selection."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--fields", "name,type,project", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--fields",
+                "name,type,project",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -205,10 +204,10 @@ class TestListFormatOptions:
     def test_list_fields_with_plain_format(self, list_test_workspace):
         """Test --fields option with plain format."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--fields", "name,type,dependencies"
-        ])
+        result = runner.invoke(
+            cli,
+            ["--workspace", str(list_test_workspace), "list", "--fields", "name,type,dependencies"],
+        )
 
         assert result.exit_code == 0
         assert "type:" in result.output
@@ -217,10 +216,19 @@ class TestListFormatOptions:
     def test_list_combined_filters(self, list_test_workspace):
         """Test combining multiple filters."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--ready", "--project", "project-a", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--ready",
+                "--project",
+                "project-a",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -232,10 +240,17 @@ class TestListFormatOptions:
     def test_list_empty_result(self, list_test_workspace):
         """Test list with filters that return no results."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--ready", "--project", "non-existent"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--ready",
+                "--project",
+                "non-existent",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "No tasks found." in result.output
@@ -243,11 +258,18 @@ class TestListFormatOptions:
     def test_list_all_fields_json(self, list_test_workspace):
         """Test listing all available fields in JSON format."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--fields", "name,description,status,type,dependencies,project,task",
-            "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--fields",
+                "name,description,status,type,dependencies,project,task",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -255,37 +277,61 @@ class TestListFormatOptions:
         first_task = data[0]
 
         # Should have all requested fields
-        expected_fields = ["name", "description", "status", "type", "dependencies", "project", "task"]
+        expected_fields = [
+            "name",
+            "description",
+            "status",
+            "type",
+            "dependencies",
+            "project",
+            "task",
+        ]
         for field in expected_fields:
             assert field in first_task
 
     def test_list_tsv_with_custom_fields(self, list_test_workspace):
         """Test TSV format with custom fields."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--fields", "name,status,type", "--format", "tsv"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--fields",
+                "name,status,type",
+                "--format",
+                "tsv",
+            ],
+        )
 
         assert result.exit_code == 0
 
-        lines = result.output.strip().split('\n')
-        headers = lines[0].split('\t')
+        lines = result.output.strip().split("\n")
+        headers = lines[0].split("\t")
 
         assert headers == ["name", "status", "type"]
 
         # Check data consistency
         for line in lines[1:]:
-            values = line.split('\t')
+            values = line.split("\t")
             assert len(values) == 3
 
     def test_list_invalid_field(self, list_test_workspace):
         """Test behavior with invalid field names."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(list_test_workspace),
-            "list", "--fields", "name,invalid_field", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(list_test_workspace),
+                "list",
+                "--fields",
+                "name,invalid_field",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 

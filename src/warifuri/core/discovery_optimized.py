@@ -2,12 +2,12 @@
 
 import logging
 import time
-from pathlib import Path
-from typing import Dict, List, Set, Tuple, Optional, Callable, Any
 from functools import lru_cache
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
-from .types import Task
 from ..utils.filesystem import find_instruction_files
+from .types import Task
 
 logger = logging.getLogger(__name__)
 

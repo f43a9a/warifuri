@@ -2,8 +2,9 @@
 
 import pytest
 from click.testing import CliRunner
+
 from warifuri.cli.main import cli
-from warifuri.utils import safe_write_file, ensure_directory
+from warifuri.utils import ensure_directory, safe_write_file
 
 
 class TestCLI:
@@ -60,17 +61,18 @@ note: Setup task
 
     def test_show_command(self, runner, workspace_with_demo):
         """Test show command."""
-        result = runner.invoke(cli, [
-            "--workspace", str(workspace_with_demo),
-            "show", "--task", "demo/setup"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(workspace_with_demo), "show", "--task", "demo/setup"]
+        )
         assert result.exit_code == 0
         assert "Task: demo/setup" in result.output
         assert "Type: machine" in result.output
 
     def test_validate_command_strict_mode(self, runner, workspace_with_demo):
         """Test validate command with strict mode."""
-        result = runner.invoke(cli, ["--workspace", str(workspace_with_demo), "validate", "--strict"])
+        result = runner.invoke(
+            cli, ["--workspace", str(workspace_with_demo), "validate", "--strict"]
+        )
         assert result.exit_code == 0
         assert "Validating workspace" in result.output
 
@@ -82,8 +84,9 @@ note: Setup task
 
     def test_validate_command_dependency_validation_error(self, runner, temp_workspace):
         """Test validate command when dependency validation throws an exception."""
-        from warifuri.utils import safe_write_file
         from unittest.mock import patch
+
+        from warifuri.utils import safe_write_file
 
         # Create a valid project first
         demo_dir = temp_workspace / "projects" / "demo"
@@ -100,7 +103,10 @@ outputs: [output.txt]
         safe_write_file(task_dir / "instruction.yaml", instruction)
 
         # Mock detect_circular_dependencies to raise an exception
-        with patch('warifuri.cli.commands.validate.detect_circular_dependencies', side_effect=Exception("Mock dependency error")):
+        with patch(
+            "warifuri.cli.commands.validate.detect_circular_dependencies",
+            side_effect=Exception("Mock dependency error"),
+        ):
             result = runner.invoke(cli, ["--workspace", str(temp_workspace), "validate"])
             assert result.exit_code == 1  # Should fail due to exception
             assert "Dependency validation failed" in result.output
@@ -199,10 +205,7 @@ outputs: [output_b.txt]
 
     def test_init_project(self, runner, temp_workspace):
         """Test project initialization."""
-        result = runner.invoke(cli, [
-            "--workspace", str(temp_workspace),
-            "init", "test-project"
-        ])
+        result = runner.invoke(cli, ["--workspace", str(temp_workspace), "init", "test-project"])
         assert result.exit_code == 0
         assert "Created project: test-project" in result.output
         assert (temp_workspace / "projects" / "test-project").exists()
@@ -212,13 +215,14 @@ outputs: [output_b.txt]
         # First create project directory
         ensure_directory(temp_workspace / "projects" / "test-project")
 
-        result = runner.invoke(cli, [
-            "--workspace", str(temp_workspace),
-            "init", "test-project/new-task"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(temp_workspace), "init", "test-project/new-task"]
+        )
         assert result.exit_code == 0
         assert "Created task: test-project/new-task" in result.output
-        assert (temp_workspace / "projects" / "test-project" / "new-task" / "instruction.yaml").exists()
+        assert (
+            temp_workspace / "projects" / "test-project" / "new-task" / "instruction.yaml"
+        ).exists()
 
     def test_template_list_empty(self, runner, temp_workspace):
         """Test template list with no templates."""
@@ -239,6 +243,7 @@ outputs: [output_b.txt]
         templates_dir = temp_workspace / "templates"
         if templates_dir.exists():
             import shutil
+
             shutil.rmtree(templates_dir)
 
         result = runner.invoke(cli, ["--workspace", str(temp_workspace), "template", "list"])
@@ -253,9 +258,12 @@ outputs: [output_b.txt]
         (template_dir / "task" / "instruction.yaml").parent.mkdir(parents=True)
         safe_write_file(template_dir / "task" / "instruction.yaml", "name: task\ndescription: test")
 
-        result = runner.invoke(cli, ["--workspace", str(temp_workspace), "template", "list", "--format", "json"])
+        result = runner.invoke(
+            cli, ["--workspace", str(temp_workspace), "template", "list", "--format", "json"]
+        )
         assert result.exit_code == 0
         import json
+
         templates = json.loads(result.output.strip())
         assert "basic" in templates
 
@@ -268,7 +276,7 @@ outputs: [output_b.txt]
         templates_dir.mkdir(exist_ok=True)
 
         # Mock Path.iterdir at the class level to raise OSError
-        with patch('pathlib.Path.iterdir', side_effect=OSError("Permission denied")):
+        with patch("pathlib.Path.iterdir", side_effect=OSError("Permission denied")):
             result = runner.invoke(cli, ["--workspace", str(temp_workspace), "template", "list"])
             assert result.exit_code == 0
             assert "No templates found." in result.output
@@ -287,10 +295,10 @@ outputs: [output_b.txt]
 
     def test_run_command_with_dry_run(self, runner, workspace_with_demo):
         """Test run command with dry run."""
-        result = runner.invoke(cli, [
-            "--workspace", str(workspace_with_demo),
-            "run", "--task", "demo/setup", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli,
+            ["--workspace", str(workspace_with_demo), "run", "--task", "demo/setup", "--dry-run"],
+        )
         assert result.exit_code == 0
         assert "[DRY RUN]" in result.output or "Would execute" in result.output
 

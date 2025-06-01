@@ -7,15 +7,15 @@ from unittest.mock import patch
 import pytest
 
 from warifuri.utils.filesystem import (
+    copy_directory_contents,
+    create_temp_dir,
+    ensure_directory,
+    find_instruction_files,
     find_workspace_root,
+    get_git_commit_sha,
     list_projects,
     list_tasks,
-    find_instruction_files,
-    create_temp_dir,
-    copy_directory_contents,
-    ensure_directory,
     safe_write_file,
-    get_git_commit_sha,
 )
 
 
@@ -53,7 +53,9 @@ class TestFindWorkspaceRoot:
         result = find_workspace_root(sub_dir)
         assert result is None
 
-    def test_find_workspace_root_current_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_find_workspace_root_current_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test finding workspace root from current directory."""
         workspace_dir = tmp_path / "workspace"
         workspace_dir.mkdir()
@@ -170,6 +172,7 @@ class TestCreateTempDir:
         finally:
             # Clean up
             import shutil
+
             shutil.rmtree(temp_dir)
 
 

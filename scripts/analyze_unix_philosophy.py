@@ -14,10 +14,10 @@ Analyzes codebase for adherence to Unix philosophy:
 """
 
 import ast
+import json
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
-import json
+from typing import Any, Dict, List
 
 
 class UnixPhilosophyAnalyzer(ast.NodeVisitor):
@@ -36,12 +36,14 @@ class UnixPhilosophyAnalyzer(ast.NodeVisitor):
         # Check for god classes (too many methods)
         methods = [n for n in node.body if isinstance(n, ast.FunctionDef)]
         if len(methods) > 15:
-            self.issues.append({
-                "type": "god_class",
-                "line": node.lineno,
-                "message": f"Class '{node.name}' has {len(methods)} methods. Consider splitting responsibilities.",
-                "severity": "high"
-            })
+            self.issues.append(
+                {
+                    "type": "god_class",
+                    "line": node.lineno,
+                    "message": f"Class '{node.name}' has {len(methods)} methods. Consider splitting responsibilities.",
+                    "severity": "high",
+                }
+            )
 
         self.generic_visit(node)
 
@@ -51,22 +53,26 @@ class UnixPhilosophyAnalyzer(ast.NodeVisitor):
         # Check function complexity (line count approximation)
         func_lines = node.end_lineno - node.lineno if node.end_lineno else 0
         if func_lines > 50:
-            self.issues.append({
-                "type": "complex_function",
-                "line": node.lineno,
-                "message": f"Function '{node.name}' has ~{func_lines} lines. Consider breaking down.",
-                "severity": "medium"
-            })
+            self.issues.append(
+                {
+                    "type": "complex_function",
+                    "line": node.lineno,
+                    "message": f"Function '{node.name}' has ~{func_lines} lines. Consider breaking down.",
+                    "severity": "medium",
+                }
+            )
 
         # Check parameter count
         args_count = len(node.args.args)
         if args_count > 7:
-            self.issues.append({
-                "type": "too_many_params",
-                "line": node.lineno,
-                "message": f"Function '{node.name}' has {args_count} parameters. Consider using objects or fewer params.",
-                "severity": "medium"
-            })
+            self.issues.append(
+                {
+                    "type": "too_many_params",
+                    "line": node.lineno,
+                    "message": f"Function '{node.name}' has {args_count} parameters. Consider using objects or fewer params.",
+                    "severity": "medium",
+                }
+            )
 
         self.generic_visit(node)
 
@@ -83,7 +89,7 @@ class UnixPhilosophyAnalyzer(ast.NodeVisitor):
 def analyze_file(file_path: Path) -> Dict[str, Any]:
     """Analyze a single Python file."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         tree = ast.parse(content)
@@ -92,17 +98,17 @@ def analyze_file(file_path: Path) -> Dict[str, Any]:
 
         return {
             "file": str(file_path),
-            "line_count": len(content.split('\n')),
+            "line_count": len(content.split("\n")),
             "classes": analyzer.classes,
             "functions": analyzer.functions,
             "imports": analyzer.imports,
-            "issues": analyzer.issues
+            "issues": analyzer.issues,
         }
     except Exception as e:
         return {
             "file": str(file_path),
             "error": str(e),
-            "issues": [{"type": "parse_error", "message": str(e), "severity": "high"}]
+            "issues": [{"type": "parse_error", "message": str(e), "severity": "high"}],
         }
 
 
@@ -126,7 +132,9 @@ def main():
         if result.get("issues"):
             print(f"\n📁 {file_path.relative_to(src_path)}")
             for issue in result["issues"]:
-                severity_icon = {"high": "🚨", "medium": "⚠️", "low": "ℹ️"}.get(issue["severity"], "?")
+                severity_icon = {"high": "🚨", "medium": "⚠️", "low": "ℹ️"}.get(
+                    issue["severity"], "?"
+                )
                 print(f"  {severity_icon} Line {issue.get('line', '?')}: {issue['message']}")
 
     # Summary statistics

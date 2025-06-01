@@ -3,10 +3,11 @@
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
+
 from warifuri.utils.templates import (
-    expand_template_placeholders,
-    expand_template_file,
     expand_template_directory,
+    expand_template_file,
+    expand_template_placeholders,
     get_template_variables_from_user,
 )
 
@@ -54,7 +55,7 @@ def test_expand_template_placeholders_missing_variable():
 
 def test_expand_template_file_success():
     """Test successful template file expansion."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as temp_file:
         temp_file.write("Project: {{PROJECT}}\nAuthor: {{AUTHOR}}")
         temp_file.flush()
         temp_path = Path(temp_file.name)
@@ -70,7 +71,9 @@ def test_expand_template_file_success():
 
 def test_expand_template_file_unicode():
     """Test template file expansion with unicode characters."""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False, encoding="utf-8"
+    ) as temp_file:
         temp_file.write("Welcome {{NAME}} 🎉\nProject: {{PROJECT}} ⭐")
         temp_file.flush()
         temp_path = Path(temp_file.name)
@@ -137,7 +140,7 @@ def test_expand_template_directory_with_skip_patterns():
         assert not (target_dir / "__pycache__").exists()
 
 
-@patch('builtins.input')
+@patch("builtins.input")
 def test_get_template_variables_interactive(mock_input):
     """Test getting template variables interactively."""
     mock_input.side_effect = ["My Project", "data.csv", "xml", "input.txt"]
@@ -148,12 +151,12 @@ def test_get_template_variables_interactive(mock_input):
         "PROJECT_NAME": "My Project",
         "SOURCE": "data.csv",
         "OUTPUT_FORMAT": "xml",
-        "INPUT_FILE": "input.txt"
+        "INPUT_FILE": "input.txt",
     }
     assert result == expected
 
 
-@patch('builtins.input')
+@patch("builtins.input")
 def test_get_template_variables_with_defaults(mock_input):
     """Test getting template variables with default values."""
     mock_input.side_effect = ["", "custom_source", "", ""]
@@ -162,9 +165,9 @@ def test_get_template_variables_with_defaults(mock_input):
 
     expected = {
         "PROJECT_NAME": "my_template",  # Used default
-        "SOURCE": "custom_source",      # Custom value
-        "OUTPUT_FORMAT": "json",        # Used default
-        "INPUT_FILE": "input.txt"       # Used default
+        "SOURCE": "custom_source",  # Custom value
+        "OUTPUT_FORMAT": "json",  # Used default
+        "INPUT_FILE": "input.txt",  # Used default
     }
     assert result == expected
 
@@ -177,6 +180,6 @@ def test_get_template_variables_non_interactive():
         "PROJECT_NAME": "test_template",
         "SOURCE": "source_data",
         "OUTPUT_FORMAT": "json",
-        "INPUT_FILE": "input.txt"
+        "INPUT_FILE": "input.txt",
     }
     assert result == expected

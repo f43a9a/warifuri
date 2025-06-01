@@ -60,17 +60,14 @@ outputs: []
         full_args = ["python", "-m", "warifuri", "--workspace", str(self.workspace_path)] + args
 
         result = subprocess.run(
-            full_args,
-            capture_output=True,
-            text=True,
-            cwd=self.workspace_path.parent
+            full_args, capture_output=True, text=True, cwd=self.workspace_path.parent
         )
 
         return {
             "stdout": result.stdout,
             "stderr": result.stderr,
             "returncode": result.returncode,
-            "args": args
+            "args": args,
         }
 
     def test_help_output_snapshot(self) -> None:

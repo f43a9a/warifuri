@@ -1,7 +1,8 @@
 """Integration tests for AI task execution with realistic scenarios."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from warifuri.core.discovery import discover_all_projects, find_ready_tasks
 from warifuri.core.execution import execute_task
@@ -19,7 +20,9 @@ class TestAITaskIntegration:
         # Step 1: Data preparation (machine task)
         data_prep = project_dir / "data-prep"
         data_prep.mkdir(parents=True)
-        safe_write_file(data_prep / "instruction.yaml", """
+        safe_write_file(
+            data_prep / "instruction.yaml",
+            """
 name: data-prep
 task_type: machine
 description: Prepare data for AI processing
@@ -27,16 +30,22 @@ auto_merge: false
 dependencies: []
 inputs: []
 outputs: [dataset.json]
-""")
-        safe_write_file(data_prep / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            data_prep / "run.sh",
+            """#!/bin/bash
 echo '{"items": [{"id": 1, "text": "Sample data"}, {"id": 2, "text": "More data"}]}' > dataset.json
-""")
+""",
+        )
         (data_prep / "run.sh").chmod(0o755)
 
         # Step 2: AI analysis (depends on data-prep)
         ai_analysis = project_dir / "ai-analysis"
         ai_analysis.mkdir(parents=True)
-        safe_write_file(ai_analysis / "instruction.yaml", """
+        safe_write_file(
+            ai_analysis / "instruction.yaml",
+            """
 name: ai-analysis
 task_type: ai
 description: Analyze the prepared dataset
@@ -44,8 +53,11 @@ auto_merge: false
 dependencies: [data-prep]
 inputs: [../data-prep/dataset.json]
 outputs: [analysis.md, summary.json]
-""")
-        safe_write_file(ai_analysis / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            ai_analysis / "prompt.yaml",
+            """
 model: gpt-3.5-turbo
 temperature: 0.2
 system_prompt: "You are a data analyst expert."
@@ -55,12 +67,15 @@ user_prompt: |
   Create:
   1. A detailed analysis in analysis.md
   2. A summary JSON with key insights in summary.json
-""")
+""",
+        )
 
         # Step 3: Report generation (depends on ai-analysis)
         report_gen = project_dir / "report-gen"
         report_gen.mkdir(parents=True)
-        safe_write_file(report_gen / "instruction.yaml", """
+        safe_write_file(
+            report_gen / "instruction.yaml",
+            """
 name: report-gen
 task_type: ai
 description: Generate final report
@@ -68,8 +83,11 @@ auto_merge: false
 dependencies: [ai-analysis]
 inputs: [../ai-analysis/analysis.md, ../ai-analysis/summary.json]
 outputs: [final_report.md]
-""")
-        safe_write_file(report_gen / "prompt.yaml", """
+""",
+        )
+        safe_write_file(
+            report_gen / "prompt.yaml",
+            """
 model: gpt-4
 temperature: 0.1
 system_prompt: "You are a report writer."
@@ -79,18 +97,19 @@ user_prompt: |
   - Summary: {../ai-analysis/summary.json}
 
   Output: {final_report.md}
-""")
+""",
+        )
 
         return temp_workspace
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_workflow_execution_order(self, mock_llm_class, ai_workflow_project):
         """Test that AI tasks execute in correct dependency order."""
         # Mock LLM responses
         mock_client = MagicMock()
         responses = [
             "# Analysis Report\n\nThe dataset contains 2 items with text data...",
-            "# Final Report\n\nBased on comprehensive analysis..."
+            "# Final Report\n\nBased on comprehensive analysis...",
         ]
         mock_client.generate_response.side_effect = responses
         mock_llm_class.return_value = mock_client
@@ -118,7 +137,7 @@ user_prompt: |
         # Verify LLM was called twice (for the two AI tasks)
         assert mock_client.generate_response.call_count == 2
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_input_file_reading(self, mock_llm_class, ai_workflow_project):
         """Test that AI tasks properly read input files."""
         mock_client = MagicMock()
@@ -145,7 +164,7 @@ user_prompt: |
         # Note: Input file expansion is a future enhancement
         # For now, just check that basic prompt structure is correct
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_run_ready_ai_tasks(self, mock_llm_class, ai_workflow_project):
         """Test running ready AI tasks in correct order."""
         mock_client = MagicMock()
@@ -179,7 +198,7 @@ user_prompt: |
         # Verify LLM was called once for the AI task
         mock_client.generate_response.assert_called_once()
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_error_recovery(self, mock_llm_class, ai_workflow_project):
         """Test AI task behavior when LLM fails and recovery."""
         from warifuri.utils.llm import LLMError
@@ -212,8 +231,8 @@ user_prompt: |
         # Should have been called twice (fail + success)
         assert mock_client.generate_response.call_count == 2
 
-    @patch.dict('os.environ', {'OPENAI_API_KEY': 'test-api-key'})
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch.dict("os.environ", {"OPENAI_API_KEY": "test-api-key"})
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_different_models(self, mock_llm_class, ai_workflow_project):
         """Test AI tasks with different model configurations."""
         mock_client = MagicMock()
@@ -241,13 +260,13 @@ user_prompt: |
 
         # First call: ai-analysis with gpt-3.5-turbo
         first_call = calls[0]
-        assert first_call[1]['model'] == 'gpt-3.5-turbo'
-        assert first_call[1]['temperature'] == 0.2
+        assert first_call[1]["model"] == "gpt-3.5-turbo"
+        assert first_call[1]["temperature"] == 0.2
 
         # Second call: report-gen with gpt-4
         second_call = calls[1]
-        assert second_call[1]['model'] == 'gpt-4'
-        assert second_call[1]['temperature'] == 0.1
+        assert second_call[1]["model"] == "gpt-4"
+        assert second_call[1]["temperature"] == 0.1
 
     def test_ai_task_dry_run_workflow(self, ai_workflow_project):
         """Test complete workflow in dry run mode."""
@@ -264,7 +283,7 @@ user_prompt: |
             done_file = task.path / "done.md"
             assert not done_file.exists()
 
-    @patch('warifuri.utils.llm.LLMClient')
+    @patch("warifuri.utils.llm.LLMClient")
     def test_ai_task_output_file_creation(self, mock_llm_class, ai_workflow_project):
         """Test that AI tasks create specified output files."""
         mock_client = MagicMock()

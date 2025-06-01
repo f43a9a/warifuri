@@ -1,12 +1,24 @@
 """Test configuration."""
 
-# Apply Python 3.12 compatibility patch for snapshottest
-import sys
+# Standard library imports first
 import importlib.util
+import shutil
+import sys
+import tempfile
 import types
+from pathlib import Path
+from typing import Generator
+
+# Third-party imports
+import pytest
+
+# Local imports
+from warifuri.utils import ensure_directory
+
 
 def _patch_snapshottest_for_python312():
     """Patch snapshottest to work with Python 3.12+ by replacing imp with importlib."""
+
     def load_source_python312(module_name: str, filepath: str) -> types.ModuleType:
         """Replacement for imp.load_source using importlib."""
         spec = importlib.util.spec_from_file_location(module_name, filepath)
@@ -20,6 +32,7 @@ def _patch_snapshottest_for_python312():
 
     try:
         import snapshottest.module
+
         # Replace imp.load_source with our importlib implementation
         snapshottest.module.imp = types.SimpleNamespace()
         snapshottest.module.imp.load_source = load_source_python312
@@ -27,16 +40,9 @@ def _patch_snapshottest_for_python312():
         # snapshottest not installed, skip patching
         pass
 
-# Apply the patch immediately
+
+# Apply the patch immediately after imports
 _patch_snapshottest_for_python312()
-
-import pytest
-from pathlib import Path
-import tempfile
-import shutil
-from typing import Generator
-
-from warifuri.utils import ensure_directory
 
 
 @pytest.fixture

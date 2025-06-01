@@ -1,9 +1,9 @@
 """Tests for issue command."""
 
-import click
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import click
 from click.testing import CliRunner
 
 from warifuri.cli.commands.issue import issue
@@ -40,9 +40,7 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--project", "test-project"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--project", "test-project"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
@@ -51,16 +49,16 @@ class TestIssueCommand:
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
-    def test_issue_no_github_repo(self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_no_github_repo(
+        self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path
+    ) -> None:
         """Test when GitHub repository cannot be detected."""
         mock_check.return_value = True
         mock_get_repo.return_value = None
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--project", "test-project"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--project", "test-project"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
@@ -69,24 +67,24 @@ class TestIssueCommand:
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
-    def test_issue_no_options_specified(self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_no_options_specified(
+        self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path
+    ) -> None:
         """Test when no options are specified."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
 
         runner = CliRunner()
-        result = runner.invoke(
-            issue,
-            [],
-            obj=Context(workspace_path=tmp_path)
-        )
+        result = runner.invoke(issue, [], obj=Context(workspace_path=tmp_path))
 
         assert result.exit_code == 0
         assert "Error: Specify exactly one of --project, --task, or --all-tasks." in result.output
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
-    def test_issue_multiple_options_specified(self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_multiple_options_specified(
+        self, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path
+    ) -> None:
         """Test when multiple options are specified."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -95,7 +93,7 @@ class TestIssueCommand:
         result = runner.invoke(
             issue,
             ["--project", "test-project", "--task", "test-project/test-task"],
-            obj=Context(workspace_path=tmp_path)
+            obj=Context(workspace_path=tmp_path),
         )
 
         assert result.exit_code == 0
@@ -105,8 +103,14 @@ class TestIssueCommand:
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_project_issue")
-    def test_issue_create_project_issue(self, mock_create: Mock, mock_discover: Mock,
-                                       mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_create_project_issue(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test creating project issue."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -116,7 +120,7 @@ class TestIssueCommand:
         result = runner.invoke(
             issue,
             ["--project", "test-project", "--assignee", "testuser", "--label", "bug,enhancement"],
-            obj=Context(workspace_path=tmp_path)
+            obj=Context(workspace_path=tmp_path),
         )
 
         assert result.exit_code == 0
@@ -126,15 +130,21 @@ class TestIssueCommand:
             "testuser",
             ["bug", "enhancement"],
             "user/repo",
-            False
+            False,
         )
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_task_issue")
-    def test_issue_create_task_issue(self, mock_create: Mock, mock_discover: Mock,
-                                    mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_create_task_issue(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test creating task issue."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -142,27 +152,26 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--task", "test-project/test-task"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--task", "test-project/test-task"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
         mock_create.assert_called_once_with(
-            [self.mock_project],
-            "test-project/test-task",
-            None,
-            [],
-            "user/repo",
-            False
+            [self.mock_project], "test-project/test-task", None, [], "user/repo", False
         )
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_all_tasks_issues")
-    def test_issue_create_all_tasks_issues(self, mock_create: Mock, mock_discover: Mock,
-                                          mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_create_all_tasks_issues(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test creating all tasks issues."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -170,26 +179,20 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--all-tasks", "test-project"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--all-tasks", "test-project"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
         mock_create.assert_called_once_with(
-            [self.mock_project],
-            "test-project",
-            None,
-            [],
-            "user/repo",
-            False
+            [self.mock_project], "test-project", None, [], "user/repo", False
         )
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
-    def test_issue_discovery_error(self, mock_discover: Mock, mock_get_repo: Mock,
-                                  mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_discovery_error(
+        self, mock_discover: Mock, mock_get_repo: Mock, mock_check: Mock, tmp_path: Path
+    ) -> None:
         """Test when project discovery fails."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -197,9 +200,7 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--project", "test-project"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--project", "test-project"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
@@ -210,8 +211,14 @@ class TestIssueCommand:
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_project_issue")
-    def test_issue_dry_run(self, mock_create: Mock, mock_discover: Mock,
-                          mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_dry_run(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test dry run mode."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -219,9 +226,7 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--project", "test-project", "--dry-run"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--project", "test-project", "--dry-run"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
@@ -232,20 +237,18 @@ class TestIssueCommand:
             None,
             [],
             "user/repo",
-            True  # dry_run = True
+            True,  # dry_run = True
         )
 
     def test_issue_no_workspace_path(self) -> None:
         """Test when workspace path is None."""
         runner = CliRunner()
 
-        with patch.object(Context, 'ensure_workspace_path') as mock_ensure:
+        with patch.object(Context, "ensure_workspace_path") as mock_ensure:
             mock_ensure.side_effect = click.ClickException("Could not find workspace directory")
 
             result = runner.invoke(
-                issue,
-                ["--project", "test-project"],
-                obj=Context(workspace_path=None)
+                issue, ["--project", "test-project"], obj=Context(workspace_path=None)
             )
 
             # Should fail due to assertion
@@ -255,8 +258,14 @@ class TestIssueCommand:
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_project_issue")
-    def test_issue_labels_parsing(self, mock_create: Mock, mock_discover: Mock,
-                                 mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_labels_parsing(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test label parsing."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -267,7 +276,7 @@ class TestIssueCommand:
         result = runner.invoke(
             issue,
             ["--project", "test-project", "--label", "bug,enhancement,priority:high"],
-            obj=Context(workspace_path=tmp_path)
+            obj=Context(workspace_path=tmp_path),
         )
 
         assert result.exit_code == 0
@@ -277,15 +286,21 @@ class TestIssueCommand:
             None,
             ["bug", "enhancement", "priority:high"],
             "user/repo",
-            False
+            False,
         )
 
     @patch("warifuri.cli.commands.issue.check_github_cli")
     @patch("warifuri.cli.commands.issue.get_github_repo")
     @patch("warifuri.cli.commands.issue.discover_all_projects")
     @patch("warifuri.cli.commands.issue._create_project_issue")
-    def test_issue_no_labels(self, mock_create: Mock, mock_discover: Mock,
-                            mock_get_repo: Mock, mock_check: Mock, tmp_path: Path) -> None:
+    def test_issue_no_labels(
+        self,
+        mock_create: Mock,
+        mock_discover: Mock,
+        mock_get_repo: Mock,
+        mock_check: Mock,
+        tmp_path: Path,
+    ) -> None:
         """Test without labels."""
         mock_check.return_value = True
         mock_get_repo.return_value = "user/repo"
@@ -293,9 +308,7 @@ class TestIssueCommand:
 
         runner = CliRunner()
         result = runner.invoke(
-            issue,
-            ["--project", "test-project"],
-            obj=Context(workspace_path=tmp_path)
+            issue, ["--project", "test-project"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0
@@ -305,5 +318,5 @@ class TestIssueCommand:
             None,
             [],  # Empty labels list
             "user/repo",
-            False
+            False,
         )

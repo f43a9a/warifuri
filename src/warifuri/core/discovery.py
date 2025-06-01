@@ -68,7 +68,7 @@ def discover_task(project_name: str, task_path: Path) -> Task:
 
 def discover_project(workspace_path: Path, project_name: str) -> Project:
     """Discover and load a project with all its tasks."""
-    from ..utils.validation import detect_circular_dependencies, CircularDependencyError
+    from ..utils.validation import CircularDependencyError, detect_circular_dependencies
 
     project_path = workspace_path / "projects" / project_name
 

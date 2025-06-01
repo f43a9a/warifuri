@@ -2,11 +2,11 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 from typing import List
+from unittest.mock import patch
 
-from warifuri.core.execution.file_ops import copy_input_files, _copy_file_or_directory
-from warifuri.core.types import TaskInstruction, Task, TaskType, TaskStatus
+from warifuri.core.execution.file_ops import _copy_file_or_directory, copy_input_files
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestCopyInputFiles:
@@ -23,7 +23,7 @@ class TestCopyInputFiles:
             description="Test task description",
             dependencies=[],
             inputs=["test_file.txt"],
-            outputs=[]
+            outputs=[],
         )
         self.task = Task(
             project="test_project",
@@ -31,7 +31,7 @@ class TestCopyInputFiles:
             path=Path("/workspace/project/task.yaml"),
             instruction=self.task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
     def test_no_input_files(self) -> None:
@@ -41,7 +41,7 @@ class TestCopyInputFiles:
             description="Test task description",
             dependencies=[],
             inputs=[],
-            outputs=[]
+            outputs=[],
         )
         task = Task(
             project="test_project",
@@ -49,7 +49,7 @@ class TestCopyInputFiles:
             path=Path("/workspace/project/task.yaml"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         copy_input_files(task, self.temp_dir, self.execution_log)
@@ -66,9 +66,7 @@ class TestCopyInputFiles:
             # Verify that _resolve_input_path_safely was called with correct projects_base
             expected_projects_base = self.task.path.parent.parent.parent / "projects"
             mock_resolve.assert_called_once_with(
-                "test_file.txt",
-                self.task.path,
-                expected_projects_base
+                "test_file.txt", self.task.path, expected_projects_base
             )
 
     def test_source_path_none_continues(self) -> None:
@@ -107,7 +105,7 @@ class TestCopyInputFiles:
                 description="Test task description",
                 dependencies=[],
                 inputs=["../other-project/file.txt"],
-                outputs=[]
+                outputs=[],
             )
             task = Task(
                 project="test_project",
@@ -115,10 +113,12 @@ class TestCopyInputFiles:
                 path=Path("/workspace/project/task.yaml"),
                 instruction=task_instruction,
                 task_type=TaskType.MACHINE,
-                status=TaskStatus.READY
+                status=TaskStatus.READY,
             )
 
-            with patch("warifuri.core.execution.file_ops._resolve_input_path_safely") as mock_resolve:
+            with patch(
+                "warifuri.core.execution.file_ops._resolve_input_path_safely"
+            ) as mock_resolve:
                 mock_resolve.return_value = (source_path, "Resolved cross-project file")
 
                 with patch("warifuri.core.execution.file_ops._copy_file_or_directory") as mock_copy:
@@ -127,10 +127,7 @@ class TestCopyInputFiles:
                     # Verify the destination path is flattened
                     expected_dest = self.temp_dir / "other-project_file.txt"
                     mock_copy.assert_called_once_with(
-                        source_path,
-                        expected_dest,
-                        "../other-project/file.txt",
-                        self.execution_log
+                        source_path, expected_dest, "../other-project/file.txt", self.execution_log
                     )
         finally:
             source_path.unlink()
@@ -148,7 +145,7 @@ class TestCopyInputFiles:
                 description="Test task description",
                 dependencies=[],
                 inputs=["subdir/file.txt"],
-                outputs=[]
+                outputs=[],
             )
             task = Task(
                 project="test_project",
@@ -156,10 +153,12 @@ class TestCopyInputFiles:
                 path=Path("/workspace/project/task.yaml"),
                 instruction=task_instruction,
                 task_type=TaskType.MACHINE,
-                status=TaskStatus.READY
+                status=TaskStatus.READY,
             )
 
-            with patch("warifuri.core.execution.file_ops._resolve_input_path_safely") as mock_resolve:
+            with patch(
+                "warifuri.core.execution.file_ops._resolve_input_path_safely"
+            ) as mock_resolve:
                 mock_resolve.return_value = (source_path, "Resolved local file")
 
                 with patch("warifuri.core.execution.file_ops._copy_file_or_directory") as mock_copy:
@@ -168,10 +167,7 @@ class TestCopyInputFiles:
                     # Verify the destination path preserves structure
                     expected_dest = self.temp_dir / "subdir/file.txt"
                     mock_copy.assert_called_once_with(
-                        source_path,
-                        expected_dest,
-                        "subdir/file.txt",
-                        self.execution_log
+                        source_path, expected_dest, "subdir/file.txt", self.execution_log
                     )
         finally:
             source_path.unlink()
@@ -224,6 +220,7 @@ class TestCopyFileOrDirectory:
         finally:
             # Clean up
             import shutil
+
             shutil.rmtree(source_dir)
             shutil.rmtree(dest_dir.parent)
 
@@ -265,6 +262,7 @@ class TestCopyFileOrDirectory:
             assert f"Copied input directory: test_dir -> {dest_dir}" in self.execution_log
         finally:
             import shutil
+
             shutil.rmtree(source_dir)
             shutil.rmtree(dest_parent)
 
@@ -291,7 +289,7 @@ class TestIntegration:
             description="Test task description",
             dependencies=[],
             inputs=["input.txt"],
-            outputs=[]
+            outputs=[],
         )
         task = Task(
             project="test-project",
@@ -299,7 +297,7 @@ class TestIntegration:
             path=project_dir / "task.yaml",
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         # Create destination
@@ -308,7 +306,9 @@ class TestIntegration:
 
         try:
             # Mock the validation function to return the source file
-            with patch("warifuri.core.execution.file_ops._resolve_input_path_safely") as mock_resolve:
+            with patch(
+                "warifuri.core.execution.file_ops._resolve_input_path_safely"
+            ) as mock_resolve:
                 mock_resolve.return_value = (source_file, "Resolved input.txt")
 
                 copy_input_files(task, temp_dir, execution_log, workspace_path=workspace)
@@ -323,5 +323,6 @@ class TestIntegration:
                 assert f"Copied input file: input.txt -> {dest_file}" in execution_log
         finally:
             import shutil
+
             shutil.rmtree(workspace)
             shutil.rmtree(temp_dir)

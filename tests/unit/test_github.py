@@ -4,35 +4,35 @@ import json
 import os
 import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from warifuri.core.github import (
-    get_github_repo,
-    check_github_cli,
-    is_working_directory_clean,
-    create_branch,
-    commit_changes,
-    push_branch,
-    create_pull_request,
-    enable_auto_merge,
-    merge_pull_request,
-    # Add missing imports
-    get_current_branch,
-    ensure_labels_exist,
-    _get_existing_labels,
-    _create_label,
-    create_issue_safe,
-    check_issue_exists,
-    format_task_issue_body,
-    format_project_issue_body,
-    find_parent_issue,
-    _add_parent_issue_section,
-    _add_task_info_section,
     _add_dependencies_section,
     _add_files_sections,
     _add_notes_and_execution_section,
+    _add_parent_issue_section,
+    _add_task_info_section,
+    _create_label,
+    _get_existing_labels,
+    check_github_cli,
+    check_issue_exists,
+    commit_changes,
+    create_branch,
+    create_issue_safe,
+    create_pull_request,
+    enable_auto_merge,
+    ensure_labels_exist,
+    find_parent_issue,
+    format_project_issue_body,
+    format_task_issue_body,
+    # Add missing imports
+    get_current_branch,
+    get_github_repo,
+    is_working_directory_clean,
+    merge_pull_request,
+    push_branch,
 )
-from warifuri.core.types import Task, TaskInstruction, Project, TaskType, TaskStatus
+from warifuri.core.types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestGetGithubRepo:
@@ -190,7 +190,7 @@ class TestCreateBranch:
         # Mock branch list (empty) and checkout success
         mock_run.side_effect = [
             Mock(stdout="", returncode=0),  # git branch --list (empty)
-            Mock(returncode=0)  # git checkout -b
+            Mock(returncode=0),  # git checkout -b
         ]
 
         result = create_branch("feature-branch")
@@ -199,14 +199,9 @@ class TestCreateBranch:
         # Verify git commands were called
         assert mock_run.call_count == 2
         mock_run.assert_any_call(
-            ["git", "branch", "--list", "feature-branch"],
-            capture_output=True,
-            text=True
+            ["git", "branch", "--list", "feature-branch"], capture_output=True, text=True
         )
-        mock_run.assert_any_call(
-            ["git", "checkout", "-b", "feature-branch"],
-            check=True
-        )
+        mock_run.assert_any_call(["git", "checkout", "-b", "feature-branch"], check=True)
 
     @patch("warifuri.core.github.subprocess.run")
     def test_create_branch_existing(self, mock_run: Mock) -> None:
@@ -214,7 +209,7 @@ class TestCreateBranch:
         # Mock branch list (has output) and checkout success
         mock_run.side_effect = [
             Mock(stdout="  feature-branch\n", returncode=0),  # git branch --list (existing)
-            Mock(returncode=0)  # git checkout
+            Mock(returncode=0),  # git checkout
         ]
 
         result = create_branch("feature-branch")
@@ -223,14 +218,9 @@ class TestCreateBranch:
         # Verify git commands were called correctly
         assert mock_run.call_count == 2
         mock_run.assert_any_call(
-            ["git", "branch", "--list", "feature-branch"],
-            capture_output=True,
-            text=True
+            ["git", "branch", "--list", "feature-branch"], capture_output=True, text=True
         )
-        mock_run.assert_any_call(
-            ["git", "checkout", "feature-branch"],
-            check=True
-        )
+        mock_run.assert_any_call(["git", "checkout", "feature-branch"], check=True)
 
     @patch("warifuri.core.github.subprocess.run")
     def test_create_branch_error(self, mock_run: Mock) -> None:
@@ -251,7 +241,7 @@ class TestCommitChanges:
         mock_run.side_effect = [
             Mock(returncode=0),  # git add .
             Mock(returncode=1),  # git diff --cached --exit-code (has changes)
-            Mock(returncode=0, stdout="", stderr="")  # git commit
+            Mock(returncode=0, stdout="", stderr=""),  # git commit
         ]
 
         result = commit_changes("Test commit message")
@@ -278,7 +268,7 @@ class TestCommitChanges:
             Mock(returncode=0),  # git add file1.txt
             Mock(returncode=0),  # git add file2.txt
             Mock(returncode=1),  # git diff --cached --exit-code (has changes)
-            Mock(returncode=0, stdout="", stderr="")  # git commit
+            Mock(returncode=0, stdout="", stderr=""),  # git commit
         ]
 
         result = commit_changes("Test commit", ["file1.txt", "file2.txt"])
@@ -295,7 +285,7 @@ class TestCommitChanges:
         # Mock git add and diff (no changes)
         mock_run.side_effect = [
             Mock(returncode=0),  # git add .
-            Mock(returncode=0)   # git diff --cached --exit-code (no changes)
+            Mock(returncode=0),  # git diff --cached --exit-code (no changes)
         ]
 
         result = commit_changes("Test commit message")
@@ -312,7 +302,7 @@ class TestCommitChanges:
             Mock(returncode=1, stdout="", stderr=""),  # git commit (fails, pre-commit modified)
             Mock(returncode=0),  # git add . (second time)
             Mock(returncode=1),  # git diff --cached --exit-code (still has changes)
-            Mock(returncode=0)   # git commit (success)
+            Mock(returncode=0),  # git commit (success)
         ]
 
         result = commit_changes("Test commit message")
@@ -328,7 +318,7 @@ class TestCommitChanges:
             Mock(returncode=1),  # git diff --cached --exit-code (has changes)
             Mock(returncode=1, stdout="", stderr=""),  # git commit (fails, pre-commit modified)
             Mock(returncode=0),  # git add . (second time)
-            Mock(returncode=0)   # git diff --cached --exit-code (no changes after hook)
+            Mock(returncode=0),  # git diff --cached --exit-code (no changes after hook)
         ]
 
         result = commit_changes("Test commit message")
@@ -350,7 +340,7 @@ class TestCommitChanges:
         mock_run.side_effect = [
             Mock(returncode=0),  # git add .
             Mock(returncode=1),  # git diff --cached --exit-code (has changes)
-            subprocess.CalledProcessError(1, "git")  # git commit fails
+            subprocess.CalledProcessError(1, "git"),  # git commit fails
         ]
 
         result = commit_changes("Test commit message")
@@ -369,8 +359,7 @@ class TestPushBranch:
         assert result is True
 
         mock_run.assert_called_once_with(
-            ["git", "push", "-u", "origin", "feature-branch"],
-            check=True
+            ["git", "push", "-u", "origin", "feature-branch"], check=True
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -393,11 +382,7 @@ class TestCreatePullRequest:
         mock_run.return_value = mock_result
 
         url = create_pull_request(
-            title="Test PR",
-            body="Test body",
-            base_branch="main",
-            draft=False,
-            auto_merge=False
+            title="Test PR", body="Test body", base_branch="main", draft=False, auto_merge=False
         )
 
         assert url == "https://github.com/user/repo/pull/123"
@@ -409,11 +394,7 @@ class TestCreatePullRequest:
         mock_result.stdout = "https://github.com/user/repo/pull/123\n"
         mock_run.return_value = mock_result
 
-        create_pull_request(
-            title="Test PR",
-            body="Test body",
-            draft=True
-        )
+        create_pull_request(title="Test PR", body="Test body", draft=True)
 
         # Verify --draft flag was included
         args = mock_run.call_args[0][0]
@@ -421,19 +402,16 @@ class TestCreatePullRequest:
 
     @patch("warifuri.core.github.enable_auto_merge")
     @patch("warifuri.core.github.subprocess.run")
-    def test_create_pull_request_with_auto_merge(self, mock_run: Mock, mock_auto_merge: Mock) -> None:
+    def test_create_pull_request_with_auto_merge(
+        self, mock_run: Mock, mock_auto_merge: Mock
+    ) -> None:
         """Test creating pull request with auto-merge enabled."""
         mock_result = Mock()
         mock_result.stdout = "https://github.com/user/repo/pull/123\n"
         mock_run.return_value = mock_result
         mock_auto_merge.return_value = True
 
-        url = create_pull_request(
-            title="Test PR",
-            body="Test body",
-            auto_merge=True,
-            draft=False
-        )
+        url = create_pull_request(title="Test PR", body="Test body", auto_merge=True, draft=False)
 
         assert url == "https://github.com/user/repo/pull/123"
         mock_auto_merge.assert_called_once_with("https://github.com/user/repo/pull/123")
@@ -460,7 +438,7 @@ class TestEnableAutoMerge:
 
         mock_run.assert_called_once_with(
             ["gh", "pr", "merge", "https://github.com/user/repo/pull/123", "--auto", "--squash"],
-            check=True
+            check=True,
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -484,8 +462,15 @@ class TestMergePullRequest:
         assert result is True
 
         mock_run.assert_called_once_with(
-            ["gh", "pr", "merge", "https://github.com/user/repo/pull/123", "--squash", "--delete-branch"],
-            check=True
+            [
+                "gh",
+                "pr",
+                "merge",
+                "https://github.com/user/repo/pull/123",
+                "--squash",
+                "--delete-branch",
+            ],
+            check=True,
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -526,10 +511,7 @@ class TestGetCurrentBranch:
         assert branch == "feature-branch"
 
         mock_run.assert_called_once_with(
-            ["git", "branch", "--show-current"],
-            capture_output=True,
-            text=True,
-            check=True
+            ["git", "branch", "--show-current"], capture_output=True, text=True, check=True
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -553,7 +535,9 @@ class TestEnsureLabelsExist:
 
     @patch("warifuri.core.github._create_label")
     @patch("warifuri.core.github._get_existing_labels")
-    def test_ensure_labels_exist_all_existing(self, mock_get_labels: Mock, mock_create: Mock) -> None:
+    def test_ensure_labels_exist_all_existing(
+        self, mock_get_labels: Mock, mock_create: Mock
+    ) -> None:
         """Test when all labels already exist."""
         mock_get_labels.return_value = {"bug", "feature", "enhancement"}
 
@@ -565,7 +549,9 @@ class TestEnsureLabelsExist:
 
     @patch("warifuri.core.github._create_label")
     @patch("warifuri.core.github._get_existing_labels")
-    def test_ensure_labels_exist_some_missing(self, mock_get_labels: Mock, mock_create: Mock) -> None:
+    def test_ensure_labels_exist_some_missing(
+        self, mock_get_labels: Mock, mock_create: Mock
+    ) -> None:
         """Test when some labels need to be created."""
         mock_get_labels.return_value = {"bug"}
         mock_create.side_effect = [True, False]  # First creation succeeds, second fails
@@ -586,11 +572,9 @@ class TestGetExistingLabels:
     def test_get_existing_labels_success(self, mock_run: Mock) -> None:
         """Test successful label retrieval."""
         mock_result = Mock()
-        mock_result.stdout = json.dumps([
-            {"name": "bug"},
-            {"name": "feature"},
-            {"name": "enhancement"}
-        ])
+        mock_result.stdout = json.dumps(
+            [{"name": "bug"}, {"name": "feature"}, {"name": "enhancement"}]
+        )
         mock_run.return_value = mock_result
 
         labels = _get_existing_labels("user/repo")
@@ -600,7 +584,7 @@ class TestGetExistingLabels:
             ["gh", "label", "list", "--repo", "user/repo", "--json", "name"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -637,14 +621,20 @@ class TestCreateLabel:
 
         mock_run.assert_called_once_with(
             [
-                "gh", "label", "create", "new-label",
-                "--color", "0969da",
-                "--description", "Auto-created by warifuri for new-label",
-                "--repo", "user/repo"
+                "gh",
+                "label",
+                "create",
+                "new-label",
+                "--color",
+                "0969da",
+                "--description",
+                "Auto-created by warifuri for new-label",
+                "--repo",
+                "user/repo",
             ],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
 
     @patch("warifuri.core.github.subprocess.run")
@@ -673,7 +663,9 @@ class TestCreateIssueSafe:
     @patch("warifuri.core.github.ensure_labels_exist")
     @patch("warifuri.core.github.check_issue_exists")
     @patch("warifuri.core.github.subprocess.run")
-    def test_create_issue_safe_success(self, mock_run: Mock, mock_check: Mock, mock_labels: Mock) -> None:
+    def test_create_issue_safe_success(
+        self, mock_run: Mock, mock_check: Mock, mock_labels: Mock
+    ) -> None:
         """Test successful issue creation."""
         mock_check.return_value = False
         mock_labels.return_value = {"bug": True, "feature": True}
@@ -687,7 +679,7 @@ class TestCreateIssueSafe:
             labels=["bug", "feature"],
             assignee="testuser",
             repo="user/repo",
-            dry_run=False
+            dry_run=False,
         )
 
         assert success is True
@@ -703,7 +695,7 @@ class TestCreateIssueSafe:
             labels=["bug", "feature"],
             assignee="testuser",
             repo="user/repo",
-            dry_run=True
+            dry_run=True,
         )
 
         assert success is True
@@ -714,11 +706,7 @@ class TestCreateIssueSafe:
         """Test when issue already exists."""
         mock_check.return_value = True
 
-        success, url = create_issue_safe(
-            title="Existing Issue",
-            body="Test body",
-            repo="user/repo"
-        )
+        success, url = create_issue_safe(title="Existing Issue", body="Test body", repo="user/repo")
 
         assert success is False
         assert url is None
@@ -726,7 +714,9 @@ class TestCreateIssueSafe:
     @patch("warifuri.core.github.ensure_labels_exist")
     @patch("warifuri.core.github.check_issue_exists")
     @patch("warifuri.core.github.subprocess.run")
-    def test_create_issue_safe_partial_label_failure(self, mock_run: Mock, mock_check: Mock, mock_labels: Mock) -> None:
+    def test_create_issue_safe_partial_label_failure(
+        self, mock_run: Mock, mock_check: Mock, mock_labels: Mock
+    ) -> None:
         """Test when some labels cannot be created."""
         mock_check.return_value = False
         mock_labels.return_value = {"bug": True, "missing": False}
@@ -735,10 +725,7 @@ class TestCreateIssueSafe:
         mock_run.return_value = mock_result
 
         success, url = create_issue_safe(
-            title="Test Issue",
-            body="Test body",
-            labels=["bug", "missing"],
-            repo="user/repo"
+            title="Test Issue", body="Test body", labels=["bug", "missing"], repo="user/repo"
         )
 
         assert success is True
@@ -752,17 +739,15 @@ class TestCreateIssueSafe:
     @patch("warifuri.core.github.ensure_labels_exist")
     @patch("warifuri.core.github.check_issue_exists")
     @patch("warifuri.core.github.subprocess.run")
-    def test_create_issue_safe_command_error(self, mock_run: Mock, mock_check: Mock, mock_labels: Mock) -> None:
+    def test_create_issue_safe_command_error(
+        self, mock_run: Mock, mock_check: Mock, mock_labels: Mock
+    ) -> None:
         """Test when gh command fails."""
         mock_check.return_value = False
         mock_labels.return_value = {}
         mock_run.side_effect = subprocess.CalledProcessError(1, "gh")
 
-        success, url = create_issue_safe(
-            title="Test Issue",
-            body="Test body",
-            repo="user/repo"
-        )
+        success, url = create_issue_safe(title="Test Issue", body="Test body", repo="user/repo")
 
         assert success is False
         assert url is None
@@ -775,10 +760,7 @@ class TestCheckIssueExists:
     def test_check_issue_exists_found(self, mock_run: Mock) -> None:
         """Test when issue with exact title exists."""
         mock_result = Mock()
-        mock_result.stdout = json.dumps([
-            {"title": "Test Issue"},
-            {"title": "Another Issue"}
-        ])
+        mock_result.stdout = json.dumps([{"title": "Test Issue"}, {"title": "Another Issue"}])
         mock_run.return_value = mock_result
 
         exists = check_issue_exists("Test Issue", "user/repo")
@@ -788,10 +770,7 @@ class TestCheckIssueExists:
     def test_check_issue_exists_not_found(self, mock_run: Mock) -> None:
         """Test when issue with title doesn't exist."""
         mock_result = Mock()
-        mock_result.stdout = json.dumps([
-            {"title": "Different Issue"},
-            {"title": "Another Issue"}
-        ])
+        mock_result.stdout = json.dumps([{"title": "Different Issue"}, {"title": "Another Issue"}])
         mock_run.return_value = mock_result
 
         exists = check_issue_exists("Test Issue", "user/repo")
@@ -829,15 +808,17 @@ class TestCheckIssueExists:
 class TestFormatTaskIssueBody:
     """Test format_task_issue_body function."""
 
-    def create_mock_task(self,
-                        name: str = "test-task",
-                        project: str = "test-project",
-                        description: str = "Test description",
-                        task_type: TaskType = TaskType.MACHINE,
-                        dependencies: list = None,
-                        inputs: list = None,
-                        outputs: list = None,
-                        note: str = "") -> Task:
+    def create_mock_task(
+        self,
+        name: str = "test-task",
+        project: str = "test-project",
+        description: str = "Test description",
+        task_type: TaskType = TaskType.MACHINE,
+        dependencies: list = None,
+        inputs: list = None,
+        outputs: list = None,
+        note: str = "",
+    ) -> Task:
         """Create a mock task for testing."""
         instruction = TaskInstruction(
             name=name,
@@ -845,7 +826,7 @@ class TestFormatTaskIssueBody:
             dependencies=dependencies or [],
             inputs=inputs or [],
             outputs=outputs or [],
-            note=note
+            note=note,
         )
 
         task = Task(
@@ -854,7 +835,7 @@ class TestFormatTaskIssueBody:
             path=Path(f"/test/path/{project}/{name}"),
             instruction=instruction,
             task_type=task_type,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         return task
@@ -862,9 +843,7 @@ class TestFormatTaskIssueBody:
     def test_format_task_issue_body_basic(self) -> None:
         """Test basic task issue body formatting."""
         task = self.create_mock_task(
-            name="test-task",
-            project="test-project",
-            description="A test task description"
+            name="test-task", project="test-project", description="A test task description"
         )
 
         body = format_task_issue_body(task)
@@ -901,9 +880,7 @@ class TestFormatTaskIssueBody:
 
     def test_format_task_issue_body_with_dependencies(self) -> None:
         """Test task issue body with dependencies."""
-        task = self.create_mock_task(
-            dependencies=["dep1", "dep2", "dep3"]
-        )
+        task = self.create_mock_task(dependencies=["dep1", "dep2", "dep3"])
 
         body = format_task_issue_body(task)
 
@@ -915,8 +892,7 @@ class TestFormatTaskIssueBody:
     def test_format_task_issue_body_with_files(self) -> None:
         """Test task issue body with input and output files."""
         task = self.create_mock_task(
-            inputs=["input1.txt", "input2.json"],
-            outputs=["output1.txt", "result.json"]
+            inputs=["input1.txt", "input2.json"], outputs=["output1.txt", "result.json"]
         )
 
         body = format_task_issue_body(task)
@@ -930,9 +906,7 @@ class TestFormatTaskIssueBody:
 
     def test_format_task_issue_body_with_note(self) -> None:
         """Test task issue body with note."""
-        task = self.create_mock_task(
-            note="This is an important note about the task."
-        )
+        task = self.create_mock_task(note="This is an important note about the task.")
 
         body = format_task_issue_body(task)
 
@@ -943,7 +917,7 @@ class TestFormatTaskIssueBody:
         """Test task issue body when task has no project attribute."""
         task = self.create_mock_task(name="standalone-task")
         # Remove the project attribute to simulate a task without it
-        delattr(task, 'project')
+        delattr(task, "project")
 
         body = format_task_issue_body(task)
 
@@ -978,7 +952,7 @@ class TestFormatProjectIssueBody:
         tasks = [
             self.create_mock_task("task1", TaskStatus.COMPLETED, "First task"),
             self.create_mock_task("task2", TaskStatus.READY, "Second task"),
-            self.create_mock_task("task3", TaskStatus.PENDING, "Third task")
+            self.create_mock_task("task3", TaskStatus.PENDING, "Third task"),
         ]
 
         project = self.create_mock_project("test-project", tasks)
@@ -1023,12 +997,9 @@ class TestFindParentIssue:
     def test_find_parent_issue_found(self, mock_run: Mock) -> None:
         """Test when parent issue is found."""
         mock_result = Mock()
-        mock_result.stdout = json.dumps([
-            {
-                "title": "[PROJECT] test-project",
-                "url": "https://github.com/user/repo/issues/123"
-            }
-        ])
+        mock_result.stdout = json.dumps(
+            [{"title": "[PROJECT] test-project", "url": "https://github.com/user/repo/issues/123"}]
+        )
         mock_run.return_value = mock_result
 
         url = find_parent_issue("test-project", "user/repo")
@@ -1036,25 +1007,33 @@ class TestFindParentIssue:
 
         mock_run.assert_called_once_with(
             [
-                "gh", "issue", "list", "--repo", "user/repo",
-                "--search", '"[PROJECT] test-project" in:title',
-                "--json", "title,url"
+                "gh",
+                "issue",
+                "list",
+                "--repo",
+                "user/repo",
+                "--search",
+                '"[PROJECT] test-project" in:title',
+                "--json",
+                "title,url",
             ],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
 
     @patch("warifuri.core.github.subprocess.run")
     def test_find_parent_issue_not_found(self, mock_run: Mock) -> None:
         """Test when parent issue is not found."""
         mock_result = Mock()
-        mock_result.stdout = json.dumps([
-            {
-                "title": "[PROJECT] different-project",
-                "url": "https://github.com/user/repo/issues/456"
-            }
-        ])
+        mock_result.stdout = json.dumps(
+            [
+                {
+                    "title": "[PROJECT] different-project",
+                    "url": "https://github.com/user/repo/issues/456",
+                }
+            ]
+        )
         mock_run.return_value = mock_result
 
         url = find_parent_issue("test-project", "user/repo")
@@ -1102,7 +1081,7 @@ class TestPrivateHelperFunctions:
             "dependencies": [],
             "inputs": [],
             "outputs": [],
-            "note": ""
+            "note": "",
         }
         defaults.update(kwargs)
 
@@ -1112,7 +1091,7 @@ class TestPrivateHelperFunctions:
             dependencies=defaults["dependencies"],
             inputs=defaults["inputs"],
             outputs=defaults["outputs"],
-            note=defaults["note"]
+            note=defaults["note"],
         )
 
         task = Task(
@@ -1121,7 +1100,7 @@ class TestPrivateHelperFunctions:
             path=Path(f"/test/path/{defaults['project']}/{defaults['name']}"),
             instruction=instruction,
             task_type=defaults["task_type"],
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         return task
@@ -1155,11 +1134,12 @@ class TestPrivateHelperFunctions:
         """Test _add_task_info_section."""
         body_lines = []
         task = self.create_mock_task(
-            description="A detailed task description",
-            task_type=TaskType.AI
+            description="A detailed task description", task_type=TaskType.AI
         )
         # Mock the is_completed property
-        with patch.object(type(task), 'is_completed', new_callable=lambda: property(lambda self: True)):
+        with patch.object(
+            type(task), "is_completed", new_callable=lambda: property(lambda self: True)
+        ):
             _add_task_info_section(body_lines, task)
 
         assert "## Description" in body_lines
@@ -1191,10 +1171,7 @@ class TestPrivateHelperFunctions:
     def test_add_files_sections(self) -> None:
         """Test _add_files_sections."""
         body_lines = []
-        task = self.create_mock_task(
-            inputs=["input1.txt", "input2.json"],
-            outputs=["output.txt"]
-        )
+        task = self.create_mock_task(inputs=["input1.txt", "input2.json"], outputs=["output.txt"])
 
         _add_files_sections(body_lines, task)
 

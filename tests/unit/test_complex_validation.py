@@ -3,14 +3,16 @@ Test complex task validation
 """
 
 import json
-import yaml
 from pathlib import Path
+
 import pytest
+import yaml
+
 
 def test_complex_task_schema_validation():
     """複雑タスクのスキーマ検証"""
     try:
-        from jsonschema import validate, ValidationError
+        from jsonschema import ValidationError, validate
     except ImportError:
         pytest.skip("jsonschema not available")
 
@@ -71,7 +73,7 @@ def test_all_data_files_loadable():
             with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            if file_path.suffix.lower() == '.json':
+            if file_path.suffix.lower() == ".json":
                 json.loads(content)
             elif "error_cases" in str(file_path) or "---" in content:
                 # Handle multi-document YAML files and error cases

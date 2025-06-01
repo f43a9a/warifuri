@@ -1,16 +1,18 @@
 """Unit tests for machine task execution."""
 
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
+
+import pytest
+
+from warifuri.core.execution.errors import ExecutionError
 from warifuri.core.execution.machine import (
-    execute_machine_task,
     _build_execution_command,
     _find_execution_script,
+    execute_machine_task,
 )
-from warifuri.core.execution.errors import ExecutionError
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 
 
 def test_build_execution_command_python():
@@ -47,10 +49,10 @@ def sample_task():
             description="Test task",
             dependencies=[],
             inputs=["input.txt"],
-            outputs=["output.txt"]
+            outputs=["output.txt"],
         ),
         task_type=TaskType.MACHINE,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
 
@@ -60,17 +62,22 @@ def test_execute_machine_task_dry_run(sample_task):
     assert result is True
 
 
-@patch('warifuri.core.execution.machine.create_temp_dir')
-@patch('warifuri.core.execution.machine.safe_rmtree')
-@patch('warifuri.core.execution.machine.copy_directory_contents')
-@patch('warifuri.core.execution.machine.copy_input_files')
-@patch('warifuri.core.execution.machine.validate_task_inputs')
-@patch('warifuri.core.execution.machine.validate_task_outputs')
-@patch('warifuri.core.execution.machine.setup_task_environment')
+@patch("warifuri.core.execution.machine.create_temp_dir")
+@patch("warifuri.core.execution.machine.safe_rmtree")
+@patch("warifuri.core.execution.machine.copy_directory_contents")
+@patch("warifuri.core.execution.machine.copy_input_files")
+@patch("warifuri.core.execution.machine.validate_task_inputs")
+@patch("warifuri.core.execution.machine.validate_task_outputs")
+@patch("warifuri.core.execution.machine.setup_task_environment")
 def test_execute_machine_task_no_script(
-    mock_setup_env, mock_validate_outputs, mock_validate_inputs,
-    mock_copy_inputs, mock_copy_dir, mock_rmtree, mock_create_temp,
-    sample_task
+    mock_setup_env,
+    mock_validate_outputs,
+    mock_validate_inputs,
+    mock_copy_inputs,
+    mock_copy_dir,
+    mock_rmtree,
+    mock_create_temp,
+    sample_task,
 ):
     """Test execute_machine_task when no execution script is found."""
     temp_dir = Path("/tmp/temp_dir")
@@ -78,25 +85,31 @@ def test_execute_machine_task_no_script(
     mock_validate_inputs.return_value = True
 
     # Mock that no run.sh or run.py exists
-    with patch('pathlib.Path.exists', return_value=False):
+    with patch("pathlib.Path.exists", return_value=False):
         result = execute_machine_task(sample_task, dry_run=False)
         assert result is False
 
     mock_rmtree.assert_called_once_with(temp_dir)
 
 
-@patch('warifuri.core.execution.machine.create_temp_dir')
-@patch('warifuri.core.execution.machine.safe_rmtree')
-@patch('warifuri.core.execution.machine.copy_directory_contents')
-@patch('warifuri.core.execution.machine.copy_input_files')
-@patch('warifuri.core.execution.machine.validate_task_inputs')
-@patch('warifuri.core.execution.machine.validate_task_outputs')
-@patch('warifuri.core.execution.machine.setup_task_environment')
-@patch('warifuri.core.execution.machine.subprocess.run')
+@patch("warifuri.core.execution.machine.create_temp_dir")
+@patch("warifuri.core.execution.machine.safe_rmtree")
+@patch("warifuri.core.execution.machine.copy_directory_contents")
+@patch("warifuri.core.execution.machine.copy_input_files")
+@patch("warifuri.core.execution.machine.validate_task_inputs")
+@patch("warifuri.core.execution.machine.validate_task_outputs")
+@patch("warifuri.core.execution.machine.setup_task_environment")
+@patch("warifuri.core.execution.machine.subprocess.run")
 def test_execute_machine_task_script_failure(
-    mock_subprocess, mock_setup_env, mock_validate_outputs, mock_validate_inputs,
-    mock_copy_inputs, mock_copy_dir, mock_rmtree, mock_create_temp,
-    sample_task
+    mock_subprocess,
+    mock_setup_env,
+    mock_validate_outputs,
+    mock_validate_inputs,
+    mock_copy_inputs,
+    mock_copy_dir,
+    mock_rmtree,
+    mock_create_temp,
+    sample_task,
 ):
     """Test execute_machine_task when script execution fails."""
     temp_dir = Path("/tmp/temp_dir")
@@ -104,7 +117,7 @@ def test_execute_machine_task_script_failure(
     mock_validate_inputs.return_value = True
 
     # Mock run.sh exists
-    with patch('pathlib.Path.exists') as mock_exists:
+    with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.side_effect = lambda path: str(path).endswith("run.sh")
 
         # Mock subprocess failure
@@ -114,7 +127,7 @@ def test_execute_machine_task_script_failure(
         mock_result.stderr = "error message"
         mock_subprocess.return_value = mock_result
 
-        with patch('warifuri.core.execution.core.log_failure') as mock_log_failure:
+        with patch("warifuri.core.execution.core.log_failure") as mock_log_failure:
             result = execute_machine_task(sample_task, dry_run=False)
 
             assert result is False
@@ -123,18 +136,24 @@ def test_execute_machine_task_script_failure(
     mock_rmtree.assert_called_once_with(temp_dir)
 
 
-@patch('warifuri.core.execution.machine.create_temp_dir')
-@patch('warifuri.core.execution.machine.safe_rmtree')
-@patch('warifuri.core.execution.machine.copy_directory_contents')
-@patch('warifuri.core.execution.machine.copy_input_files')
-@patch('warifuri.core.execution.machine.validate_task_inputs')
-@patch('warifuri.core.execution.machine.validate_task_outputs')
-@patch('warifuri.core.execution.machine.setup_task_environment')
-@patch('warifuri.core.execution.machine.subprocess.run')
+@patch("warifuri.core.execution.machine.create_temp_dir")
+@patch("warifuri.core.execution.machine.safe_rmtree")
+@patch("warifuri.core.execution.machine.copy_directory_contents")
+@patch("warifuri.core.execution.machine.copy_input_files")
+@patch("warifuri.core.execution.machine.validate_task_inputs")
+@patch("warifuri.core.execution.machine.validate_task_outputs")
+@patch("warifuri.core.execution.machine.setup_task_environment")
+@patch("warifuri.core.execution.machine.subprocess.run")
 def test_execute_machine_task_success(
-    mock_subprocess, mock_setup_env, mock_validate_outputs, mock_validate_inputs,
-    mock_copy_inputs, mock_copy_dir, mock_rmtree, mock_create_temp,
-    sample_task
+    mock_subprocess,
+    mock_setup_env,
+    mock_validate_outputs,
+    mock_validate_inputs,
+    mock_copy_inputs,
+    mock_copy_dir,
+    mock_rmtree,
+    mock_create_temp,
+    sample_task,
 ):
     """Test successful machine task execution."""
     temp_dir = Path("/tmp/temp_dir")
@@ -143,7 +162,7 @@ def test_execute_machine_task_success(
     mock_validate_outputs.return_value = True
 
     # Mock run.sh exists
-    with patch('pathlib.Path.exists') as mock_exists:
+    with patch("pathlib.Path.exists") as mock_exists:
         mock_exists.return_value = True
 
         # Mock successful subprocess
@@ -153,10 +172,11 @@ def test_execute_machine_task_success(
         mock_result.stderr = ""
         mock_subprocess.return_value = mock_result
 
-        with patch('warifuri.core.execution.core.copy_outputs_back') as mock_copy_back, \
-             patch('warifuri.core.execution.core.save_execution_log') as mock_save_log, \
-             patch('warifuri.core.execution.core.create_done_file') as mock_create_done:
-
+        with (
+            patch("warifuri.core.execution.core.copy_outputs_back") as mock_copy_back,
+            patch("warifuri.core.execution.core.save_execution_log") as mock_save_log,
+            patch("warifuri.core.execution.core.create_done_file") as mock_create_done,
+        ):
             result = execute_machine_task(sample_task, dry_run=False)
 
             assert result is True
@@ -227,7 +247,7 @@ def test_build_execution_command_unsupported():
     assert "ERROR: Unsupported script type: /tmp/run.unknown" in execution_log
 
 
-@patch('warifuri.core.execution.machine.copy_input_files')
+@patch("warifuri.core.execution.machine.copy_input_files")
 def test_copy_input_files_exception_handling(mock_copy_inputs, sample_task):
     """Test exception handling in copy_input_files wrapper."""
     from warifuri.core.execution.machine import execute_machine_task
@@ -237,28 +257,30 @@ def test_copy_input_files_exception_handling(mock_copy_inputs, sample_task):
     # Mock copy_input_files to raise an exception
     mock_copy_inputs.side_effect = Exception("Copy failed")
 
-    with patch('warifuri.core.execution.machine.create_temp_dir', return_value=temp_dir), \
-         patch('warifuri.core.execution.machine.copy_directory_contents'), \
-         patch('warifuri.core.execution.machine.validate_task_inputs', return_value=True), \
-         patch('warifuri.core.execution.machine.safe_rmtree'), \
-         patch('warifuri.core.execution.core.log_failure') as mock_log_failure:
-
+    with (
+        patch("warifuri.core.execution.machine.create_temp_dir", return_value=temp_dir),
+        patch("warifuri.core.execution.machine.copy_directory_contents"),
+        patch("warifuri.core.execution.machine.validate_task_inputs", return_value=True),
+        patch("warifuri.core.execution.machine.safe_rmtree"),
+        patch("warifuri.core.execution.core.log_failure") as mock_log_failure,
+    ):
         result = execute_machine_task(sample_task, dry_run=False)
         assert result is False
         mock_log_failure.assert_called_once()
 
 
-@patch('warifuri.core.execution.machine.validate_task_inputs')
+@patch("warifuri.core.execution.machine.validate_task_inputs")
 def test_input_validation_failure(mock_validate_inputs, sample_task):
     """Test behavior when input validation fails."""
     mock_validate_inputs.return_value = False
 
-    with patch('warifuri.core.execution.machine.create_temp_dir') as mock_create_temp, \
-         patch('warifuri.core.execution.machine.copy_directory_contents'), \
-         patch('warifuri.core.execution.machine.copy_input_files'), \
-         patch('warifuri.core.execution.machine.safe_rmtree') as mock_rmtree, \
-         patch('warifuri.core.execution.core.log_failure') as mock_log_failure:
-
+    with (
+        patch("warifuri.core.execution.machine.create_temp_dir") as mock_create_temp,
+        patch("warifuri.core.execution.machine.copy_directory_contents"),
+        patch("warifuri.core.execution.machine.copy_input_files"),
+        patch("warifuri.core.execution.machine.safe_rmtree") as mock_rmtree,
+        patch("warifuri.core.execution.core.log_failure") as mock_log_failure,
+    ):
         temp_dir = Path("/tmp/temp_dir")
         mock_create_temp.return_value = temp_dir
 
@@ -269,21 +291,22 @@ def test_input_validation_failure(mock_validate_inputs, sample_task):
         mock_rmtree.assert_called_once_with(temp_dir)
 
 
-@patch('warifuri.core.execution.machine.validate_task_outputs')
+@patch("warifuri.core.execution.machine.validate_task_outputs")
 def test_output_validation_failure(mock_validate_outputs, sample_task):
     """Test behavior when output validation fails."""
     temp_dir = Path("/tmp/temp_dir")
 
-    with patch('warifuri.core.execution.machine.create_temp_dir', return_value=temp_dir), \
-         patch('warifuri.core.execution.machine.copy_directory_contents'), \
-         patch('warifuri.core.execution.machine.copy_input_files'), \
-         patch('warifuri.core.execution.machine.validate_task_inputs', return_value=True), \
-         patch('warifuri.core.execution.machine.setup_task_environment'), \
-         patch('warifuri.core.execution.machine.subprocess.run') as mock_subprocess, \
-         patch('warifuri.core.execution.machine.safe_rmtree'), \
-         patch('warifuri.core.execution.core.copy_outputs_back'), \
-         patch('warifuri.core.execution.core.log_failure') as mock_log_failure:
-
+    with (
+        patch("warifuri.core.execution.machine.create_temp_dir", return_value=temp_dir),
+        patch("warifuri.core.execution.machine.copy_directory_contents"),
+        patch("warifuri.core.execution.machine.copy_input_files"),
+        patch("warifuri.core.execution.machine.validate_task_inputs", return_value=True),
+        patch("warifuri.core.execution.machine.setup_task_environment"),
+        patch("warifuri.core.execution.machine.subprocess.run") as mock_subprocess,
+        patch("warifuri.core.execution.machine.safe_rmtree"),
+        patch("warifuri.core.execution.core.copy_outputs_back"),
+        patch("warifuri.core.execution.core.log_failure") as mock_log_failure,
+    ):
         # Mock successful script execution
         mock_result = Mock()
         mock_result.returncode = 0
@@ -294,7 +317,7 @@ def test_output_validation_failure(mock_validate_outputs, sample_task):
         # Mock output validation failure
         mock_validate_outputs.return_value = False
 
-        with patch('pathlib.Path.exists') as mock_exists:
+        with patch("pathlib.Path.exists") as mock_exists:
             mock_exists.side_effect = lambda path: str(path).endswith("run.sh")
 
             result = execute_machine_task(sample_task, dry_run=False)

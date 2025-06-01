@@ -24,28 +24,34 @@ class TestRunAutoExecution:
         project_a = projects_dir / "project-a"
         task_a1 = project_a / "ready-task"
         task_a1.mkdir(parents=True)
-        safe_write_file(task_a1 / "instruction.yaml", """name: ready-task
+        safe_write_file(
+            task_a1 / "instruction.yaml",
+            """name: ready-task
 task_type: machine
 description: Ready task with no dependencies
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [result.txt]
-""")
+""",
+        )
         safe_write_file(task_a1 / "run.sh", "#!/bin/bash\necho 'done' > result.txt")
         (task_a1 / "run.sh").chmod(0o755)
 
         # Project A: Blocked task (has dependency)
         task_a2 = project_a / "blocked-task"
         task_a2.mkdir(parents=True)
-        safe_write_file(task_a2 / "instruction.yaml", """name: blocked-task
+        safe_write_file(
+            task_a2 / "instruction.yaml",
+            """name: blocked-task
 task_type: machine
 description: Blocked task with dependency
 auto_merge: false
 dependencies: [ready-task]
 inputs: [../ready-task/result.txt]
 outputs: [final.txt]
-""")
+""",
+        )
         safe_write_file(task_a2 / "run.sh", "#!/bin/bash\ncp ../ready-task/result.txt final.txt")
         (task_a2 / "run.sh").chmod(0o755)
 
@@ -53,14 +59,17 @@ outputs: [final.txt]
         project_b = projects_dir / "project-b"
         task_b1 = project_b / "another-ready"
         task_b1.mkdir(parents=True)
-        safe_write_file(task_b1 / "instruction.yaml", """name: another-ready
+        safe_write_file(
+            task_b1 / "instruction.yaml",
+            """name: another-ready
 task_type: human
 description: Another ready task
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: []
-""")
+""",
+        )
 
         return temp_workspace
 
@@ -73,14 +82,17 @@ outputs: []
         project = projects_dir / "completed-project"
         task = project / "completed-task"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: completed-task
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: completed-task
 task_type: machine
 description: Already completed task
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [output.txt]
-""")
+""",
+        )
         safe_write_file(task / "run.sh", "#!/bin/bash\necho 'output' > output.txt")
         (task / "run.sh").chmod(0o755)
 
@@ -93,10 +105,7 @@ outputs: [output.txt]
         """Test auto-selection of ready task without arguments."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--dry-run"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run", "--dry-run"])
 
         assert result.exit_code == 0
         assert "Executing task:" in result.output
@@ -108,10 +117,9 @@ outputs: [output.txt]
         """Test running ready task from specific project."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-a", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "project-a", "--dry-run"]
+        )
 
         assert result.exit_code == 0
         assert "Executing task: project-a/ready-task" in result.output
@@ -121,10 +129,9 @@ outputs: [output.txt]
         """Test running specific task."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-a/ready-task", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "project-a/ready-task", "--dry-run"]
+        )
 
         assert result.exit_code == 0
         assert "Executing task: project-a/ready-task" in result.output
@@ -135,10 +142,7 @@ outputs: [output.txt]
         """Test behavior when no ready tasks are available."""
         workspace = str(workspace_with_completed_task)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run"])
 
         assert result.exit_code == 0
         assert "No ready tasks found." in result.output
@@ -147,10 +151,7 @@ outputs: [output.txt]
         """Test running non-existent task."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "nonexistent/task"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run", "--task", "nonexistent/task"])
 
         assert result.exit_code == 0
         assert "Error: Task 'nonexistent/task' not found." in result.output
@@ -163,19 +164,19 @@ outputs: [output.txt]
         project_c = workspace_with_ready_tasks / "projects" / "project-c"
         task_c1 = project_c / "blocked-only"
         task_c1.mkdir(parents=True)
-        safe_write_file(task_c1 / "instruction.yaml", """name: blocked-only
+        safe_write_file(
+            task_c1 / "instruction.yaml",
+            """name: blocked-only
 task_type: machine
 description: Task blocked by dependency
 auto_merge: false
 dependencies: [nonexistent-task]
 inputs: []
 outputs: []
-""")
+""",
+        )
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-c"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run", "--task", "project-c"])
 
         assert result.exit_code == 0
         assert "No ready tasks found in project 'project-c'." in result.output
@@ -184,10 +185,9 @@ outputs: []
         """Test actual task execution (not dry run)."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-a/ready-task"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "project-a/ready-task"]
+        )
 
         assert result.exit_code == 0
         assert "Executing task: project-a/ready-task" in result.output
@@ -198,7 +198,9 @@ outputs: []
         assert done_file.exists()
 
         # Verify output was created
-        output_file = workspace_with_ready_tasks / "projects" / "project-a" / "ready-task" / "result.txt"
+        output_file = (
+            workspace_with_ready_tasks / "projects" / "project-a" / "ready-task" / "result.txt"
+        )
         assert output_file.exists()
         assert output_file.read_text().strip() == "done"
 
@@ -206,10 +208,18 @@ outputs: []
         """Test force execution of blocked task."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-a/blocked-task", "--force", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                workspace,
+                "run",
+                "--task",
+                "project-a/blocked-task",
+                "--force",
+                "--dry-run",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Executing task: project-a/blocked-task" in result.output
@@ -219,10 +229,7 @@ outputs: []
         """Test run command with empty workspace."""
         workspace = str(temp_workspace)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run"
-        ])
+        result = runner.invoke(cli, ["--workspace", workspace, "run"])
 
         assert result.exit_code == 0
         assert "No projects found in workspace." in result.output
@@ -235,25 +242,30 @@ outputs: []
         project = workspace_with_ready_tasks / "projects" / "env-test"
         task = project / "env-check"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: env-check
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: env-check
 task_type: machine
 description: Check environment variables
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [env.txt]
-""")
-        safe_write_file(task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task / "run.sh",
+            """#!/bin/bash
 echo "PROJECT_NAME: $WARIFURI_PROJECT_NAME" > env.txt
 echo "TASK_NAME: $WARIFURI_TASK_NAME" >> env.txt
 echo "WORKSPACE_DIR: $WARIFURI_WORKSPACE_DIR" >> env.txt
-""")
+""",
+        )
         (task / "run.sh").chmod(0o755)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "env-test/env-check"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "env-test/env-check"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Task completed" in result.output
@@ -274,23 +286,28 @@ echo "WORKSPACE_DIR: $WARIFURI_WORKSPACE_DIR" >> env.txt
         project = workspace_with_ready_tasks / "projects" / "ai-project"
         task = project / "ai-task"
         task.mkdir(parents=True)
-        safe_write_file(task / "instruction.yaml", """name: ai-task
+        safe_write_file(
+            task / "instruction.yaml",
+            """name: ai-task
 task_type: ai
 description: AI task for testing
 auto_merge: false
 dependencies: []
 inputs: []
 outputs: [response.md]
-""")
-        safe_write_file(task / "prompt.yaml", """model: gpt-3.5-turbo
+""",
+        )
+        safe_write_file(
+            task / "prompt.yaml",
+            """model: gpt-3.5-turbo
 temperature: 0.7
 system_prompt: "You are a helpful assistant."
-""")
+""",
+        )
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "ai-project/ai-task", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "ai-project/ai-task", "--dry-run"]
+        )
 
         assert result.exit_code == 0
         assert "Executing task: ai-project/ai-task" in result.output
@@ -301,10 +318,9 @@ system_prompt: "You are a helpful assistant."
         """Test human task execution."""
         workspace = str(workspace_with_ready_tasks)
 
-        result = runner.invoke(cli, [
-            "--workspace", workspace,
-            "run", "--task", "project-b/another-ready"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", workspace, "run", "--task", "project-b/another-ready"]
+        )
 
         assert result.exit_code == 0
         assert "Executing task: project-b/another-ready" in result.output

@@ -1,6 +1,7 @@
 """Test dependency resolution with file inputs."""
 
 import pytest
+
 from warifuri.core.discovery import discover_all_projects, find_ready_tasks
 from warifuri.core.types import TaskStatus
 from warifuri.utils import safe_write_file
@@ -18,7 +19,9 @@ class TestDependencyFileResolution:
         # Create task A (foundation) - creates output file
         task_a = project_dir / "task-a-foundation"
         task_a.mkdir(parents=True)
-        safe_write_file(task_a / "instruction.yaml", """
+        safe_write_file(
+            task_a / "instruction.yaml",
+            """
 name: task-a-foundation
 task_type: human
 description: "Foundation Task A - Creates foundation files with no external dependencies"
@@ -26,12 +29,15 @@ dependencies: []
 inputs: []
 outputs:
   - "foundation_output.txt"
-""")
+""",
+        )
 
         # Create task B (dependent) - requires output from task A
         task_b = project_dir / "task-b-dependent"
         task_b.mkdir(parents=True)
-        safe_write_file(task_b / "instruction.yaml", """
+        safe_write_file(
+            task_b / "instruction.yaml",
+            """
 name: task-b-dependent
 task_type: human
 description: "Dependent Task B - Requires foundation_output.txt from Task A"
@@ -40,7 +46,8 @@ inputs:
   - "foundation_output.txt"
 outputs:
   - "dependent_output.txt"
-""")
+""",
+        )
 
         # Mark task A as completed
         safe_write_file(task_a / "done.md", "Task A completed")
@@ -94,7 +101,9 @@ outputs:
         # Create task with multiple inputs
         task_dir = project_dir / "multi-input-task"
         task_dir.mkdir(parents=True)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: multi-input-task
 task_type: human
 description: "Task requiring multiple input files"
@@ -105,7 +114,8 @@ inputs:
   - "data/input3.json"
 outputs:
   - "output.txt"
-""")
+""",
+        )
 
         projects = discover_all_projects(temp_workspace)
 
@@ -134,7 +144,9 @@ outputs:
         # Create task requiring file in subdirectory
         task_dir = project_dir / "subdir-task"
         task_dir.mkdir(parents=True)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: subdir-task
 task_type: human
 description: "Task requiring file in subdirectory"
@@ -143,7 +155,8 @@ inputs:
   - "data/processed/result.txt"
 outputs:
   - "final.txt"
-""")
+""",
+        )
 
         projects = discover_all_projects(temp_workspace)
 

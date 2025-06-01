@@ -1,9 +1,9 @@
 """Tests for mark_done command."""
 
-import click
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import click
 from click.testing import CliRunner
 
 from warifuri.cli.commands.mark_done import mark_done
@@ -32,7 +32,7 @@ class TestMarkDoneCommand:
                     result = runner.invoke(
                         mark_done,
                         ["test-project/test-task", "--message", "Completed successfully"],
-                        obj=Context(workspace_path=tmp_path)
+                        obj=Context(workspace_path=tmp_path),
                     )
 
                     assert result.exit_code == 0
@@ -54,9 +54,7 @@ class TestMarkDoneCommand:
 
                     runner = CliRunner()
                     result = runner.invoke(
-                        mark_done,
-                        ["test-project/test-task"],
-                        obj=Context(workspace_path=tmp_path)
+                        mark_done, ["test-project/test-task"], obj=Context(workspace_path=tmp_path)
                     )
 
                     assert result.exit_code == 0
@@ -69,9 +67,7 @@ class TestMarkDoneCommand:
         """Test with invalid task name format."""
         runner = CliRunner()
         result = runner.invoke(
-            mark_done,
-            ["invalid-task-name"],
-            obj=Context(workspace_path=tmp_path)
+            mark_done, ["invalid-task-name"], obj=Context(workspace_path=tmp_path)
         )
 
         assert result.exit_code == 0  # Command doesn't exit with error code
@@ -86,9 +82,7 @@ class TestMarkDoneCommand:
 
                 runner = CliRunner()
                 result = runner.invoke(
-                    mark_done,
-                    ["project/nonexistent-task"],
-                    obj=Context(workspace_path=tmp_path)
+                    mark_done, ["project/nonexistent-task"], obj=Context(workspace_path=tmp_path)
                 )
 
                 assert result.exit_code == 0
@@ -106,9 +100,7 @@ class TestMarkDoneCommand:
 
                 runner = CliRunner()
                 result = runner.invoke(
-                    mark_done,
-                    ["project/completed-task"],
-                    obj=Context(workspace_path=tmp_path)
+                    mark_done, ["project/completed-task"], obj=Context(workspace_path=tmp_path)
                 )
 
                 assert result.exit_code == 0
@@ -118,14 +110,10 @@ class TestMarkDoneCommand:
         """Test when workspace path is None."""
         runner = CliRunner()
 
-        with patch.object(Context, 'ensure_workspace_path') as mock_ensure:
+        with patch.object(Context, "ensure_workspace_path") as mock_ensure:
             mock_ensure.side_effect = click.ClickException("Could not find workspace directory")
 
-            result = runner.invoke(
-                mark_done,
-                ["project/task"],
-                obj=Context(workspace_path=None)
-            )
+            result = runner.invoke(mark_done, ["project/task"], obj=Context(workspace_path=None))
 
             # Should fail due to assertion
             assert result.exit_code != 0
@@ -145,7 +133,7 @@ class TestMarkDoneCommand:
                     result = runner.invoke(
                         mark_done,
                         ["project/nested/task-name"],
-                        obj=Context(workspace_path=tmp_path)
+                        obj=Context(workspace_path=tmp_path),
                     )
 
                     assert result.exit_code == 0

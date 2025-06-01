@@ -1,12 +1,13 @@
 """Run command for executing tasks."""
 
+from typing import Optional
+
 import click
 
-from ..context import Context, pass_context
-from typing import Optional
 from ...core.discovery import discover_all_projects, find_ready_tasks, find_task_by_name
 from ...core.execution import execute_task
 from ...core.types import TaskType
+from ..context import Context, pass_context
 
 
 @click.command()

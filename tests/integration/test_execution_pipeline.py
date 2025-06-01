@@ -1,15 +1,11 @@
 """Integration tests for task execution pipeline and error handling."""
 
 import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
-import shutil
 
-from warifuri.core.discovery import discover_task, discover_project
+from warifuri.core.discovery import discover_project, discover_task
 from warifuri.core.execution import execute_task
-from warifuri.core.types import TaskType, TaskStatus
-from warifuri.utils import safe_write_file, ensure_directory
+from warifuri.core.types import TaskStatus, TaskType
+from warifuri.utils import ensure_directory, safe_write_file
 
 
 class TestTaskExecutionPipeline:
@@ -21,67 +17,90 @@ class TestTaskExecutionPipeline:
         workspace = temp_workspace
 
         # Create project with various execution scenarios
-        project_dir = workspace / "projects" / "execution-test"  # Changed from sample-projects to projects
+        project_dir = (
+            workspace / "projects" / "execution-test"
+        )  # Changed from sample-projects to projects
         ensure_directory(project_dir)
 
         # Simple successful task
         success_task = project_dir / "success-task"
         ensure_directory(success_task)
-        safe_write_file(success_task / "instruction.yaml", """
+        safe_write_file(
+            success_task / "instruction.yaml",
+            """
 name: success-task
 task_type: machine
 description: A task that succeeds
 dependencies: []
-""")
-        safe_write_file(success_task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            success_task / "run.sh",
+            """#!/bin/bash
 echo "Task executed successfully"
 echo "Output line 2"
 exit 0
-""")
+""",
+        )
         (success_task / "run.sh").chmod(0o755)
 
         # Task that fails
         failure_task = project_dir / "failure-task"
         ensure_directory(failure_task)
-        safe_write_file(failure_task / "instruction.yaml", """
+        safe_write_file(
+            failure_task / "instruction.yaml",
+            """
 name: failure-task
 task_type: machine
 description: A task that fails
 dependencies: []
-""")
-        safe_write_file(failure_task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            failure_task / "run.sh",
+            """#!/bin/bash
 echo "Task starting..."
 echo "Error: Something went wrong" >&2
 exit 1
-""")
+""",
+        )
         (failure_task / "run.sh").chmod(0o755)
 
         # Task with file operations
         file_task = project_dir / "file-task"
         ensure_directory(file_task)
-        safe_write_file(file_task / "instruction.yaml", """
+        safe_write_file(
+            file_task / "instruction.yaml",
+            """
 name: file-task
 task_type: machine
 description: A task that creates files
 dependencies: []
-""")
-        safe_write_file(file_task / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            file_task / "run.sh",
+            """#!/bin/bash
 echo "Creating output file..."
 echo "Generated content" > output.txt
 echo "File created: output.txt"
 exit 0
-""")
+""",
+        )
         (file_task / "run.sh").chmod(0o755)
 
         # Human task (should not be executable)
         human_task = project_dir / "human-task"
         ensure_directory(human_task)
-        safe_write_file(human_task / "instruction.yaml", """
+        safe_write_file(
+            human_task / "instruction.yaml",
+            """
 name: human-task
 task_type: human
 description: A task for humans
 dependencies: []
-""")
+""",
+        )
 
         return workspace
 
@@ -153,25 +172,31 @@ dependencies: []
         # Base task (no dependencies)
         base_task = project_dir / "base"
         ensure_directory(base_task)
-        safe_write_file(base_task / "instruction.yaml", """
+        safe_write_file(
+            base_task / "instruction.yaml",
+            """
 name: base
 task_type: machine
 description: Base task with no dependencies
 dependencies: []
-""")
+""",
+        )
         safe_write_file(base_task / "run.sh", "#!/bin/bash\necho 'Base task completed'")
         (base_task / "run.sh").chmod(0o755)
 
         # Dependent task
         dependent_task = project_dir / "dependent"
         ensure_directory(dependent_task)
-        safe_write_file(dependent_task / "instruction.yaml", """
+        safe_write_file(
+            dependent_task / "instruction.yaml",
+            """
 name: dependent
 task_type: machine
 description: Task that depends on base
 dependencies:
   - dependency-test/base
-""")
+""",
+        )
         safe_write_file(dependent_task / "run.sh", "#!/bin/bash\necho 'Dependent task completed'")
         (dependent_task / "run.sh").chmod(0o755)
 
@@ -200,17 +225,21 @@ dependencies:
 
             task_dir = project_dir / "task"
             ensure_directory(task_dir)
-            safe_write_file(task_dir / "instruction.yaml", f"""
+            safe_write_file(
+                task_dir / "instruction.yaml",
+                f"""
 name: task
 task_type: machine
 description: Task in {project_name}
 dependencies: []
-""")
+""",
+            )
             safe_write_file(task_dir / "run.sh", f"#!/bin/bash\necho 'Task in {project_name}'")
             (task_dir / "run.sh").chmod(0o755)
 
         # Discover all projects
         from warifuri.core.discovery import discover_all_projects
+
         projects = discover_all_projects(workspace)
 
         assert len(projects) >= 2
@@ -243,12 +272,15 @@ dependencies: []
 
         task_dir = project_dir / "permission-error"
         ensure_directory(task_dir)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: permission-error
 task_type: machine
 description: Task with permission issues
 dependencies: []
-""")
+""",
+        )
         safe_write_file(task_dir / "run.sh", "#!/bin/bash\necho 'This should not execute'")
         # Do not make executable - this should cause execution to fail
 
@@ -274,20 +306,26 @@ dependencies: []
         # Task with missing required fields
         invalid_task = project_dir / "invalid"
         ensure_directory(invalid_task)
-        safe_write_file(invalid_task / "instruction.yaml", """
+        safe_write_file(
+            invalid_task / "instruction.yaml",
+            """
 # Missing name and task_type
 description: Invalid task
-""")
+""",
+        )
 
         # Valid task for comparison
         valid_task = project_dir / "valid"
         ensure_directory(valid_task)
-        safe_write_file(valid_task / "instruction.yaml", """
+        safe_write_file(
+            valid_task / "instruction.yaml",
+            """
 name: valid
 task_type: machine
 description: Valid task
 dependencies: []
-""")
+""",
+        )
 
         # Discovery should handle invalid tasks gracefully by raising exceptions
         # This is the expected behavior - invalid tasks should be rejected
@@ -319,12 +357,15 @@ class TestExecutionPipelineErrorHandling:
 
         task_dir = project_dir / "no-script"
         ensure_directory(task_dir)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: no-script
 task_type: machine
 description: Task without automation script
 dependencies: []
-""")
+""",
+        )
         # Note: No run.sh file created
 
         task = discover_task("missing-script", task_dir)
@@ -344,13 +385,16 @@ dependencies: []
 
         task_dir = project_dir / "corrupted-yaml"
         ensure_directory(task_dir)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: corrupted
 task_type: machine
 dependencies: [
   - unclosed: list
 description: "Corrupted YAML with syntax errors
-""")
+""",
+        )
 
         # Discovery should handle corrupted files by raising exceptions
         # This is the expected behavior - corrupted YAML should be rejected
@@ -366,19 +410,25 @@ description: "Corrupted YAML with syntax errors
 
         task_dir = project_dir / "download"
         ensure_directory(task_dir)
-        safe_write_file(task_dir / "instruction.yaml", """
+        safe_write_file(
+            task_dir / "instruction.yaml",
+            """
 name: download
 task_type: machine
 description: Task that downloads data
 dependencies: []
-""")
-        safe_write_file(task_dir / "run.sh", """#!/bin/bash
+""",
+        )
+        safe_write_file(
+            task_dir / "run.sh",
+            """#!/bin/bash
 # Simulate network operation
 echo "Downloading data..."
 # In real scenario, this might fail due to network issues
 curl -s https://api.github.com/zen || echo "Network unavailable"
 exit 0
-""")
+""",
+        )
         (task_dir / "run.sh").chmod(0o755)
 
         task = discover_task("network-task", task_dir)

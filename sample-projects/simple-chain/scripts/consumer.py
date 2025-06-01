@@ -35,7 +35,7 @@ Original file size: {input_file.stat().st_size} bytes
 --- Processing Results ---
 - Line count: {len(foundation_content.splitlines())}
 - Character count: {len(foundation_content)}
-- Contains 'SUCCESS': {'YES' if 'SUCCESS' in foundation_content else 'NO'}
+- Contains 'SUCCESS': {"YES" if "SUCCESS" in foundation_content else "NO"}
 
 Processing Status: COMPLETED
 """

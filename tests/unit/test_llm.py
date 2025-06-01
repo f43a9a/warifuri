@@ -8,11 +8,11 @@ import pytest
 import requests
 
 from warifuri.utils.llm import (
-    LLMError,
     LLMClient,
+    LLMError,
     load_prompt_config,
-    save_ai_response,
     log_ai_error,
+    save_ai_response,
 )
 
 
@@ -102,9 +102,7 @@ class TestLLMClient:
         """Test successful OpenAI API call."""
         with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
             mock_response = Mock()
-            mock_response.json.return_value = {
-                "choices": [{"message": {"content": "AI response"}}]
-            }
+            mock_response.json.return_value = {"choices": [{"message": {"content": "AI response"}}]}
             mock_post.return_value = mock_response
 
             client = LLMClient()
@@ -140,9 +138,7 @@ class TestLLMClient:
         """Test successful Anthropic API call."""
         with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
             mock_response = Mock()
-            mock_response.json.return_value = {
-                "content": [{"text": "AI response"}]
-            }
+            mock_response.json.return_value = {"content": [{"text": "AI response"}]}
             mock_post.return_value = mock_response
 
             client = LLMClient(model="claude-3")
@@ -229,7 +225,7 @@ system_prompt: "You are a helpful assistant"
                 "model": "gpt-4",
                 "temperature": 0.8,
                 "max_tokens": 2000,
-                "system_prompt": "You are a helpful assistant"
+                "system_prompt": "You are a helpful assistant",
             }
 
             config = load_prompt_config(tmp_path)

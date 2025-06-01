@@ -1,16 +1,19 @@
 """Unit tests for validate command functionality."""
+
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 from click.testing import CliRunner
+
 from warifuri.cli.commands.validate import validate
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 
 
 def test_validate_command_no_workspace():
     """Test validate command when no workspace is found."""
     runner = CliRunner()
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path') as mock_ensure:
+    with patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_ensure:
         mock_ensure.side_effect = Exception("No workspace found")
 
         result = runner.invoke(validate)
@@ -23,9 +26,12 @@ def test_validate_command_discovery_error():
     """Test validate command when project discovery fails."""
     runner = CliRunner()
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.load_schema') as mock_load_schema:
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch("warifuri.cli.commands.validate.load_schema") as mock_load_schema,
+    ):
         mock_load_schema.side_effect = Exception("Schema load failed")
 
         result = runner.invoke(validate)
@@ -47,26 +53,29 @@ def test_validate_command_strict_mode():
             description="Test task",
             dependencies=[],
             inputs=["input.txt"],
-            outputs=["output.txt"]
+            outputs=["output.txt"],
         ),
         task_type=TaskType.HUMAN,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
     mock_project = Mock()
     mock_project.name = "test-project"
     mock_project.tasks = [task]
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.discover_all_projects', return_value=[mock_project]), \
-         patch('warifuri.cli.commands.validate.load_schema', return_value={}), \
-         patch('warifuri.cli.commands.validate.validate_instruction_yaml'), \
-         patch('warifuri.cli.commands.validate.validate_file_references', return_value=[]), \
-         patch('warifuri.cli.commands.validate.detect_circular_dependencies') as mock_circular:
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch("warifuri.cli.commands.validate.discover_all_projects", return_value=[mock_project]),
+        patch("warifuri.cli.commands.validate.load_schema", return_value={}),
+        patch("warifuri.cli.commands.validate.validate_instruction_yaml"),
+        patch("warifuri.cli.commands.validate.validate_file_references", return_value=[]),
+        patch("warifuri.cli.commands.validate.detect_circular_dependencies") as mock_circular,
+    ):
         mock_circular.return_value = None
 
-        result = runner.invoke(validate, ['--strict'])
+        result = runner.invoke(validate, ["--strict"])
 
         assert result.exit_code == 0
         assert "Found 1 project(s)" in result.output
@@ -86,23 +95,29 @@ def test_validate_command_file_validation_failure():
             description="Test task",
             dependencies=[],
             inputs=["input.txt"],
-            outputs=["output.txt"]
+            outputs=["output.txt"],
         ),
         task_type=TaskType.HUMAN,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
     mock_project = Mock()
     mock_project.name = "test-project"
     mock_project.tasks = [task]
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.discover_all_projects', return_value=[mock_project]), \
-         patch('warifuri.cli.commands.validate.load_schema', return_value={}), \
-         patch('warifuri.cli.commands.validate.validate_instruction_yaml'), \
-         patch('warifuri.cli.commands.validate.validate_file_references', return_value=["Input file not found: input.txt"]), \
-         patch('warifuri.cli.commands.validate.detect_circular_dependencies', return_value=None):
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch("warifuri.cli.commands.validate.discover_all_projects", return_value=[mock_project]),
+        patch("warifuri.cli.commands.validate.load_schema", return_value={}),
+        patch("warifuri.cli.commands.validate.validate_instruction_yaml"),
+        patch(
+            "warifuri.cli.commands.validate.validate_file_references",
+            return_value=["Input file not found: input.txt"],
+        ),
+        patch("warifuri.cli.commands.validate.detect_circular_dependencies", return_value=None),
+    ):
         result = runner.invoke(validate)
 
         assert result.exit_code == 0  # File errors are warnings by default, not errors
@@ -122,23 +137,29 @@ def test_validate_command_dependency_validation_failure():
             description="Test task",
             dependencies=["nonexistent-task"],
             inputs=["input.txt"],
-            outputs=["output.txt"]
+            outputs=["output.txt"],
         ),
         task_type=TaskType.HUMAN,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
     mock_project = Mock()
     mock_project.name = "test-project"
     mock_project.tasks = [task]
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.discover_all_projects', return_value=[mock_project]), \
-         patch('warifuri.cli.commands.validate.load_schema', return_value={}), \
-         patch('warifuri.cli.commands.validate.validate_instruction_yaml'), \
-         patch('warifuri.cli.commands.validate.validate_file_references', return_value=[]), \
-         patch('warifuri.cli.commands.validate.detect_circular_dependencies', return_value=["task1", "task2", "task1"]):
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch("warifuri.cli.commands.validate.discover_all_projects", return_value=[mock_project]),
+        patch("warifuri.cli.commands.validate.load_schema", return_value={}),
+        patch("warifuri.cli.commands.validate.validate_instruction_yaml"),
+        patch("warifuri.cli.commands.validate.validate_file_references", return_value=[]),
+        patch(
+            "warifuri.cli.commands.validate.detect_circular_dependencies",
+            return_value=["task1", "task2", "task1"],
+        ),
+    ):
         result = runner.invoke(validate)
 
         assert result.exit_code == 1
@@ -154,14 +175,10 @@ def test_validate_command_project_filter():
         name="task1",
         path=Path("/tmp/task1"),
         instruction=TaskInstruction(
-            name="task1",
-            description="Task 1",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="task1", description="Task 1", dependencies=[], inputs=[], outputs=[]
         ),
         task_type=TaskType.HUMAN,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
     task2 = Task(
@@ -169,14 +186,10 @@ def test_validate_command_project_filter():
         name="task2",
         path=Path("/tmp/task2"),
         instruction=TaskInstruction(
-            name="task2",
-            description="Task 2",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="task2", description="Task 2", dependencies=[], inputs=[], outputs=[]
         ),
         task_type=TaskType.HUMAN,
-        status=TaskStatus.PENDING
+        status=TaskStatus.PENDING,
     )
 
     mock_project1 = Mock()
@@ -187,13 +200,19 @@ def test_validate_command_project_filter():
     mock_project2.name = "project-2"
     mock_project2.tasks = [task2]
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.discover_all_projects', return_value=[mock_project1, mock_project2]), \
-         patch('warifuri.cli.commands.validate.load_schema', return_value={}), \
-         patch('warifuri.cli.commands.validate.validate_instruction_yaml'), \
-         patch('warifuri.cli.commands.validate.validate_file_references', return_value=[]), \
-         patch('warifuri.cli.commands.validate.detect_circular_dependencies', return_value=None):
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch(
+            "warifuri.cli.commands.validate.discover_all_projects",
+            return_value=[mock_project1, mock_project2],
+        ),
+        patch("warifuri.cli.commands.validate.load_schema", return_value={}),
+        patch("warifuri.cli.commands.validate.validate_instruction_yaml"),
+        patch("warifuri.cli.commands.validate.validate_file_references", return_value=[]),
+        patch("warifuri.cli.commands.validate.detect_circular_dependencies", return_value=None),
+    ):
         result = runner.invoke(validate)
 
         assert result.exit_code == 0
@@ -205,9 +224,12 @@ def test_validate_command_empty_projects():
     """Test validate command with no projects found."""
     runner = CliRunner()
 
-    with patch('warifuri.cli.context.Context.ensure_workspace_path', return_value=Path("/workspace")), \
-         patch('warifuri.cli.commands.validate.discover_all_projects', return_value=[]):
-
+    with (
+        patch(
+            "warifuri.cli.context.Context.ensure_workspace_path", return_value=Path("/workspace")
+        ),
+        patch("warifuri.cli.commands.validate.discover_all_projects", return_value=[]),
+    ):
         result = runner.invoke(validate)
 
         assert result.exit_code == 0

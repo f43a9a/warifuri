@@ -1,13 +1,13 @@
 """Main CLI entry point."""
 
+import importlib.metadata
 from pathlib import Path
 from typing import Optional
-import importlib.metadata
 
 import click
 
-from .context import Context, pass_context
 from ..utils import find_workspace_root, setup_logging
+from .context import Context, pass_context
 
 
 def get_version() -> str:
@@ -19,16 +19,16 @@ def get_version() -> str:
 
 
 # Import commands after defining Context to avoid circular imports
+from .commands.automation import automation  # noqa: E402
+from .commands.graph import graph  # noqa: E402
 from .commands.init import init  # noqa: E402
+from .commands.issue import issue  # noqa: E402
 from .commands.list import list_cmd  # noqa: E402
+from .commands.mark_done import mark_done  # noqa: E402
 from .commands.run import run  # noqa: E402
 from .commands.show import show  # noqa: E402
-from .commands.validate import validate  # noqa: E402
-from .commands.graph import graph  # noqa: E402
-from .commands.mark_done import mark_done  # noqa: E402
 from .commands.template import template  # noqa: E402
-from .commands.issue import issue  # noqa: E402
-from .commands.automation import automation  # noqa: E402
+from .commands.validate import validate  # noqa: E402
 
 
 @click.group()

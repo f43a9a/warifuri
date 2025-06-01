@@ -1,10 +1,12 @@
 """Unit tests for atomic file operations."""
 
-import pytest
 import tempfile
 import time
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import pytest
+
 from warifuri.utils.atomic import (
     AtomicWriter,
     FileLock,
@@ -35,8 +37,8 @@ def test_safe_rmtree_nonexistent_path():
     safe_rmtree(non_existent)
 
 
-@patch('warifuri.utils.atomic.shutil.rmtree')
-@patch('warifuri.utils.atomic.Path.exists')
+@patch("warifuri.utils.atomic.shutil.rmtree")
+@patch("warifuri.utils.atomic.Path.exists")
 def test_safe_rmtree_retry_on_failure(mock_exists, mock_rmtree):
     """Test safe_rmtree retries on failure."""
     mock_exists.return_value = True
@@ -67,10 +69,10 @@ def test_atomic_write_text_with_encoding():
         target_file = Path(temp_dir) / "test.txt"
         content = "test content with unicode: ñáéíóú"
 
-        atomic_write_text(target_file, content, encoding='utf-8')
+        atomic_write_text(target_file, content, encoding="utf-8")
 
         assert target_file.exists()
-        assert target_file.read_text(encoding='utf-8') == content
+        assert target_file.read_text(encoding="utf-8") == content
 
 
 def test_safe_copy_with_lock_success():
@@ -198,7 +200,7 @@ def test_file_lock_cleanup_on_error():
         assert not lock_file.exists()
 
 
-@patch('warifuri.utils.atomic.shutil.copy2')
+@patch("warifuri.utils.atomic.shutil.copy2")
 def test_safe_copy_with_lock_copy_failure(mock_copy):
     """Test safe_copy_with_lock when copy operation fails."""
     mock_copy.side_effect = OSError("Copy failed")
@@ -212,7 +214,7 @@ def test_safe_copy_with_lock_copy_failure(mock_copy):
             safe_copy_with_lock(src, dst)
 
 
-@patch('warifuri.utils.atomic.AtomicWriter.__enter__')
+@patch("warifuri.utils.atomic.AtomicWriter.__enter__")
 def test_atomic_write_text_failure(mock_enter):
     """Test atomic_write_text when write operation fails."""
     mock_file = Mock()

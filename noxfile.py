@@ -4,7 +4,6 @@
 
 import nox
 
-
 # デフォルトのPythonバージョン
 nox.options.sessions = [
     "lint",
@@ -36,7 +35,17 @@ def security(session):
     """Run security checks with bandit and safety."""
     session.install("bandit[toml]", "safety")
     # bandit セキュリティスキャン
-    session.run("bandit", "--config", "pyproject.toml", "-r", "src", "-f", "json", "-o", "bandit-report.json")
+    session.run(
+        "bandit",
+        "--config",
+        "pyproject.toml",
+        "-r",
+        "src",
+        "-f",
+        "json",
+        "-o",
+        "bandit-report.json",
+    )
     # safety 脆弱性チェック (updated to new API)
     session.run("safety", "scan", "--json", "--output", "safety-report.json")
 
@@ -46,13 +55,7 @@ def tests(session):
     """Run all tests with pytest."""
     session.install("pytest", "pytest-asyncio", "pytest-cov", "pytest-mock", "hypothesis")
     session.install("-e", ".")
-    session.run(
-        "pytest",
-        "tests/",
-        "--asyncio-mode=strict",
-        "-v",
-        *session.posargs
-    )
+    session.run("pytest", "tests/", "--asyncio-mode=strict", "-v", *session.posargs)
 
 
 @nox.session(python="3.11")
@@ -69,7 +72,7 @@ def coverage(session):
         "--cov-report=xml",
         "--cov-report=term-missing",
         "--cov-fail-under=90",  # Updated to 90% threshold to match CI
-        *session.posargs
+        *session.posargs,
     )
 
 
@@ -86,13 +89,7 @@ def integration(session):
     """Run only integration tests."""
     session.install("pytest", "pytest-asyncio", "pytest-cov", "pytest-mock")
     session.install("-e", ".")
-    session.run(
-        "pytest",
-        "tests/integration/",
-        "--asyncio-mode=strict",
-        "-v",
-        *session.posargs
-    )
+    session.run("pytest", "tests/integration/", "--asyncio-mode=strict", "-v", *session.posargs)
 
 
 @nox.session(python="3.11")
@@ -105,7 +102,7 @@ def property_tests(session):
         "tests/unit/test_property_based.py",
         "--asyncio-mode=strict",
         "-v",
-        *session.posargs
+        *session.posargs,
     )
 
 
@@ -114,13 +111,7 @@ def unit(session):
     """Run only unit tests."""
     session.install("pytest", "pytest-asyncio", "pytest-cov", "pytest-mock")
     session.install("-e", ".")
-    session.run(
-        "pytest",
-        "tests/unit/",
-        "--asyncio-mode=strict",
-        "-v",
-        *session.posargs
-    )
+    session.run("pytest", "tests/unit/", "--asyncio-mode=strict", "-v", *session.posargs)
 
 
 @nox.session(python="3.11")
@@ -128,13 +119,7 @@ def e2e(session):
     """Run only end-to-end tests."""
     session.install("pytest", "pytest-asyncio", "pytest-cov", "pytest-mock")
     session.install("-e", ".")
-    session.run(
-        "pytest",
-        "tests/e2e/",
-        "--asyncio-mode=strict",
-        "-v",
-        *session.posargs
-    )
+    session.run("pytest", "tests/e2e/", "--asyncio-mode=strict", "-v", *session.posargs)
 
 
 @nox.session(python="3.11")

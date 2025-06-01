@@ -1,13 +1,13 @@
 """List command for displaying tasks."""
 
 import json
+from typing import Any, Dict, List, Optional
 
 import click
 
-from ..context import Context, pass_context
-from typing import Dict, List, Optional, Any
 from ...core.discovery import discover_all_projects, find_ready_tasks
 from ...core.types import Task, TaskStatus
+from ..context import Context, pass_context
 
 
 @click.command()

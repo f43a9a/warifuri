@@ -10,13 +10,13 @@ from unittest.mock import Mock, patch
 
 from src.warifuri.core.discovery_optimized import (
     TaskCache,
-    _task_cache,
-    discover_tasks_optimized,
-    build_dependency_graph_optimized,
-    find_ready_tasks_optimized,
-    detect_cycles_optimized,
-    monitor_performance,
     _cached_find_instruction_files,
+    _task_cache,
+    build_dependency_graph_optimized,
+    detect_cycles_optimized,
+    discover_tasks_optimized,
+    find_ready_tasks_optimized,
+    monitor_performance,
 )
 
 
@@ -62,8 +62,8 @@ class TestTaskCache:
         assert str(mock_task.path) in cache._task_cache
         assert cache._task_cache[str(mock_task.path)] == mock_task
 
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.stat')
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.stat")
     def test_cache_task_with_instruction_file(self, mock_stat, mock_exists):
         """Test caching a task with instruction.yaml file."""
         cache = TaskCache()
@@ -79,8 +79,8 @@ class TestTaskCache:
         assert str(mock_task.path) in cache._task_cache
         assert cache._last_modified[str(mock_task.path)] == 1234567890.0
 
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.stat')
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.stat")
     def test_get_task_cache_valid(self, mock_stat, mock_exists):
         """Test getting a cached task when cache is still valid."""
         cache = TaskCache()
@@ -96,8 +96,8 @@ class TestTaskCache:
         result = cache.get_task(mock_task.path)
         assert result == mock_task
 
-    @patch('pathlib.Path.exists')
-    @patch('pathlib.Path.stat')
+    @patch("pathlib.Path.exists")
+    @patch("pathlib.Path.stat")
     def test_get_task_cache_invalidated(self, mock_stat, mock_exists):
         """Test getting a cached task when cache is invalidated by file modification."""
         cache = TaskCache()
@@ -118,7 +118,7 @@ class TestTaskCache:
 class TestCachedFindInstructionFiles:
     """Test the cached instruction file finder."""
 
-    @patch('src.warifuri.core.discovery_optimized.find_instruction_files')
+    @patch("src.warifuri.core.discovery_optimized.find_instruction_files")
     def test_cached_find_instruction_files(self, mock_find_files):
         """Test cached instruction file finding."""
         mock_paths = [Path("/path1/instruction.yaml"), Path("/path2/instruction.yaml")]
@@ -129,7 +129,7 @@ class TestCachedFindInstructionFiles:
         assert result == ("/path1/instruction.yaml", "/path2/instruction.yaml")
         mock_find_files.assert_called_once_with(Path("/workspace"))
 
-    @patch('src.warifuri.core.discovery_optimized.find_instruction_files')
+    @patch("src.warifuri.core.discovery_optimized.find_instruction_files")
     def test_cached_find_instruction_files_caching(self, mock_find_files):
         """Test that the function caches results."""
         mock_paths = [Path("/path1/instruction.yaml")]
@@ -151,7 +151,7 @@ class TestCachedFindInstructionFiles:
 class TestDiscoverTasksOptimized:
     """Test optimized task discovery."""
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
     def test_discover_tasks_optimized_empty(self, mock_find_files):
         """Test task discovery with no instruction files."""
         mock_find_files.return_value = ()
@@ -160,8 +160,8 @@ class TestDiscoverTasksOptimized:
 
         assert result == []
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
-    @patch('src.warifuri.core.discovery_optimized._task_cache')
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
+    @patch("src.warifuri.core.discovery_optimized._task_cache")
     def test_discover_tasks_optimized_cached_task(self, mock_cache, mock_find_files):
         """Test task discovery using cached task."""
         mock_find_files.return_value = ("/project/task/instruction.yaml",)
@@ -176,10 +176,12 @@ class TestDiscoverTasksOptimized:
         assert result[0] == cached_task
         mock_cache.get_task.assert_called_once()
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
-    @patch('src.warifuri.core.discovery_optimized._task_cache')
-    @patch('src.warifuri.core.discovery.discover_task')
-    def test_discover_tasks_optimized_new_task(self, mock_discover_task, mock_cache, mock_find_files):
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
+    @patch("src.warifuri.core.discovery_optimized._task_cache")
+    @patch("src.warifuri.core.discovery.discover_task")
+    def test_discover_tasks_optimized_new_task(
+        self, mock_discover_task, mock_cache, mock_find_files
+    ):
         """Test task discovery loading new task."""
         mock_find_files.return_value = ("/project/task/instruction.yaml",)
         mock_cache.get_task.return_value = None  # Not cached
@@ -195,10 +197,12 @@ class TestDiscoverTasksOptimized:
         mock_discover_task.assert_called_once_with("project", Path("/project/task"))
         mock_cache.cache_task.assert_called_once_with(discovered_task)
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
-    @patch('src.warifuri.core.discovery_optimized._task_cache')
-    @patch('src.warifuri.core.discovery.discover_task')
-    def test_discover_tasks_optimized_task_load_exception(self, mock_discover_task, mock_cache, mock_find_files):
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
+    @patch("src.warifuri.core.discovery_optimized._task_cache")
+    @patch("src.warifuri.core.discovery.discover_task")
+    def test_discover_tasks_optimized_task_load_exception(
+        self, mock_discover_task, mock_cache, mock_find_files
+    ):
         """Test task discovery handling exceptions during task loading."""
         mock_find_files.return_value = ("/project/task/instruction.yaml",)
         mock_cache.get_task.return_value = None
@@ -208,10 +212,12 @@ class TestDiscoverTasksOptimized:
 
         assert result == []
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
-    @patch('src.warifuri.core.discovery_optimized._task_cache')
-    @patch('src.warifuri.core.discovery.discover_task')
-    def test_discover_tasks_optimized_task_returns_none(self, mock_discover_task, mock_cache, mock_find_files):
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
+    @patch("src.warifuri.core.discovery_optimized._task_cache")
+    @patch("src.warifuri.core.discovery.discover_task")
+    def test_discover_tasks_optimized_task_returns_none(
+        self, mock_discover_task, mock_cache, mock_find_files
+    ):
         """Test task discovery when discover_task returns None."""
         mock_find_files.return_value = ("/project/task/instruction.yaml",)
         mock_cache.get_task.return_value = None
@@ -242,10 +248,7 @@ class TestBuildDependencyGraphOptimized:
 
         result = build_dependency_graph_optimized([task1, task2])
 
-        assert result == {
-            "project/task1": set(),
-            "project/task2": set()
-        }
+        assert result == {"project/task1": set(), "project/task2": set()}
 
     def test_build_dependency_graph_with_dependencies(self):
         """Test building dependency graph with valid dependencies."""
@@ -259,10 +262,7 @@ class TestBuildDependencyGraphOptimized:
 
         result = build_dependency_graph_optimized([task1, task2])
 
-        assert result == {
-            "project/task1": set(),
-            "project/task2": {"project/task1"}
-        }
+        assert result == {"project/task1": set(), "project/task2": {"project/task1"}}
 
     def test_build_dependency_graph_invalid_dependency(self):
         """Test building dependency graph with invalid dependencies."""
@@ -270,7 +270,7 @@ class TestBuildDependencyGraphOptimized:
         task1.full_name = "project/task1"
         task1.instruction.dependencies = ["project/nonexistent"]
 
-        with patch('src.warifuri.core.discovery_optimized.logger') as mock_logger:
+        with patch("src.warifuri.core.discovery_optimized.logger") as mock_logger:
             result = build_dependency_graph_optimized([task1])
 
             assert result == {"project/task1": set()}
@@ -293,7 +293,7 @@ class TestFindReadyTasksOptimized:
 
         dependency_graph = {"project/task1": set()}
 
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             result = find_ready_tasks_optimized([task1], dependency_graph)
 
         assert len(result) == 1
@@ -308,7 +308,7 @@ class TestFindReadyTasksOptimized:
         dependency_graph = {"project/task1": set()}
 
         # Mock that done.md exists (task is completed)
-        with patch.object(Path, 'exists', return_value=True):
+        with patch.object(Path, "exists", return_value=True):
             result = find_ready_tasks_optimized([task1], dependency_graph)
 
         assert result == []
@@ -329,10 +329,7 @@ class TestFindReadyTasksOptimized:
         done_path2.exists.return_value = False  # task2 is not completed
         task2.path.__truediv__ = Mock(return_value=done_path2)
 
-        dependency_graph = {
-            "project/task1": set(),
-            "project/task2": {"project/task1"}
-        }
+        dependency_graph = {"project/task1": set(), "project/task2": {"project/task1"}}
 
         result = find_ready_tasks_optimized([task1, task2], dependency_graph)
 
@@ -349,13 +346,10 @@ class TestFindReadyTasksOptimized:
         task2.full_name = "project/task2"
         task2.path = Path("/project/task2")
 
-        dependency_graph = {
-            "project/task1": set(),
-            "project/task2": {"project/task1"}
-        }
+        dependency_graph = {"project/task1": set(), "project/task2": {"project/task1"}}
 
         # Neither task is completed
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             result = find_ready_tasks_optimized([task1, task2], dependency_graph)
 
         # Only task1 should be ready (no dependencies)
@@ -373,21 +367,14 @@ class TestDetectCyclesOptimized:
 
     def test_detect_cycles_no_cycles(self):
         """Test cycle detection with acyclic graph."""
-        graph = {
-            "A": {"B"},
-            "B": {"C"},
-            "C": set()
-        }
+        graph = {"A": {"B"}, "B": {"C"}, "C": set()}
 
         result = detect_cycles_optimized(graph)
         assert result == []
 
     def test_detect_cycles_simple_cycle(self):
         """Test cycle detection with simple cycle."""
-        graph = {
-            "A": {"B"},
-            "B": {"A"}
-        }
+        graph = {"A": {"B"}, "B": {"A"}}
 
         result = detect_cycles_optimized(graph)
         assert len(result) >= 1
@@ -396,9 +383,7 @@ class TestDetectCyclesOptimized:
 
     def test_detect_cycles_self_loop(self):
         """Test cycle detection with self-loop."""
-        graph = {
-            "A": {"A"}
-        }
+        graph = {"A": {"A"}}
 
         result = detect_cycles_optimized(graph)
         assert len(result) >= 1
@@ -411,7 +396,7 @@ class TestDetectCyclesOptimized:
             "B": {"C"},
             "C": {"A"},  # Creates cycle A->B->C->A
             "D": {"E"},
-            "E": set()
+            "E": set(),
         }
 
         result = detect_cycles_optimized(graph)
@@ -437,11 +422,12 @@ class TestMonitorPerformance:
 
     def test_monitor_performance_fast_function(self):
         """Test performance monitoring with fast function."""
+
         @monitor_performance
         def fast_function():
             return "result"
 
-        with patch('src.warifuri.core.discovery_optimized.logger') as mock_logger:
+        with patch("src.warifuri.core.discovery_optimized.logger") as mock_logger:
             result = fast_function()
 
             assert result == "result"
@@ -450,13 +436,14 @@ class TestMonitorPerformance:
 
     def test_monitor_performance_slow_function(self):
         """Test performance monitoring with slow function."""
+
         @monitor_performance
         def slow_function():
             time.sleep(0.1)  # Simulate slow operation
             return "result"
 
-        with patch('src.warifuri.core.discovery_optimized.logger') as mock_logger:
-            with patch('time.time', side_effect=[0, 1.5]):  # Mock slow operation
+        with patch("src.warifuri.core.discovery_optimized.logger") as mock_logger:
+            with patch("time.time", side_effect=[0, 1.5]):  # Mock slow operation
                 result = slow_function()
 
                 assert result == "result"
@@ -464,6 +451,7 @@ class TestMonitorPerformance:
 
     def test_monitor_performance_with_args_kwargs(self):
         """Test performance monitoring with function arguments."""
+
         @monitor_performance
         def function_with_args(arg1, arg2, kwarg1=None):
             return f"{arg1}-{arg2}-{kwarg1}"
@@ -502,8 +490,8 @@ class TestGlobalCacheInstance:
 class TestIntegrationScenarios:
     """Test integration scenarios combining multiple optimized functions."""
 
-    @patch('src.warifuri.core.discovery_optimized._cached_find_instruction_files')
-    @patch('src.warifuri.core.discovery.discover_task')
+    @patch("src.warifuri.core.discovery_optimized._cached_find_instruction_files")
+    @patch("src.warifuri.core.discovery.discover_task")
     def test_full_optimized_workflow(self, mock_discover_task, mock_find_files):
         """Test complete workflow using optimized functions."""
         mock_find_files.return_value = (
@@ -534,7 +522,7 @@ class TestIntegrationScenarios:
         graph = build_dependency_graph_optimized(tasks)
 
         # Find ready tasks
-        with patch.object(Path, 'exists', return_value=False):
+        with patch.object(Path, "exists", return_value=False):
             ready_tasks = find_ready_tasks_optimized(tasks, graph)
 
         # Detect cycles
@@ -545,7 +533,4 @@ class TestIntegrationScenarios:
         assert len(ready_tasks) == 1  # Only task1 should be ready
         assert ready_tasks[0] == task1
         assert cycles == []  # No cycles in this graph
-        assert graph == {
-            "project1/task1": set(),
-            "project1/task2": {"project1/task1"}
-        }
+        assert graph == {"project1/task1": set(), "project1/task2": {"project1/task1"}}

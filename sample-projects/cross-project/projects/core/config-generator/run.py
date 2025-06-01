@@ -3,6 +3,7 @@
 
 from datetime import datetime
 
+
 def main():
     print("Running config-generator task...")
 
@@ -33,7 +34,7 @@ format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
 Generated: {datetime.now()}
 
 Version: 1.0.0
-Build: {datetime.now().strftime('%Y%m%d%H%M%S')}
+Build: {datetime.now().strftime("%Y%m%d%H%M%S")}
 Environment: development
 """
 
@@ -41,6 +42,7 @@ Environment: development
         f.write(version_content)
 
     print("Generated files: shared.conf, version.txt")
+
 
 if __name__ == "__main__":
     main()

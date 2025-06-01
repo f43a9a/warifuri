@@ -6,11 +6,11 @@ import click
 
 from ..context import Context, pass_context
 from ..services.automation_service import (
-    AutomationListService,
     AutomationCheckService,
+    AutomationListService,
     TaskExecutionService,
 )
-from ..services.pr_service import PullRequestService, AutomationValidator
+from ..services.pr_service import AutomationValidator, PullRequestService
 
 
 @click.command()

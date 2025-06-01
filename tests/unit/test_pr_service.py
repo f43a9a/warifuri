@@ -1,15 +1,15 @@
 """Unit tests for PR service module."""
 
 import subprocess
-import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import click
+import pytest
 
-from warifuri.cli.services.pr_service import PullRequestService, AutomationValidator
 from warifuri.cli.context import Context
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus, Project
+from warifuri.cli.services.pr_service import AutomationValidator, PullRequestService
+from warifuri.core.types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestPullRequestService:
@@ -43,10 +43,11 @@ class TestPullRequestService:
         mock_check_cli.return_value = True
         mock_get_repo.return_value = "owner/repo"
 
-        with patch.object(self.service, "_prepare_pr_details") as mock_prepare, \
-             patch.object(self.service, "_create_branch_and_commit") as mock_branch, \
-             patch.object(self.service, "_create_github_pr") as mock_create_pr:
-
+        with (
+            patch.object(self.service, "_prepare_pr_details") as mock_prepare,
+            patch.object(self.service, "_create_branch_and_commit") as mock_branch,
+            patch.object(self.service, "_create_github_pr") as mock_create_pr,
+        ):
             mock_prepare.return_value = {"branch_name": "test-branch"}
             mock_branch.return_value = True
             mock_create_pr.return_value = True
@@ -56,7 +57,9 @@ class TestPullRequestService:
             assert result is True
             mock_prepare.assert_called_once_with("test-task", None, None, None, None)
             mock_branch.assert_called_once_with({"branch_name": "test-branch"}, False)
-            mock_create_pr.assert_called_once_with({"branch_name": "test-branch"}, "main", False, False)
+            mock_create_pr.assert_called_once_with(
+                {"branch_name": "test-branch"}, "main", False, False
+            )
 
     @patch("warifuri.cli.services.pr_service.check_github_cli")
     def test_create_pr_github_cli_validation_fails(self, mock_check_cli: Mock) -> None:
@@ -69,7 +72,9 @@ class TestPullRequestService:
 
     @patch("warifuri.cli.services.pr_service.check_github_cli")
     @patch("warifuri.cli.services.pr_service.get_github_repo")
-    def test_create_pr_repo_detection_fails(self, mock_get_repo: Mock, mock_check_cli: Mock) -> None:
+    def test_create_pr_repo_detection_fails(
+        self, mock_get_repo: Mock, mock_check_cli: Mock
+    ) -> None:
         """Test PR creation fails when repository detection fails."""
         mock_check_cli.return_value = True
         mock_get_repo.return_value = None
@@ -80,14 +85,17 @@ class TestPullRequestService:
 
     @patch("warifuri.cli.services.pr_service.check_github_cli")
     @patch("warifuri.cli.services.pr_service.get_github_repo")
-    def test_create_pr_branch_creation_fails(self, mock_get_repo: Mock, mock_check_cli: Mock) -> None:
+    def test_create_pr_branch_creation_fails(
+        self, mock_get_repo: Mock, mock_check_cli: Mock
+    ) -> None:
         """Test PR creation fails when branch creation fails."""
         mock_check_cli.return_value = True
         mock_get_repo.return_value = "owner/repo"
 
-        with patch.object(self.service, "_prepare_pr_details") as mock_prepare, \
-             patch.object(self.service, "_create_branch_and_commit") as mock_branch:
-
+        with (
+            patch.object(self.service, "_prepare_pr_details") as mock_prepare,
+            patch.object(self.service, "_create_branch_and_commit") as mock_branch,
+        ):
             mock_prepare.return_value = {"branch_name": "test-branch"}
             mock_branch.return_value = False
 
@@ -97,15 +105,18 @@ class TestPullRequestService:
 
     @patch("warifuri.cli.services.pr_service.check_github_cli")
     @patch("warifuri.cli.services.pr_service.get_github_repo")
-    def test_create_pr_github_pr_creation_fails(self, mock_get_repo: Mock, mock_check_cli: Mock) -> None:
+    def test_create_pr_github_pr_creation_fails(
+        self, mock_get_repo: Mock, mock_check_cli: Mock
+    ) -> None:
         """Test PR creation fails when GitHub PR creation fails."""
         mock_check_cli.return_value = True
         mock_get_repo.return_value = "owner/repo"
 
-        with patch.object(self.service, "_prepare_pr_details") as mock_prepare, \
-             patch.object(self.service, "_create_branch_and_commit") as mock_branch, \
-             patch.object(self.service, "_create_github_pr") as mock_create_pr:
-
+        with (
+            patch.object(self.service, "_prepare_pr_details") as mock_prepare,
+            patch.object(self.service, "_create_branch_and_commit") as mock_branch,
+            patch.object(self.service, "_create_github_pr") as mock_create_pr,
+        ):
             mock_prepare.return_value = {"branch_name": "test-branch"}
             mock_branch.return_value = True
             mock_create_pr.return_value = False
@@ -121,11 +132,12 @@ class TestPullRequestService:
         mock_check_cli.return_value = True
         mock_get_repo.return_value = "owner/repo"
 
-        with patch.object(self.service, "_prepare_pr_details") as mock_prepare, \
-             patch.object(self.service, "_create_branch_and_commit") as mock_branch, \
-             patch.object(self.service, "_create_github_pr") as mock_create_pr, \
-             patch.object(self.service, "_setup_auto_merge") as mock_auto_merge:
-
+        with (
+            patch.object(self.service, "_prepare_pr_details") as mock_prepare,
+            patch.object(self.service, "_create_branch_and_commit") as mock_branch,
+            patch.object(self.service, "_create_github_pr") as mock_create_pr,
+            patch.object(self.service, "_setup_auto_merge") as mock_auto_merge,
+        ):
             mock_prepare.return_value = {"branch_name": "test-branch"}
             mock_branch.return_value = True
             mock_create_pr.return_value = True
@@ -137,16 +149,19 @@ class TestPullRequestService:
 
     @patch("warifuri.cli.services.pr_service.check_github_cli")
     @patch("warifuri.cli.services.pr_service.get_github_repo")
-    def test_create_pr_auto_merge_not_called_for_draft(self, mock_get_repo: Mock, mock_check_cli: Mock) -> None:
+    def test_create_pr_auto_merge_not_called_for_draft(
+        self, mock_get_repo: Mock, mock_check_cli: Mock
+    ) -> None:
         """Test auto-merge is not called for draft PRs."""
         mock_check_cli.return_value = True
         mock_get_repo.return_value = "owner/repo"
 
-        with patch.object(self.service, "_prepare_pr_details") as mock_prepare, \
-             patch.object(self.service, "_create_branch_and_commit") as mock_branch, \
-             patch.object(self.service, "_create_github_pr") as mock_create_pr, \
-             patch.object(self.service, "_setup_auto_merge") as mock_auto_merge:
-
+        with (
+            patch.object(self.service, "_prepare_pr_details") as mock_prepare,
+            patch.object(self.service, "_create_branch_and_commit") as mock_branch,
+            patch.object(self.service, "_create_github_pr") as mock_create_pr,
+            patch.object(self.service, "_setup_auto_merge") as mock_auto_merge,
+        ):
             mock_prepare.return_value = {"branch_name": "test-branch"}
             mock_branch.return_value = True
             mock_create_pr.return_value = True
@@ -190,11 +205,7 @@ class TestPullRequestService:
     def test_prepare_pr_details_with_custom_values(self) -> None:
         """Test PR details preparation with custom values."""
         result = self.service._prepare_pr_details(
-            "test-task",
-            "custom-branch",
-            "custom commit",
-            "Custom Title",
-            "Custom body"
+            "test-task", "custom-branch", "custom commit", "Custom Title", "Custom body"
         )
 
         expected = {
@@ -209,10 +220,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_branch_and_commit_dry_run(self, mock_run: Mock) -> None:
         """Test branch creation and commit in dry run mode."""
-        pr_details = {
-            "branch_name": "test-branch",
-            "commit_message": "test commit"
-        }
+        pr_details = {"branch_name": "test-branch", "commit_message": "test commit"}
 
         result = self.service._create_branch_and_commit(pr_details, dry_run=True)
 
@@ -222,10 +230,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_branch_and_commit_success(self, mock_run: Mock) -> None:
         """Test successful branch creation and commit."""
-        pr_details = {
-            "branch_name": "test-branch",
-            "commit_message": "test commit"
-        }
+        pr_details = {"branch_name": "test-branch", "commit_message": "test commit"}
 
         mock_run.return_value = Mock()
 
@@ -244,10 +249,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_branch_and_commit_failure(self, mock_run: Mock) -> None:
         """Test branch creation and commit failure."""
-        pr_details = {
-            "branch_name": "test-branch",
-            "commit_message": "test commit"
-        }
+        pr_details = {"branch_name": "test-branch", "commit_message": "test commit"}
 
         mock_run.side_effect = subprocess.CalledProcessError(1, "git")
 
@@ -258,11 +260,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_github_pr_dry_run(self, mock_run: Mock) -> None:
         """Test GitHub PR creation in dry run mode."""
-        pr_details = {
-            "pr_title": "Test PR",
-            "pr_body": "Test body",
-            "branch_name": "test-branch"
-        }
+        pr_details = {"pr_title": "Test PR", "pr_body": "Test body", "branch_name": "test-branch"}
 
         result = self.service._create_github_pr(pr_details, "main", False, dry_run=True)
 
@@ -272,11 +270,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_github_pr_success(self, mock_run: Mock) -> None:
         """Test successful GitHub PR creation."""
-        pr_details = {
-            "pr_title": "Test PR",
-            "pr_body": "Test body",
-            "branch_name": "test-branch"
-        }
+        pr_details = {"pr_title": "Test PR", "pr_body": "Test body", "branch_name": "test-branch"}
 
         mock_run.return_value = Mock(stdout="https://github.com/owner/repo/pull/123")
 
@@ -296,11 +290,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_github_pr_with_draft(self, mock_run: Mock) -> None:
         """Test GitHub PR creation with draft flag."""
-        pr_details = {
-            "pr_title": "Test PR",
-            "pr_body": "Test body",
-            "branch_name": "test-branch"
-        }
+        pr_details = {"pr_title": "Test PR", "pr_body": "Test body", "branch_name": "test-branch"}
 
         mock_run.return_value = Mock(stdout="https://github.com/owner/repo/pull/123")
 
@@ -315,11 +305,7 @@ class TestPullRequestService:
     @patch("subprocess.run")
     def test_create_github_pr_failure(self, mock_run: Mock) -> None:
         """Test GitHub PR creation failure."""
-        pr_details = {
-            "pr_title": "Test PR",
-            "pr_body": "Test body",
-            "branch_name": "test-branch"
-        }
+        pr_details = {"pr_title": "Test PR", "pr_body": "Test body", "branch_name": "test-branch"}
 
         mock_run.side_effect = subprocess.CalledProcessError(1, "gh")
 
@@ -399,11 +385,7 @@ class TestAutomationValidator:
         """Test successful task readiness validation."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -411,15 +393,11 @@ class TestAutomationValidator:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
         # Create mock project
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = [task]
@@ -439,15 +417,13 @@ class TestAutomationValidator:
 
     @patch("warifuri.core.discovery.discover_all_projects")
     @patch("warifuri.core.discovery.find_ready_tasks")
-    def test_validate_task_ready_task_not_found(self, mock_find_ready: Mock, mock_discover: Mock) -> None:
+    def test_validate_task_ready_task_not_found(
+        self, mock_find_ready: Mock, mock_discover: Mock
+    ) -> None:
         """Test task readiness validation when task not found."""
         # Create mock task with different name
         task_instruction = TaskInstruction(
-            name="other-task",
-            description="Other task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="other-task", description="Other task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -455,14 +431,10 @@ class TestAutomationValidator:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = [task]
@@ -473,15 +445,13 @@ class TestAutomationValidator:
 
     @patch("warifuri.core.discovery.discover_all_projects")
     @patch("warifuri.core.discovery.find_ready_tasks")
-    def test_validate_task_ready_task_not_ready(self, mock_find_ready: Mock, mock_discover: Mock) -> None:
+    def test_validate_task_ready_task_not_ready(
+        self, mock_find_ready: Mock, mock_discover: Mock
+    ) -> None:
         """Test task readiness validation when task is not ready."""
         # Create mock task
         task_instruction = TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=[],
-            outputs=[]
+            name="test-task", description="Test task", dependencies=[], inputs=[], outputs=[]
         )
         task = Task(
             project="test-project",
@@ -489,14 +459,10 @@ class TestAutomationValidator:
             path=Path("/test/path"),
             instruction=task_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.PENDING
+            status=TaskStatus.PENDING,
         )
 
-        project = Project(
-            name="test-project",
-            path=Path("/test/project"),
-            tasks=[task]
-        )
+        project = Project(name="test-project", path=Path("/test/project"), tasks=[task])
 
         mock_discover.return_value = [project]
         mock_find_ready.return_value = []  # Task is not in ready tasks
@@ -547,9 +513,10 @@ class TestIntegration:
 
         service = PullRequestService(ctx)
 
-        with patch("warifuri.cli.services.pr_service.check_github_cli") as mock_check_cli, \
-             patch("warifuri.cli.services.pr_service.get_github_repo") as mock_get_repo:
-
+        with (
+            patch("warifuri.cli.services.pr_service.check_github_cli") as mock_check_cli,
+            patch("warifuri.cli.services.pr_service.get_github_repo") as mock_get_repo,
+        ):
             mock_check_cli.return_value = True
             mock_get_repo.return_value = "owner/repo"
 

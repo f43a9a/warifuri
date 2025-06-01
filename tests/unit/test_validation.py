@@ -1,14 +1,15 @@
 """Test validation utilities."""
 
-import pytest
 from pathlib import Path
 
+import pytest
+
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 from warifuri.utils.validation import (
-    validate_instruction_yaml,
-    detect_circular_dependencies,
     ValidationError,
+    detect_circular_dependencies,
+    validate_instruction_yaml,
 )
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
 
 
 def test_validate_instruction_yaml_valid(sample_task_instruction):

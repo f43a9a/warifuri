@@ -3,13 +3,14 @@ Test Data Validation Tests
 テストデータの読み込みとバリデーションのテスト
 """
 
-import yaml
-from pathlib import Path
-import pytest
-
 # Import directly without relative imports
 import sys
-sys.path.insert(0, '/workspace/src')
+from pathlib import Path
+
+import pytest
+import yaml
+
+sys.path.insert(0, "/workspace/src")
 
 from warifuri.core.types import TaskInstruction
 
@@ -47,7 +48,7 @@ def test_schema_loading():
 def test_jsonschema_validation():
     """JSONスキーマ検証テスト"""
     try:
-        from jsonschema import validate, ValidationError
+        from jsonschema import ValidationError, validate
     except ImportError:
         pytest.skip("jsonschema not available")
 
@@ -82,7 +83,7 @@ def test_task_instruction_creation():
         dependencies=task_data.get("dependencies", []),
         inputs=task_data.get("inputs", []),
         outputs=task_data.get("outputs", []),
-        note=task_data.get("note")
+        note=task_data.get("note"),
     )
 
     assert task_instruction.name == task_data["title"]

@@ -7,8 +7,8 @@ from .discovery import (
     find_ready_tasks,
     find_task_by_name,
 )
-from .execution import execute_task, ExecutionError
-from .types import Task, TaskInstruction, TaskStatus, TaskType, Project
+from .execution import ExecutionError, execute_task
+from .types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 __all__: list[str] = [
     "Task",

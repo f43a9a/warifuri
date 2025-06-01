@@ -6,10 +6,12 @@ This module provides GitHub PR creation functionality following Unix philosophy:
 - Testability: Each component can be tested independently
 """
 
-from typing import Optional, Dict
+from typing import Dict, Optional
+
 import click
-from ..context import Context
+
 from ...core.github import check_github_cli, get_github_repo
+from ..context import Context
 
 
 class PullRequestService:

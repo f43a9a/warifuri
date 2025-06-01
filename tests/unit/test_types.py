@@ -1,7 +1,6 @@
 """Test core types and models."""
 
-
-from warifuri.core.types import TaskInstruction, Task, TaskType, TaskStatus
+from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 
 
 def test_task_instruction_from_dict(sample_task_instruction):

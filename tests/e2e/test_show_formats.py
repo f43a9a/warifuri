@@ -1,8 +1,9 @@
 """Test show command format options."""
 
 import json
-import yaml
+
 import pytest
+import yaml
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli
@@ -33,7 +34,7 @@ outputs:
   - "report.html"
 note: "This task requires special attention and careful monitoring"
 auto_merge: true
-"""
+""",
     )
 
     # Create run script
@@ -41,7 +42,7 @@ auto_merge: true
         task_dir / "run.sh",
         """#!/bin/bash
 echo "Running complex task"
-"""
+""",
     )
 
     # Create auto_merge file
@@ -56,7 +57,7 @@ echo "Running complex task"
 task_type: ai
 description: This task is already completed
 dependencies: []
-"""
+""",
     )
     safe_write_file(completed_task_dir / "prompt.yaml", "model: gpt-3.5-turbo")
     safe_write_file(completed_task_dir / "done.md", "2025-05-27 12:00:00 SHA: abc123")
@@ -70,10 +71,16 @@ class TestShowFormatOptions:
     def test_show_pretty_format_default(self, show_test_workspace):
         """Test default pretty format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Task: test-project/complex-task" in result.output
@@ -92,10 +99,18 @@ class TestShowFormatOptions:
     def test_show_json_format(self, show_test_workspace):
         """Test JSON format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -119,10 +134,18 @@ class TestShowFormatOptions:
     def test_show_yaml_format(self, show_test_workspace):
         """Test YAML format output."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task", "--format", "yaml"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+                "--format",
+                "yaml",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -140,10 +163,18 @@ class TestShowFormatOptions:
     def test_show_completed_task(self, show_test_workspace):
         """Test showing a completed task."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/completed-task", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/completed-task",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -156,10 +187,16 @@ class TestShowFormatOptions:
     def test_show_task_not_found(self, show_test_workspace):
         """Test error handling for non-existent task."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/non-existent"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/non-existent",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Error: Task 'test-project/non-existent' not found" in result.output
@@ -167,10 +204,9 @@ class TestShowFormatOptions:
     def test_show_invalid_task_format(self, show_test_workspace):
         """Test error handling for invalid task format."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "invalid-format"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(show_test_workspace), "show", "--task", "invalid-format"]
+        )
 
         assert result.exit_code == 0
         assert "Error: Task must be in format 'project/task'" in result.output
@@ -186,14 +222,22 @@ class TestShowFormatOptions:
 task_type: human
 description: A minimal human task
 dependencies: []
-"""
+""",
         )
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/minimal", "--format", "json"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/minimal",
+                "--format",
+                "json",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -219,14 +263,14 @@ dependencies: []
 inputs: []
 outputs: []
 note: ""
-"""
+""",
         )
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/empty-lists"
-        ])
+        result = runner.invoke(
+            cli,
+            ["--workspace", str(show_test_workspace), "show", "--task", "test-project/empty-lists"],
+        )
 
         assert result.exit_code == 0
         assert "Task: test-project/empty-lists" in result.output
@@ -240,20 +284,44 @@ note: ""
         runner = CliRunner()
 
         # Get data in all formats
-        json_result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task", "--format", "json"
-        ])
+        json_result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+                "--format",
+                "json",
+            ],
+        )
 
-        yaml_result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task", "--format", "yaml"
-        ])
+        yaml_result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+                "--format",
+                "yaml",
+            ],
+        )
 
-        pretty_result = runner.invoke(cli, [
-            "--workspace", str(show_test_workspace),
-            "show", "--task", "test-project/complex-task", "--format", "pretty"
-        ])
+        pretty_result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(show_test_workspace),
+                "show",
+                "--task",
+                "test-project/complex-task",
+                "--format",
+                "pretty",
+            ],
+        )
 
         assert json_result.exit_code == 0
         assert yaml_result.exit_code == 0

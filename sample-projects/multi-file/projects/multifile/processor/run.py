@@ -5,11 +5,16 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+
 def main():
     print("Running processor task...")
 
     # Check if all input files exist
-    required_files = ["../generator/data1.txt", "../generator/data2.txt", "../generator/config.json"]
+    required_files = [
+        "../generator/data1.txt",
+        "../generator/data2.txt",
+        "../generator/config.json",
+    ]
     missing_files = []
 
     for file in required_files:
@@ -53,6 +58,7 @@ def main():
 
     print("Generated summary.txt with processing results")
     return 0
+
 
 if __name__ == "__main__":
     exit(main())

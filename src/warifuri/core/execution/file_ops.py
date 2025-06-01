@@ -3,7 +3,7 @@
 import logging
 import shutil
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from .validation import _resolve_input_path_safely
 

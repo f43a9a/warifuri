@@ -1,13 +1,14 @@
 """Unit tests for automation CLI commands."""
 
+from pathlib import Path
+from unittest.mock import Mock, patch
+
 import pytest
 from click.testing import CliRunner
-from unittest.mock import Mock, patch
-from pathlib import Path
 
 from warifuri.cli.commands.automation import automation_list, check_automation, create_pr, merge_pr
 from warifuri.cli.context import Context
-from warifuri.core.types import Project, Task, TaskInstruction, TaskType, TaskStatus
+from warifuri.core.types import Project, Task, TaskInstruction, TaskStatus, TaskType
 
 
 class TestAutomationCommands:
@@ -36,7 +37,7 @@ class TestAutomationCommands:
             dependencies=[],
             inputs=[],
             outputs=["config.json"],
-            note="Setup configuration"
+            note="Setup configuration",
         )
 
         setup_task = Task(
@@ -45,14 +46,10 @@ class TestAutomationCommands:
             path=Path("/workspace/projects/demo/setup"),
             instruction=setup_instruction,
             task_type=TaskType.MACHINE,
-            status=TaskStatus.READY
+            status=TaskStatus.READY,
         )
 
-        project = Project(
-            name="demo",
-            path=Path("/workspace/projects/demo"),
-            tasks=[setup_task]
-        )
+        project = Project(name="demo", path=Path("/workspace/projects/demo"), tasks=[setup_task])
         return [project]
 
     def test_automation_list_basic(self, runner, mock_context):
@@ -69,9 +66,7 @@ class TestAutomationCommands:
                 assert result.exit_code == 0
                 mock_service.assert_called_once_with(mock_context)
                 mock_service_instance.list_automation_tasks.assert_called_once_with(
-                    ready_only=False,
-                    machine_only=False,
-                    project=None
+                    ready_only=False, machine_only=False, project=None
                 )
                 mock_service_instance.output_results.assert_called_once_with([], "plain")
 
@@ -87,14 +82,12 @@ class TestAutomationCommands:
                 result = runner.invoke(
                     automation_list,
                     ["--ready-only", "--machine-only", "--format", "json", "--project", "demo"],
-                    obj=mock_context
+                    obj=mock_context,
                 )
 
                 assert result.exit_code == 0
                 mock_service_instance.list_automation_tasks.assert_called_once_with(
-                    ready_only=True,
-                    machine_only=True,
-                    project="demo"
+                    ready_only=True, machine_only=True, project="demo"
                 )
                 mock_service_instance.output_results.assert_called_once_with([], "json")
 
@@ -117,7 +110,7 @@ class TestAutomationCommands:
                     can_automate=True,
                     issues=[],
                     auto_merge_config=None,
-                    check_only=False
+                    check_only=False,
                 )
 
     def test_automation_check_with_verbose(self, runner, mock_context):
@@ -130,9 +123,7 @@ class TestAutomationCommands:
 
             with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
                 result = runner.invoke(
-                    check_automation,
-                    ["--check-only", "demo/setup"],
-                    obj=mock_context
+                    check_automation, ["--check-only", "demo/setup"], obj=mock_context
                 )
 
                 assert result.exit_code == 0
@@ -141,7 +132,7 @@ class TestAutomationCommands:
                     can_automate=True,
                     issues=[],
                     auto_merge_config=None,
-                    check_only=True
+                    check_only=True,
                 )
 
     def test_create_pr_validation_failure_github_prerequisites(self, runner, mock_context):
@@ -152,11 +143,7 @@ class TestAutomationCommands:
             mock_validator.validate_github_prerequisites.return_value = False
 
             with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
-                result = runner.invoke(
-                    create_pr,
-                    ["demo/setup"],
-                    obj=mock_context
-                )
+                result = runner.invoke(create_pr, ["demo/setup"], obj=mock_context)
 
                 assert result.exit_code == 1  # click.Abort()
                 mock_validator.validate_github_prerequisites.assert_called_once()
@@ -170,11 +157,7 @@ class TestAutomationCommands:
             mock_validator.validate_workspace_clean.return_value = False
 
             with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
-                result = runner.invoke(
-                    create_pr,
-                    ["demo/setup"],
-                    obj=mock_context
-                )
+                result = runner.invoke(create_pr, ["demo/setup"], obj=mock_context)
 
                 assert result.exit_code == 1  # click.Abort()
                 mock_validator.validate_github_prerequisites.assert_called_once()
@@ -193,12 +176,10 @@ class TestAutomationCommands:
                 mock_pr_service.return_value = mock_pr_instance
                 mock_pr_instance.create_pr.return_value = True
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
-                    result = runner.invoke(
-                        create_pr,
-                        ["demo/setup"],
-                        obj=mock_context
-                    )
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
+                    result = runner.invoke(create_pr, ["demo/setup"], obj=mock_context)
 
                     assert result.exit_code == 0
                     mock_pr_instance.create_pr.assert_called_once_with(
@@ -227,12 +208,10 @@ class TestAutomationCommands:
                 mock_pr_service.return_value = mock_pr_instance
                 mock_pr_instance.create_pr.return_value = False
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
-                    result = runner.invoke(
-                        create_pr,
-                        ["demo/setup"],
-                        obj=mock_context
-                    )
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
+                    result = runner.invoke(create_pr, ["demo/setup"], obj=mock_context)
 
                     assert result.exit_code == 1  # click.Abort()
 
@@ -249,22 +228,30 @@ class TestAutomationCommands:
                 mock_pr_service.return_value = mock_pr_instance
                 mock_pr_instance.create_pr.return_value = True
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
                     result = runner.invoke(
                         create_pr,
                         [
                             "demo/setup",
-                            "--branch-name", "feature/setup",
-                            "--commit-message", "Add setup functionality",
-                            "--pr-title", "Setup task implementation",
-                            "--pr-body", "Implements the setup task",
-                            "--base-branch", "develop",
+                            "--branch-name",
+                            "feature/setup",
+                            "--commit-message",
+                            "Add setup functionality",
+                            "--pr-title",
+                            "Setup task implementation",
+                            "--pr-body",
+                            "Implements the setup task",
+                            "--base-branch",
+                            "develop",
                             "--draft",
                             "--auto-merge",
-                            "--merge-method", "squash",
+                            "--merge-method",
+                            "squash",
                             "--dry-run",
                         ],
-                        obj=mock_context
+                        obj=mock_context,
                     )
 
                     assert result.exit_code == 0
@@ -290,9 +277,7 @@ class TestAutomationCommands:
 
             with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
                 result = runner.invoke(
-                    merge_pr,
-                    ["https://github.com/owner/repo/pull/123"],
-                    obj=mock_context
+                    merge_pr, ["https://github.com/owner/repo/pull/123"], obj=mock_context
                 )
 
                 assert result.exit_code == 1  # click.Abort()
@@ -309,7 +294,7 @@ class TestAutomationCommands:
                 result = runner.invoke(
                     merge_pr,
                     ["--dry-run", "https://github.com/owner/repo/pull/123"],
-                    obj=mock_context
+                    obj=mock_context,
                 )
 
                 assert result.exit_code == 0
@@ -327,8 +312,13 @@ class TestAutomationCommands:
             with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
                 result = runner.invoke(
                     merge_pr,
-                    ["--dry-run", "--merge-method", "squash", "https://github.com/owner/repo/pull/123"],
-                    obj=mock_context
+                    [
+                        "--dry-run",
+                        "--merge-method",
+                        "squash",
+                        "https://github.com/owner/repo/pull/123",
+                    ],
+                    obj=mock_context,
                 )
 
                 assert result.exit_code == 0
@@ -341,22 +331,23 @@ class TestAutomationCommands:
             mock_validator_class.return_value = mock_validator
             mock_validator.validate_github_prerequisites.return_value = True
 
-            with patch("warifuri.cli.commands.automation.TaskExecutionService") as mock_task_service:
+            with patch(
+                "warifuri.cli.commands.automation.TaskExecutionService"
+            ) as mock_task_service:
                 mock_task_instance = Mock()
                 mock_task_service.return_value = mock_task_instance
                 mock_task_instance.merge_pr.return_value = True
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
                     result = runner.invoke(
-                        merge_pr,
-                        ["https://github.com/owner/repo/pull/123"],
-                        obj=mock_context
+                        merge_pr, ["https://github.com/owner/repo/pull/123"], obj=mock_context
                     )
 
                     assert result.exit_code == 0
                     mock_task_instance.merge_pr.assert_called_once_with(
-                        "https://github.com/owner/repo/pull/123",
-                        "squash"
+                        "https://github.com/owner/repo/pull/123", "squash"
                     )
 
     def test_merge_pr_failure(self, runner, mock_context):
@@ -366,16 +357,18 @@ class TestAutomationCommands:
             mock_validator_class.return_value = mock_validator
             mock_validator.validate_github_prerequisites.return_value = True
 
-            with patch("warifuri.cli.commands.automation.TaskExecutionService") as mock_task_service:
+            with patch(
+                "warifuri.cli.commands.automation.TaskExecutionService"
+            ) as mock_task_service:
                 mock_task_instance = Mock()
                 mock_task_service.return_value = mock_task_instance
                 mock_task_instance.merge_pr.return_value = False
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
                     result = runner.invoke(
-                        merge_pr,
-                        ["https://github.com/owner/repo/pull/123"],
-                        obj=mock_context
+                        merge_pr, ["https://github.com/owner/repo/pull/123"], obj=mock_context
                     )
 
                     assert result.exit_code == 1  # click.Abort()
@@ -387,20 +380,23 @@ class TestAutomationCommands:
             mock_validator_class.return_value = mock_validator
             mock_validator.validate_github_prerequisites.return_value = True
 
-            with patch("warifuri.cli.commands.automation.TaskExecutionService") as mock_task_service:
+            with patch(
+                "warifuri.cli.commands.automation.TaskExecutionService"
+            ) as mock_task_service:
                 mock_task_instance = Mock()
                 mock_task_service.return_value = mock_task_instance
                 mock_task_instance.merge_pr.return_value = True
 
-                with patch("warifuri.cli.commands.automation.pass_context", return_value=lambda f: f):
+                with patch(
+                    "warifuri.cli.commands.automation.pass_context", return_value=lambda f: f
+                ):
                     result = runner.invoke(
                         merge_pr,
                         ["--merge-method", "rebase", "https://github.com/owner/repo/pull/123"],
-                        obj=mock_context
+                        obj=mock_context,
                     )
 
                     assert result.exit_code == 0
                     mock_task_instance.merge_pr.assert_called_once_with(
-                        "https://github.com/owner/repo/pull/123",
-                        "rebase"
+                        "https://github.com/owner/repo/pull/123", "rebase"
                     )

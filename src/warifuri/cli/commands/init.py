@@ -5,13 +5,13 @@ from typing import Optional
 
 import click
 
-from ..context import Context, pass_context
 from ...utils import (
     ensure_directory,
-    safe_write_file,
     expand_template_directory,
     get_template_variables_from_user,
+    safe_write_file,
 )
+from ..context import Context, pass_context
 
 
 @click.command()

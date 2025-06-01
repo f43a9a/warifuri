@@ -27,14 +27,14 @@ inputs:
 outputs:
   - "extracted_data.{{OUTPUT_FORMAT}}"
 note: "Data extraction task for {{PROJECT_NAME}}"
-"""
+""",
     )
     safe_write_file(
         extract_dir / "run.sh",
         """#!/bin/bash
 # Extract data from {{SOURCE}}
 echo "Extracting data for {{PROJECT_NAME}}"
-"""
+""",
     )
 
     # Create transform task
@@ -51,7 +51,7 @@ inputs:
   - "extracted_data.{{OUTPUT_FORMAT}}"
 outputs:
   - "transformed_data.{{OUTPUT_FORMAT}}"
-"""
+""",
     )
     safe_write_file(
         transform_dir / "prompt.yaml",
@@ -59,7 +59,7 @@ outputs:
 temperature: 0.1
 system_prompt: "You are a data transformation expert for {{PROJECT_NAME}}"
 user_prompt: "Transform the data with format {{OUTPUT_FORMAT}}"
-"""
+""",
     )
 
     return temp_workspace
@@ -71,10 +71,17 @@ class TestTemplateInitialization:
     def test_template_whole_expansion_dry_run(self, template_workspace):
         """Test whole template expansion with dry run."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline", "--dry-run"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "--template",
+                "data-pipeline",
+                "--dry-run",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Would expand template 'data-pipeline' as project:" in result.output
@@ -85,10 +92,17 @@ class TestTemplateInitialization:
     def test_template_whole_expansion_force(self, template_workspace):
         """Test whole template expansion with force flag."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline", "--force"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "--template",
+                "data-pipeline",
+                "--force",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Template 'data-pipeline' expanded as project 'data-pipeline'" in result.output
@@ -110,11 +124,18 @@ class TestTemplateInitialization:
     def test_template_partial_expansion_task(self, template_workspace):
         """Test partial template expansion for task creation."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "custom-project/my-extract",
-            "--template", "data-pipeline/extract", "--force"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "custom-project/my-extract",
+                "--template",
+                "data-pipeline/extract",
+                "--force",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Created task 'custom-project/my-extract'" in result.output
@@ -132,11 +153,18 @@ class TestTemplateInitialization:
     def test_template_partial_expansion_project(self, template_workspace):
         """Test partial template expansion for project creation."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "my-project",
-            "--template", "data-pipeline/extract", "--force"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "my-project",
+                "--template",
+                "data-pipeline/extract",
+                "--force",
+            ],
+        )
 
         assert result.exit_code == 0
         assert "Created project 'my-project'" in result.output
@@ -148,10 +176,9 @@ class TestTemplateInitialization:
     def test_template_not_found(self, template_workspace):
         """Test error handling for non-existent template."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "non-existent"
-        ])
+        result = runner.invoke(
+            cli, ["--workspace", str(template_workspace), "init", "--template", "non-existent"]
+        )
 
         assert result.exit_code == 0
         assert "Error: Template 'non-existent' not found" in result.output
@@ -161,27 +188,40 @@ class TestTemplateInitialization:
         runner = CliRunner()
 
         # First creation
-        result1 = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline", "--force"
-        ])
+        result1 = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "--template",
+                "data-pipeline",
+                "--force",
+            ],
+        )
         assert result1.exit_code == 0
 
         # Second creation without force should fail
-        result2 = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline"
-        ])
+        result2 = runner.invoke(
+            cli, ["--workspace", str(template_workspace), "init", "--template", "data-pipeline"]
+        )
         assert result2.exit_code == 0
         assert "already exists. Use --force to overwrite" in result2.output
 
     def test_placeholder_substitution_complex(self, template_workspace):
         """Test complex placeholder substitution in multiple files."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline", "--force"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "--template",
+                "data-pipeline",
+                "--force",
+            ],
+        )
 
         assert result.exit_code == 0
 
@@ -192,7 +232,9 @@ class TestTemplateInitialization:
         assert "Extracting data for data-pipeline" in content
 
         # Check transform prompt.yaml file
-        prompt_file = template_workspace / "projects" / "data-pipeline" / "transform" / "prompt.yaml"
+        prompt_file = (
+            template_workspace / "projects" / "data-pipeline" / "transform" / "prompt.yaml"
+        )
         assert prompt_file.exists()
         content = prompt_file.read_text()
         assert "data transformation expert for data-pipeline" in content
@@ -201,10 +243,17 @@ class TestTemplateInitialization:
     def test_dependency_preservation(self, template_workspace):
         """Test that dependencies are preserved in template expansion."""
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "--workspace", str(template_workspace),
-            "init", "--template", "data-pipeline", "--force"
-        ])
+        result = runner.invoke(
+            cli,
+            [
+                "--workspace",
+                str(template_workspace),
+                "init",
+                "--template",
+                "data-pipeline",
+                "--force",
+            ],
+        )
 
         assert result.exit_code == 0
 

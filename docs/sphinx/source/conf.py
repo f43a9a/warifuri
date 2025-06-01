@@ -3,36 +3,36 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import sys
 import os
+import sys
 
 # -- Path setup --------------------------------------------------------------
-sys.path.insert(0, os.path.abspath('../../../src'))
+sys.path.insert(0, os.path.abspath("../../../src"))
 
 # -- Project information -----------------------------------------------------
-project = 'Warifuri'
-copyright = '2025, Warifuri Team'
-author = 'Warifuri Team'
-release = '1.0.0'
+project = "Warifuri"
+copyright = "2025, Warifuri Team"
+author = "Warifuri Team"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx_autodoc_typehints',
-    'myst_parser',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx_autodoc_typehints",
+    "myst_parser",
 ]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
-language = 'en'
+language = "en"
 
 # -- Options for HTML output -------------------------------------------------
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+html_static_path = ["_static"]
 
 # -- Extension configuration -------------------------------------------------
 
@@ -51,11 +51,11 @@ napoleon_use_rtype = True
 
 # Autodoc settings
 autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-    'exclude-members': '__weakref__'
+    "members": True,
+    "member-order": "bysource",
+    "special-members": "__init__",
+    "undoc-members": True,
+    "exclude-members": "__weakref__",
 }
 
 # Type hints settings
@@ -81,8 +81,8 @@ myst_enable_extensions = [
 
 # Intersphinx settings
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'click': ('https://click.palletsprojects.com/', None),
+    "python": ("https://docs.python.org/3", None),
+    "click": ("https://click.palletsprojects.com/", None),
 }
 
 # Todo extension settings

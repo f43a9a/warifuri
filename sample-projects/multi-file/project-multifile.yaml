@@ -1,0 +1,23 @@
+name: multifile
+description: Multi-file dependencies test project
+
+tasks:
+  generator:
+    command: python scripts/generator.py
+    outputs:
+      - data1.txt
+      - data2.txt
+      - config.json
+    description: Generate multiple data files
+
+  processor:
+    command: python scripts/processor.py
+    inputs:
+      - data1.txt
+      - data2.txt
+      - config.json
+    outputs:
+      - summary.txt
+    depends:
+      - generator
+    description: Process all generated files

@@ -36,7 +36,7 @@ def expand_template_directory(
         template_dir: Source template directory
         target_dir: Target directory to create
         variables: Variables for placeholder expansion
-        skip_patterns: File patterns to skip (e.g., ['*.pyc', '__pycache__'])
+        skip_patterns: File patterns to skip (e.g., ["*.pyc", "__pycache__"])
     """
     if skip_patterns is None:
         skip_patterns = ["*.pyc", "__pycache__", ".git", ".gitignore"]

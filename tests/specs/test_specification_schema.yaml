@@ -1,0 +1,449 @@
+# Test Specification Schema
+# テスト観点記述仕様のスキーマ定義
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://warifuri.dev/schemas/test-spec.schema.json"
+
+title: "Warifuri Test Specification Schema"
+description: "Warifuriテスト観点記述仕様のJSONスキーマ"
+version: "1.0.0"
+
+type: "object"
+
+required:
+  - "$schema"
+  - "specification_version"
+  - "test_type"
+  - "target_component"
+  - "metadata"
+
+properties:
+  $schema:
+    type: "string"
+    format: "uri"
+    description: "このスキーマのURI"
+
+  specification_version:
+    type: "string"
+    pattern: "^\\d+\\.\\d+\\.\\d+$"
+    description: "仕様のバージョン (セマンティックバージョニング)"
+
+  test_type:
+    type: "string"
+    enum: ["unit", "integration", "e2e", "security", "performance", "property_based", "snapshot"]
+    description: "テストの種類"
+
+  target_component:
+    type: "string"
+    description: "テスト対象コンポーネント"
+
+  metadata:
+    type: "object"
+    required: ["title", "description", "author", "created_date", "priority"]
+    properties:
+      title:
+        type: "string"
+        maxLength: 200
+        description: "テスト仕様のタイトル"
+
+      description:
+        type: "string"
+        maxLength: 1000
+        description: "テスト仕様の詳細説明"
+
+      author:
+        type: "string"
+        description: "作成者"
+
+      created_date:
+        type: "string"
+        format: "date"
+        description: "作成日 (YYYY-MM-DD)"
+
+      updated_date:
+        type: "string"
+        format: "date"
+        description: "更新日 (YYYY-MM-DD)"
+
+      priority:
+        type: "string"
+        enum: ["low", "medium", "high", "critical"]
+        description: "優先度"
+
+      coverage_target:
+        type: "number"
+        minimum: 0
+        maximum: 100
+        description: "カバレッジ目標 (%)"
+
+      compliance_standards:
+        type: "array"
+        items:
+          type: "string"
+        description: "準拠する標準・規格"
+
+      test_environment:
+        type: "string"
+        description: "テスト実行環境"
+
+# テストタイプ別の追加プロパティ
+
+  # Unit Test 固有
+  modules:
+    type: "array"
+    items:
+      type: "object"
+      required: ["module", "description", "test_cases"]
+      properties:
+        module:
+          type: "string"
+          description: "テスト対象モジュール名"
+
+        description:
+          type: "string"
+          description: "モジュールの説明"
+
+        test_cases:
+          type: "array"
+          items:
+            type: "object"
+            required: ["case", "input", "expected"]
+            properties:
+              case:
+                type: "string"
+                description: "テストケース名"
+
+              input:
+                type: "string"
+                description: "入力条件"
+
+              expected:
+                type: "string"
+                description: "期待される結果"
+
+              assertions:
+                type: "array"
+                items:
+                  type: "string"
+                description: "検証すべきアサーション"
+
+  property_based_tests:
+    type: "array"
+    items:
+      type: "object"
+      required: ["property", "description", "strategy", "invariants"]
+      properties:
+        property:
+          type: "string"
+          description: "検証するプロパティ"
+
+        description:
+          type: "string"
+          description: "プロパティの説明"
+
+        strategy:
+          type: "string"
+          description: "テストデータ生成戦略"
+
+        invariants:
+          type: "array"
+          items:
+            type: "string"
+          description: "不変条件"
+
+  mocking_strategy:
+    type: "object"
+    additionalProperties:
+      type: "array"
+      items:
+        type: "string"
+    description: "モッキング戦略"
+
+  # Integration Test 固有
+  integration_scenarios:
+    type: "array"
+    items:
+      type: "object"
+      required: ["scenario", "description", "steps"]
+      properties:
+        scenario:
+          type: "string"
+          description: "統合テストシナリオ名"
+
+        description:
+          type: "string"
+          description: "シナリオの説明"
+
+        steps:
+          type: "array"
+          items:
+            type: "object"
+            required: ["step", "action", "expected"]
+            properties:
+              step:
+                type: "string"
+                description: "ステップ名"
+
+              action:
+                type: "string"
+                description: "実行するアクション"
+
+              expected:
+                type: "string"
+                description: "期待される結果"
+
+              assertions:
+                type: "array"
+                items:
+                  type: "string"
+                description: "検証項目"
+
+        test_cases:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              case:
+                type: "string"
+              dependencies:
+                oneOf:
+                  - type: "array"
+                    items:
+                      type: "string"
+                  - type: "string"
+              expected:
+                type: "string"
+
+  environment_requirements:
+    type: "object"
+    properties:
+      runtime:
+        type: "array"
+        items:
+          type: "string"
+        description: "実行時要件"
+
+      test_data:
+        type: "array"
+        items:
+          type: "string"
+        description: "テストデータ要件"
+
+  external_dependencies:
+    type: "object"
+    additionalProperties:
+      type: "object"
+      properties:
+        mock_level:
+          type: "string"
+          enum: ["none", "minimal", "partial", "full"]
+        use_vcr:
+          type: "boolean"
+        mock_strategy:
+          type: "string"
+
+  # E2E Test 固有
+  user_journeys:
+    type: "array"
+    items:
+      type: "object"
+      required: ["journey", "persona", "goal", "steps"]
+      properties:
+        journey:
+          type: "string"
+          description: "ユーザージャーニー名"
+
+        persona:
+          type: "string"
+          description: "ユーザーペルソナ"
+
+        goal:
+          type: "string"
+          description: "ユーザーの目標"
+
+        steps:
+          type: "array"
+          items:
+            type: "object"
+            required: ["step", "action", "expected"]
+            properties:
+              step:
+                type: "string"
+              action:
+                type: "string"
+              expected:
+                type: "string"
+              verification:
+                type: "array"
+                items:
+                  type: "string"
+
+  execution_environments:
+    type: "array"
+    items:
+      type: "object"
+      required: ["environment"]
+      properties:
+        environment:
+          type: "string"
+        os:
+          type: "array"
+          items:
+            type: "string"
+        python:
+          type: "array"
+          items:
+            type: "string"
+        runner:
+          type: "array"
+          items:
+            type: "string"
+        requirements:
+          type: "array"
+          items:
+            type: "string"
+
+  # Security Test 固有
+  threat_model:
+    type: "object"
+    properties:
+      assets:
+        type: "array"
+        items:
+          type: "string"
+      threat_actors:
+        type: "array"
+        items:
+          type: "string"
+      attack_vectors:
+        type: "array"
+        items:
+          type: "string"
+
+  # Performance Test 固有
+  performance_requirements:
+    type: "object"
+    properties:
+      response_time:
+        type: "array"
+        items:
+          type: "object"
+          required: ["command", "target"]
+          properties:
+            command:
+              type: "string"
+            target:
+              type: "string"
+            acceptable:
+              type: "string"
+            critical:
+              type: "string"
+
+      throughput:
+        type: "array"
+        items:
+          type: "object"
+          required: ["metric", "target"]
+          properties:
+            metric:
+              type: "string"
+            target:
+              type: "string"
+            acceptable:
+              type: "string"
+            minimum:
+              type: "string"
+
+      resource_usage:
+        type: "object"
+        properties:
+          memory:
+            type: "object"
+            additionalProperties:
+              type: "string"
+          cpu:
+            type: "object"
+            additionalProperties:
+              type: "string"
+          disk_io:
+            type: "object"
+            additionalProperties:
+              type: "string"
+
+  # 共通プロパティ
+  coverage_requirements:
+    type: "object"
+    properties:
+      statement_coverage:
+        type: "number"
+        minimum: 0
+        maximum: 100
+
+      branch_coverage:
+        type: "number"
+        minimum: 0
+        maximum: 100
+
+      function_coverage:
+        type: "number"
+        minimum: 0
+        maximum: 100
+
+      critical_paths:
+        type: "array"
+        items:
+          type: "string"
+
+  quality_gates:
+    oneOf:
+      - type: "array"
+        items:
+          type: "string"
+      - type: "object"
+        additionalProperties:
+          type: "array"
+          items:
+            type: "string"
+
+  notes:
+    type: "string"
+    description: "追加の注記・備考"
+
+# 条件付き必須フィールド
+allOf:
+  - if:
+      properties:
+        test_type:
+          const: "unit"
+    then:
+      required: ["modules"]
+
+  - if:
+      properties:
+        test_type:
+          const: "integration"
+    then:
+      required: ["integration_scenarios"]
+
+  - if:
+      properties:
+        test_type:
+          const: "e2e"
+    then:
+      required: ["user_journeys"]
+
+  - if:
+      properties:
+        test_type:
+          const: "security"
+    then:
+      required: ["threat_model"]
+
+  - if:
+      properties:
+        test_type:
+          const: "performance"
+    then:
+      required: ["performance_requirements"]
+
+additionalProperties: true

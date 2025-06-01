@@ -1,0 +1,19 @@
+name: simple
+description: Simple dependency chain test project
+
+tasks:
+  foundation:
+    command: python scripts/foundation.py
+    outputs:
+      - base.txt
+    description: Generate foundation file
+
+  consumer:
+    command: python scripts/consumer.py
+    inputs:
+      - base.txt
+    outputs:
+      - processed.txt
+    depends:
+      - foundation
+    description: Process foundation file

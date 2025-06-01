@@ -1,0 +1,6 @@
+Core Library Version Information
+Generated: 2025-05-29 23:10:37.714644
+
+Version: 1.0.0
+Build: 20250529231037
+Environment: development

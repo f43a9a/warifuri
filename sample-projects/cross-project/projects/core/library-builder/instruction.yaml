@@ -1,0 +1,9 @@
+name: library-builder
+description: Build core library information
+auto_merge: false
+dependencies:
+  - config-generator
+inputs:
+  - ../config-generator/shared.conf
+outputs:
+  - core_lib.json

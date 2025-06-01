@@ -18,7 +18,7 @@ def mark_done(
 ) -> None:
     """Mark task as completed by creating done.md file.
 
-    TASK_NAME should be in format 'project/task'.
+    TASK_NAME should be in format "project/task".
     """
     workspace_path = ctx.ensure_workspace_path()
 

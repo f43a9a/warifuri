@@ -1,0 +1,348 @@
+# Task Schema Definition
+# タスク定義のスキーマ
+
+$schema: "http://json-schema.org/draft-07/schema#"
+$id: "https://warifuri.dev/schemas/task.schema.json"
+
+title: "Warifuri Task Definition Schema"
+description: "Warifuriタスク定義のJSONスキーマ"
+version: "2.0.0"
+
+type: "object"
+
+required:
+  - "id"
+  - "title"
+  - "type"
+  - "status"
+
+properties:
+  # 基本フィールド
+  id:
+    type: "string"
+    pattern: "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
+    minLength: 1
+    maxLength: 100
+    description: "タスクの一意識別子"
+    examples: ["setup-environment", "build-app", "deploy-prod"]
+
+  title:
+    type: "string"
+    minLength: 1
+    maxLength: 200
+    description: "タスクのタイトル"
+    examples: ["環境セットアップ", "アプリケーションビルド"]
+
+  description:
+    type: "string"
+    maxLength: 1000
+    description: "タスクの詳細説明"
+
+  type:
+    type: "string"
+    enum: ["machine", "human", "ai"]
+    description: "タスクの実行タイプ"
+
+  status:
+    type: "string"
+    enum: ["todo", "in_progress", "done", "blocked", "cancelled"]
+    description: "タスクの現在のステータス"
+
+  # 依存関係
+  dependencies:
+    type: "array"
+    items:
+      type: "object"
+      required: ["id"]
+      properties:
+        id:
+          type: "string"
+          description: "依存先タスクのID"
+        type:
+          type: "string"
+          enum: ["strict", "soft"]
+          default: "strict"
+          description: "依存の種類 (strict: 必須, soft: 推奨)"
+        description:
+          type: "string"
+          description: "依存関係の説明"
+      additionalProperties: false
+    description: "このタスクが依存する他のタスク"
+
+  # 実行設定
+  execution:
+    type: "object"
+    properties:
+      script:
+        type: "string"
+        description: "実行するスクリプト (machine タイプ用)"
+
+      environment:
+        type: "object"
+        properties:
+          variables:
+            type: "object"
+            patternProperties:
+              "^[A-Z_][A-Z0-9_]*$":
+                type: "string"
+            description: "環境変数"
+
+          requirements:
+            type: "object"
+            properties:
+              python:
+                type: "string"
+                pattern: "^>=?[0-9]+\\.[0-9]+(\\.?[0-9]+)?$"
+                description: "Pythonバージョン要件"
+
+              node:
+                type: "string"
+                pattern: "^>=?[0-9]+\\.[0-9]+(\\.?[0-9]+)?$"
+                description: "Node.jsバージョン要件"
+
+              packages:
+                type: "array"
+                items:
+                  type: "string"
+                description: "必要なパッケージ"
+            additionalProperties: false
+        additionalProperties: false
+
+      timeout:
+        type: "string"
+        pattern: "^[0-9]+[smh]$"
+        description: "タイムアウト (例: 30s, 5m, 2h)"
+
+      retry:
+        type: "object"
+        properties:
+          max_attempts:
+            type: "integer"
+            minimum: 1
+            maximum: 10
+            description: "最大試行回数"
+
+          backoff:
+            type: "string"
+            enum: ["linear", "exponential"]
+            description: "バックオフ戦略"
+
+          delay:
+            type: "string"
+            pattern: "^[0-9]+[smh]$"
+            description: "リトライ間隔"
+        additionalProperties: false
+    additionalProperties: false
+
+  # バリデーション設定
+  validation:
+    type: "object"
+    properties:
+      output_files:
+        type: "array"
+        items:
+          type: "string"
+        description: "生成されるべきファイル"
+
+      expected_content:
+        type: "array"
+        items:
+          type: "object"
+          required: ["file"]
+          properties:
+            file:
+              type: "string"
+              description: "チェック対象ファイル"
+
+            contains:
+              type: "string"
+              description: "含まれるべき文字列"
+
+            matches:
+              type: "string"
+              description: "マッチするべき正規表現"
+
+            json_schema:
+              type: "object"
+              description: "JSONスキーマ (JSONファイル用)"
+
+            yaml_schema:
+              type: "object"
+              description: "YAMLスキーマ (YAMLファイル用)"
+          additionalProperties: false
+        description: "ファイル内容の期待値"
+
+      performance:
+        type: "object"
+        properties:
+          max_memory:
+            type: "string"
+            pattern: "^[0-9]+[KMGT]?B$"
+            description: "最大メモリ使用量"
+
+          max_cpu_time:
+            type: "string"
+            pattern: "^[0-9]+[smh]$"
+            description: "最大CPU時間"
+        additionalProperties: false
+    additionalProperties: false
+
+  # エラーハンドリング
+  error_handling:
+    type: "object"
+    properties:
+      on_failure:
+        type: "array"
+        items:
+          type: "object"
+          required: ["action"]
+          properties:
+            action:
+              type: "string"
+              enum: ["cleanup", "notify", "retry", "escalate"]
+              description: "失敗時のアクション"
+
+            script:
+              type: "string"
+              description: "実行するスクリプト (cleanup用)"
+
+            level:
+              type: "string"
+              enum: ["info", "warning", "error", "critical"]
+              description: "通知レベル (notify用)"
+
+            message:
+              type: "string"
+              description: "通知メッセージ"
+          additionalProperties: false
+
+      recoverable_errors:
+        type: "array"
+        items:
+          type: "object"
+          required: ["pattern", "action"]
+          properties:
+            pattern:
+              type: "string"
+              description: "エラーパターン (正規表現)"
+
+            action:
+              type: "string"
+              description: "回復アクション"
+          additionalProperties: false
+    additionalProperties: false
+
+  # メタデータ
+  tags:
+    type: "array"
+    items:
+      type: "string"
+      pattern: "^[a-zA-Z0-9][a-zA-Z0-9_-]*$"
+    uniqueItems: true
+    description: "タスクのタグ"
+
+  metadata:
+    type: "object"
+    properties:
+      estimated_duration:
+        type: "string"
+        pattern: "^[0-9]+[smhd]$"
+        description: "推定実行時間"
+
+      complexity:
+        type: "string"
+        enum: ["low", "medium", "high"]
+        description: "複雑度"
+
+      category:
+        type: "string"
+        description: "カテゴリ"
+
+      author:
+        type: "string"
+        description: "作成者"
+
+      version:
+        type: "string"
+        pattern: "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+        description: "バージョン"
+
+      created_at:
+        type: "string"
+        format: "date-time"
+        description: "作成日時"
+
+      updated_at:
+        type: "string"
+        format: "date-time"
+        description: "更新日時"
+    additionalProperties: true
+
+  # 出力設定
+  output:
+    type: "object"
+    properties:
+      artifacts:
+        type: "array"
+        items:
+          type: "string"
+        description: "生成される成果物"
+
+      logs:
+        type: "object"
+        properties:
+          level:
+            type: "string"
+            enum: ["DEBUG", "INFO", "WARNING", "ERROR"]
+            description: "ログレベル"
+
+          format:
+            type: "string"
+            enum: ["text", "json"]
+            description: "ログ形式"
+        additionalProperties: false
+
+      metrics:
+        type: "array"
+        items:
+          type: "object"
+          required: ["name", "type"]
+          properties:
+            name:
+              type: "string"
+              description: "メトリクス名"
+
+            type:
+              type: "string"
+              enum: ["counter", "gauge", "histogram", "duration"]
+              description: "メトリクスタイプ"
+
+            unit:
+              type: "string"
+              description: "単位"
+          additionalProperties: false
+    additionalProperties: false
+
+additionalProperties: false
+
+# バリデーション例
+examples:
+  - id: "setup-node-env"
+    title: "Node.js環境セットアップ"
+    description: "Node.jsとnpmの環境をセットアップする"
+    type: "machine"
+    status: "todo"
+    execution:
+      script: |
+        #!/bin/bash
+        node --version
+        npm --version
+        npm install
+      timeout: "300s"
+    validation:
+      output_files:
+        - "node_modules/package.json"
+    tags: ["setup", "nodejs"]
+    metadata:
+      estimated_duration: "2m"
+      complexity: "low"

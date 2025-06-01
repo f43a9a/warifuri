@@ -1,0 +1,26 @@
+[tool.mutmut]
+paths_to_mutate = ["src/warifuri/"]
+backup = false
+tests_dir = "tests/"
+# Exclude test files and __pycache__ directories
+paths_to_exclude = [
+    "tests/",
+    "__pycache__/",
+    ".pytest_cache/",
+    "htmlcov/",
+    "debug/",
+    "sample-projects/"
+]
+
+# Run tests with pytest
+test_command = "python -m pytest tests/ -x --tb=short --no-cov"
+
+# Mutation test configuration
+mutation_operator = ["arithmetic", "comparison", "logical", "slice", "remove_decorators"]
+
+# Performance settings
+cache_only = false
+simple_output = true
+
+# CI settings
+runner = "python"

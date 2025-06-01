@@ -1,0 +1,6 @@
+name: consumer
+description: Process foundation file
+auto_merge: false
+dependencies: [foundation]
+inputs: [../foundation/base.txt]
+outputs: [processed.txt]

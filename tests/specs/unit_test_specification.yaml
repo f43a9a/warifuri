@@ -1,0 +1,119 @@
+# Unit Test Specification for Warifuri
+# 単体テストの観点記述仕様
+
+$schema: "https://warifuri.dev/schemas/test-spec.schema.json"
+specification_version: "1.0.0"
+test_type: "unit"
+target_component: "warifuri.core"
+
+metadata:
+  title: "Core Module Unit Test Specification"
+  description: "warifuri.coreパッケージの単体テスト観点記述"
+  author: "ai_copilot"
+  created_date: "2025-05-31"
+  updated_date: "2025-05-31"
+  priority: "high"
+  coverage_target: 95
+
+# テスト対象モジュール
+modules:
+  - module: "warifuri.core.discovery"
+    description: "タスク発見・探索機能"
+    test_cases:
+      - case: "正常系: プロジェクト内タスクファイル発見"
+        input: "有効なYAMLタスクファイルを含むディレクトリ"
+        expected: "すべてのタスクファイルが正しく発見される"
+        assertions:
+          - "戻り値がlist[Path]型"
+          - "YAMLファイルのみが対象"
+          - "再帰的にサブディレクトリも探索"
+
+      - case: "境界値: 空のディレクトリ"
+        input: "タスクファイルが存在しないディレクトリ"
+        expected: "空のリストが返される"
+        assertions:
+          - "len(result) == 0"
+          - "例外が発生しない"
+
+      - case: "異常系: 不正なパス"
+        input: "存在しないパス"
+        expected: "適切な例外が発生"
+        assertions:
+          - "FileNotFoundError or 適切な例外が発生"
+          - "エラーメッセージが分かりやすい"
+
+  - module: "warifuri.core.types"
+    description: "コア型定義とバリデーション"
+    test_cases:
+      - case: "正常系: TaskDefinition作成"
+        input: "有効なタスク定義辞書"
+        expected: "TaskDefinitionオブジェクトが正しく作成"
+        assertions:
+          - "すべての必須フィールドが設定"
+          - "型注釈に準拠"
+          - "バリデーションが適切に動作"
+
+      - case: "異常系: 必須フィールド不足"
+        input: "不完全なタスク定義"
+        expected: "バリデーションエラーが発生"
+        assertions:
+          - "ValidationError例外"
+          - "不足フィールドが明示される"
+
+# プロパティベーステスト観点
+property_based_tests:
+  - property: "タスクID生成の一意性"
+    description: "generate_task_id関数は常に一意なIDを生成する"
+    strategy: "任意の文字列入力"
+    invariants:
+      - "戻り値は有効な識別子パターン"
+      - "同一入力に対して同一出力"
+      - "空文字列入力でも有効なIDを生成"
+
+  - property: "パス正規化の冪等性"
+    description: "normalize_path関数は冪等性を満たす"
+    strategy: "任意のパス文字列"
+    invariants:
+      - "normalize_path(normalize_path(x)) == normalize_path(x)"
+      - "相対パスは絶対パスに変換"
+      - "不正なパス文字は適切に処理"
+
+# モッキング戦略
+mocking_strategy:
+  filesystem:
+    - "pathlib.Path.exists() のモック"
+    - "os.listdir() のモック"
+    - "glob.glob() のモック"
+
+  external_commands:
+    - "subprocess.run() のモック"
+    - "git コマンドのモック"
+
+  network:
+    - "requests.get/post のモック"
+    - "HTTPレスポンスのモック"
+
+# カバレッジ要件
+coverage_requirements:
+  statement_coverage: 95
+  branch_coverage: 90
+  function_coverage: 100
+
+  critical_paths:
+    - "エラーハンドリングパス"
+    - "例外発生パス"
+    - "境界値処理パス"
+
+# 品質ゲート
+quality_gates:
+  - "すべてのテストケースが通過"
+  - "mypy --strict 検査通過"
+  - "ruff linter 検査通過"
+  - "カバレッジ目標達成"
+  - "プロパティベーステスト通過"
+
+notes: |
+  この仕様は単体テストの包括的な観点を定義する。
+  各モジュールの正常系・異常系・境界値テストを網羅し、
+  プロパティベーステストによる網羅的な検証を行う。
+  モッキング戦略により外部依存を適切に分離する。

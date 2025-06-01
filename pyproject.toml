@@ -4,58 +4,42 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "warifuri"
-version = "0.1.0"
-description = "A powerful CLI tool for task-driven workflow automation with dependency resolution, GitHub integration, and multi-format output support"
-authors = ["warifuri team <contact@warifuri.dev>"]
-license = "MIT"
+version = "0.2.0"
+description = "Task automation with cross-project dependency resolution"
+authors = ["f43a9a"]
 readme = "README.md"
-homepage = "https://github.com/f43a9a/warifuri"
-repository = "https://github.com/f43a9a/warifuri"
-documentation = "https://warifuri.readthedocs.io/"
-keywords = ["cli", "automation", "workflow", "task-management", "dependency-resolution"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Topic :: System :: Systems Administration",
-    "Topic :: Utilities",
-]
-packages = [{ include = "warifuri", from = "src" }]
-
-[tool.poetry.scripts]
-warifuri = "warifuri.cli.main:cli"
+packages = [{include = "warifuri", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
 PyYAML = ">=6.0"
 gitpython = ">=3.1.0"
 requests = ">=2.28.0"
+flask = ">=2.0.0"
 click = ">=8.0.0"
 jsonschema = ">=4.0.0"
 
+[tool.poetry.scripts]
+warifuri = "warifuri.__main__:main"
+
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
-types-jsonschema = "*"
 ruff = "*"
 pytest = "*"
+pytest-asyncio = "*"
 pytest-cov = "*"
-types-pyyaml = "^6.0.12.20250516"
-bandit = "^1.8.3"
-safety = "^3.5.1"
-bleach = "^6.1.0"
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^8.2.3"
-sphinx-autodoc-typehints = "^3.2.0"
-sphinx-rtd-theme = "^3.0.2"
+pytest-mock = "*"
+vulture = "*"
+radon = "*"
+bandit = "*"
+safety = "*"
+nox = "*"
+types-PyYAML = "*"
+types-requests = "*"
+types-jsonschema = "*"
+hypothesis = "^6.131.31"
+mutmut = "^3.3.0"
+snapshottest = "^0.6.0"
 
 [tool.mypy]
 python_version = "3.11"
@@ -81,17 +65,6 @@ exclude = [
 module = ["git.*", "flask.*", "requests.*", "pytest.*"]
 ignore_missing_imports = true
 
-[tool.bandit]
-# Skip these test patterns as they are expected in CLI tools
-skips = ["B101", "B404", "B603", "B607", "B606"]
-# B404: subprocess module usage (acceptable for CLI tool)
-# B603: subprocess without shell=True (acceptable with controlled inputs)
-# B607: partial executable path (acceptable for system tools like git/gh)
-# B606: process without shell (preferred for security)
-# B101: assert usage (replaced with proper exceptions where critical)
-
-exclude_dirs = ["tests", ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "htmlcov", "dist", ".venv"]
-
 [tool.ruff]
 target-version = "py311"
 line-length = 100
@@ -103,6 +76,52 @@ ignore = ["E203", "E501", "C901"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "--color=yes"
+
+[tool.hypothesis]
+# Property-based testing configuration
+max_examples = 50  # Default number of examples to generate
+deadline = 10000   # 10 seconds per test case
+suppress_health_check = ["too_slow"]  # Allow longer running tests
+database = ".hypothesis/examples"
+
+[tool.vulture]
+# デッドコード検出設定
+paths = ["src", "tests"]
+exclude = [
+    "*/migrations/*",
+    "*/tests/test_*",
+    "*/__pycache__/*"
+]
+min_confidence = 70
+ignore_decorators = ["@pytest.fixture", "@click.command", "@click.option"]
+ignore_names = ["unused_*", "_*"]
+
+[tool.radon]
+# 複雑度測定設定
+show = "mi"  # Maintainability Index
+min = "B"    # B以上の品質を要求
+max = "F"    # F以下は警告
+exclude = ["tests/*", "*/migrations/*"]
+
+[tool.bandit]
+# セキュリティチェック設定
+exclude_dirs = ["tests", "scripts"]
+skips = [
+    "B101",  # assert文の使用を許可
+    "B602",  # subprocess with shell=False - safe for controlled commands
+    "B603",  # subprocess with partial paths - acceptable for CLI tools
+    "B404",  # subprocess module usage - expected in task execution
+    "B606",  # starting process without shell - safe practice
+    "B607",  # partial executable path - acceptable for CLI tools
+]
+
+[tool.mutmut]
+# Mutation testing configuration
+paths_to_mutate = ["src/warifuri"]
+backup = false
+runner = "python -m pytest tests/unit --tb=no -q --disable-warnings"
+tests_dir = "tests/unit"
+dict_synonyms = ["Mapping", "MutableMapping"]

@@ -1,10 +1,9 @@
 """Issue command for GitHub integration."""
 
-from typing import List, Optional
-
 import click
 
 from ..context import Context, pass_context
+from typing import List, Optional
 from ...core.discovery import discover_all_projects, find_task_by_name
 from ...core.types import Project
 from ...core.github import (

@@ -1,0 +1,165 @@
+# Integration Test Specification for Warifuri
+# 統合テストの観点記述仕様
+
+$schema: "https://warifuri.dev/schemas/test-spec.schema.json"
+specification_version: "1.0.0"
+test_type: "integration"
+target_component: "warifuri.cli"
+
+metadata:
+  title: "CLI Integration Test Specification"
+  description: "Warifuri CLI統合テストの観点記述"
+  author: "ai_copilot"
+  created_date: "2025-05-31"
+  updated_date: "2025-05-31"
+  priority: "high"
+  coverage_target: 90
+
+# 統合テストシナリオ
+integration_scenarios:
+  - scenario: "タスク実行ワークフロー統合テスト"
+    description: "タスク発見→検証→実行の一連の流れ"
+    steps:
+      - step: "プロジェクト初期化"
+        action: "warifuri init"
+        expected: "プロジェクト設定ファイル作成"
+
+      - step: "タスク発見"
+        action: "warifuri list"
+        expected: "利用可能なタスク一覧表示"
+        assertions:
+          - "JSONフォーマット出力正常"
+          - "すべてのタスクが発見される"
+
+      - step: "タスク実行"
+        action: "warifuri run <task-id>"
+        expected: "タスクが正常に実行される"
+        assertions:
+          - "実行ログが適切に出力"
+          - "ステータスが更新される"
+          - "依存関係が解決される"
+
+  - scenario: "依存関係解決統合テスト"
+    description: "複雑な依存関係チェーンの解決"
+    setup:
+      - "複数の相互依存タスクを含むプロジェクト作成"
+      - "循環依存を含むケースの準備"
+
+    test_cases:
+      - case: "正常系: 線形依存関係"
+        dependencies: ["A → B → C"]
+        expected: "C, B, A の順で実行"
+
+      - case: "正常系: 複雑な依存グラフ"
+        dependencies: ["A → [B, C]", "B → D", "C → D"]
+        expected: "D, [B, C], A の順で実行"
+
+      - case: "異常系: 循環依存検出"
+        dependencies: ["A → B → A"]
+        expected: "CircularDependencyError例外"
+
+  - scenario: "GitHub統合テスト"
+    description: "GitHub APIとの統合機能"
+    prerequisites:
+      - "GitHub CLI (gh) インストール済み"
+      - "適切な認証設定"
+
+    test_cases:
+      - case: "イシュー作成統合"
+        action: "warifuri github create-issue"
+        expected: "GitHubイシューが作成される"
+        assertions:
+          - "イシュー番号が返される"
+          - "適切なラベルが設定される"
+
+      - case: "プルリクエスト作成統合"
+        action: "warifuri github create-pr"
+        expected: "PRが作成される"
+        assertions:
+          - "PR番号が返される"
+          - "適切なブランチが設定される"
+
+# 環境要件
+environment_requirements:
+  runtime:
+    - "Python 3.11+"
+    - "Git 2.0+"
+    - "GitHub CLI (gh) 2.0+"
+
+  test_data:
+    - "sample-projects/ 以下のテストプロジェクト"
+    - "有効なタスク定義YAML"
+    - "GitHub認証トークン (テスト用)"
+
+# 外部依存のモッキング戦略
+external_dependencies:
+  filesystem:
+    mock_level: "minimal"  # 実際のファイルシステムを使用
+    isolated_directory: true  # テスト用一時ディレクトリ
+
+  github_api:
+    mock_level: "partial"  # APIレスポンスのみモック
+    use_vcr: true  # HTTPインタラクション記録
+
+  git_operations:
+    mock_level: "full"  # Git操作は完全モック
+    mock_strategy: "subprocess_mock"
+
+# パフォーマンス要件
+performance_requirements:
+  response_time:
+    list_command: "< 2秒"
+    run_command: "< 30秒"
+    github_operations: "< 10秒"
+
+  resource_usage:
+    memory: "< 100MB"
+    cpu: "< 80% for 10秒間"
+
+# エラーシナリオ
+error_scenarios:
+  - scenario: "ネットワーク障害"
+    simulation: "GitHub API接続失敗"
+    expected: "適切なエラーメッセージとリトライ機構"
+
+  - scenario: "ファイルシステムエラー"
+    simulation: "権限不足によるファイル書き込み失敗"
+    expected: "明確なエラーメッセージと代替案提示"
+
+  - scenario: "不正なタスク定義"
+    simulation: "YAML構文エラーやスキーマ違反"
+    expected: "バリデーションエラーの詳細な説明"
+
+# 品質ゲート
+quality_gates:
+  functional:
+    - "すべての統合シナリオが成功"
+    - "エラーシナリオが適切に処理される"
+
+  non_functional:
+    - "パフォーマンス要件を満たす"
+    - "メモリリークが発生しない"
+    - "長時間実行でも安定動作"
+
+  compatibility:
+    - "複数OS (Linux, macOS, Windows) で動作"
+    - "異なるGitバージョンで動作"
+    - "異なるPythonバージョン (3.11+) で動作"
+
+# データ検証
+data_validation:
+  input_validation:
+    - "不正なYAMLファイルの拒否"
+    - "スキーマ違反の検出"
+    - "SQLインジェクション等の脆弱性チェック"
+
+  output_validation:
+    - "JSON出力の構造検証"
+    - "ログフォーマットの一貫性"
+    - "文字エンコーディングの正確性"
+
+notes: |
+  統合テストは実際のコンポーネント間の連携を検証する。
+  外部依存は最小限のモッキングに留め、実際の動作に近い環境でテストする。
+  パフォーマンスとエラーハンドリングも重要な検証観点とする。
+  複数環境での動作確認により、実運用環境での信頼性を保証する。

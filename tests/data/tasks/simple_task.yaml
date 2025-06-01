@@ -1,0 +1,34 @@
+# Simple Task Definition Sample
+# 基本的なタスク定義のサンプル
+
+id: "simple-file-creation"
+title: "シンプルなタスクの実行"
+description: "基本的なファイル作成タスク"
+type: "machine"
+status: "todo"
+
+# 必須フィールド
+execution:
+  script: |
+    #!/bin/bash
+    echo "Hello, World!" > output.txt
+    echo "Task completed successfully"
+
+# 任意フィールド
+tags:
+  - "sample"
+  - "basic"
+  - "file-operation"
+
+metadata:
+  estimated_duration: "30s"
+  complexity: "low"
+  category: "setup"
+
+# バリデーション設定
+validation:
+  output_files:
+    - "output.txt"
+  expected_content:
+    - file: "output.txt"
+      contains: "Hello, World!"

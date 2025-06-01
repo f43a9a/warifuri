@@ -1,0 +1,11 @@
+name: validator
+description: Validate application output
+auto_merge: false
+dependencies:
+  - main-app
+  - core/config-generator
+inputs:
+  - app_output.txt
+  - version.txt
+outputs:
+  - validation_report.txt

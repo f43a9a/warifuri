@@ -1,11 +1,11 @@
 """List command for displaying tasks."""
 
 import json
-from typing import Any, Dict, List, Optional
 
 import click
 
 from ..context import Context, pass_context
+from typing import Dict, List, Optional, Any
 from ...core.discovery import discover_all_projects, find_ready_tasks
 from ...core.types import Task, TaskStatus
 
@@ -44,7 +44,7 @@ def list_cmd(
         all_tasks.extend(proj.tasks)
 
     # Update task statuses
-    find_ready_tasks(projects)
+    find_ready_tasks(projects, workspace_path)
 
     # Filter tasks
     tasks = _filter_tasks(all_tasks, ready, completed)

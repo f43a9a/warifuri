@@ -1,0 +1,10 @@
+name: main-app
+description: Main application processing
+auto_merge: false
+dependencies:
+  - core/library-builder
+inputs:
+  - ../core/config-generator/shared.conf
+  - ../core/library-builder/core_lib.json
+outputs:
+  - app_output.txt

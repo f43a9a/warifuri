@@ -135,70 +135,104 @@ def _create_task(
     """Create a new task."""
     task_path = workspace_path / "projects" / project_name / task_name
 
-    if task_path.exists() and not force:
-        click.echo(
-            f"Error: Task '{project_name}/{task_name}' already exists. Use --force to overwrite.",
-            err=True,
-        )
+    if not _validate_task_creation(task_path, force):
         return
 
     if dry_run:
-        click.echo(f"Would create task: {task_path}")
-        click.echo("  - instruction.yaml")
-        if template:
-            click.echo(f"  Using template: {template}")
+        _show_dry_run_task_creation(task_path, template)
         return
 
-    # Create task directory
     ensure_directory(task_path)
 
-    # Handle template expansion
     if template:
-        # Support template/task format
-        if "/" in template:
-            template_name, template_task = template.split("/", 1)
-            template_task_path = workspace_path / "templates" / template_name / template_task
-        else:
-            # Try to find a single task template
-            template_path = workspace_path / "templates" / template
-            if template_path.exists():
-                # Look for single task directory
-                task_dirs = [d for d in template_path.iterdir() if d.is_dir()]
-                if len(task_dirs) == 1:
-                    template_task_path = task_dirs[0]
-                else:
-                    click.echo(
-                        f"Error: Template '{template}' contains multiple tasks. Specify as 'template/task'.",
-                        err=True,
-                    )
-                    return
-            else:
-                click.echo(f"Error: Template '{template}' not found.", err=True)
-                return
-
-        if not template_task_path.exists():
-            click.echo(f"Error: Template task '{template}' not found.", err=True)
-            return
-
-        click.echo(f"Using template: {template}")
-
-        # Get template variables from user
-        variables = get_template_variables_from_user(
-            task_name, non_interactive=dry_run or force or non_interactive
+        _create_task_from_template(
+            workspace_path, task_path, project_name, task_name, template, force, non_interactive
         )
-        variables["PROJECT_NAME"] = project_name
-        variables["TASK_NAME"] = task_name
-
-        # Expand template task
-        try:
-            expand_template_directory(template_task_path, task_path, variables)
-            click.echo(f"Created task '{project_name}/{task_name}' from template '{template}'")
-        except Exception as e:
-            click.echo(f"Error expanding template: {e}", err=True)
-            return
     else:
-        # Create basic instruction.yaml
-        instruction_content = f"""name: {task_name}
+        _create_basic_task(task_path, project_name, task_name)
+
+
+def _validate_task_creation(task_path: Path, force: bool) -> bool:
+    """Validate that task creation can proceed."""
+    if task_path.exists() and not force:
+        click.echo(
+            f"Error: Task '{task_path.parent.name}/{task_path.name}' already exists. Use --force to overwrite.",
+            err=True,
+        )
+        return False
+    return True
+
+
+def _show_dry_run_task_creation(task_path: Path, template: Optional[str]) -> None:
+    """Show what would be created in dry run mode."""
+    click.echo(f"Would create task: {task_path}")
+    click.echo("  - instruction.yaml")
+    if template:
+        click.echo(f"  Using template: {template}")
+
+
+def _create_task_from_template(
+    workspace_path: Path,
+    task_path: Path,
+    project_name: str,
+    task_name: str,
+    template: str,
+    force: bool,
+    non_interactive: bool,
+) -> None:
+    """Create task from template."""
+    template_task_path = _resolve_template_path(workspace_path, template)
+    if not template_task_path:
+        return
+
+    click.echo(f"Using template: {template}")
+
+    # Get template variables from user
+    variables = get_template_variables_from_user(template, non_interactive=non_interactive or force)
+    variables["PROJECT_NAME"] = project_name
+    variables["TASK_NAME"] = task_name
+
+    # Expand template task
+    try:
+        expand_template_directory(template_task_path, task_path, variables)
+        click.echo(f"Created task '{project_name}/{task_name}' from template '{template}'")
+    except Exception as e:
+        click.echo(f"Error expanding template: {e}", err=True)
+
+
+def _resolve_template_path(workspace_path: Path, template: str) -> Optional[Path]:
+    """Resolve template path, handling both 'template' and 'template/task' formats."""
+    if "/" in template:
+        template_name, template_task = template.split("/", 1)
+        template_task_path = workspace_path / "templates" / template_name / template_task
+    else:
+        # Try to find a single task template
+        template_path = workspace_path / "templates" / template
+        if template_path.exists():
+            # Look for single task directory
+            task_dirs = [d for d in template_path.iterdir() if d.is_dir()]
+            if len(task_dirs) == 1:
+                template_task_path = task_dirs[0]
+            else:
+                click.echo(
+                    f"Error: Template '{template}' contains multiple tasks. Specify as 'template/task'.",
+                    err=True,
+                )
+                return None
+        else:
+            click.echo(f"Error: Template '{template}' not found.", err=True)
+            return None
+
+    if not template_task_path.exists():
+        click.echo(f"Error: Template task '{template}' not found.", err=True)
+        return None
+
+    return template_task_path
+
+
+def _create_basic_task(task_path: Path, project_name: str, task_name: str) -> None:
+    """Create basic task with default instruction.yaml."""
+    instruction_content = f"""name: {task_name}
 task_type: human
 description: "Task description here"
 auto_merge: false
@@ -208,12 +242,12 @@ outputs: []
 note: "Please edit this instruction.yaml to complete the task definition"
 """
 
-        instruction_path = task_path / "instruction.yaml"
-        safe_write_file(instruction_path, instruction_content)
+    instruction_path = task_path / "instruction.yaml"
+    safe_write_file(instruction_path, instruction_content)
 
-        click.echo(f"Created task: {project_name}/{task_name}")
-        click.echo(f"  - {instruction_path}")
-        click.echo("Please edit instruction.yaml to complete the task definition.")
+    click.echo(f"Created task: {project_name}/{task_name}")
+    click.echo(f"  - {instruction_path}")
+    click.echo("Please edit instruction.yaml to complete the task definition.")
 
 
 def _expand_template_to_workspace(

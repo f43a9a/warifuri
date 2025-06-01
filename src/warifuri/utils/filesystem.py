@@ -107,5 +107,6 @@ def get_git_commit_sha() -> Optional[str]:
         repo = git.Repo(search_parent_directories=True)
         sha: str = repo.head.commit.hexsha
         return sha
-    except Exception:
+    except (ImportError, OSError, FileNotFoundError, ValueError):
+        # Git module not available or repository not found or other error
         return None

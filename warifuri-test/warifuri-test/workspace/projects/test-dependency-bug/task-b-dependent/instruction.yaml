@@ -1,0 +1,10 @@
+name: task-b-dependent
+task_type: human
+description: "Dependent Task B - Requires foundation_output.txt from Task A"
+auto_merge: false
+dependencies: ["task-a-foundation"]
+inputs:
+  - "foundation_output.txt"
+outputs:
+  - "dependent_output.txt"
+note: "This should only be READY after Task A completes AND foundation_output.txt exists"

@@ -57,6 +57,18 @@ jobs:
     - name: Install warifuri
       run: poetry install --no-interaction
 
+    - name: Check poetry.lock synchronization
+      run: |
+        echo "Checking if poetry.lock is synchronized with pyproject.toml..."
+        if ! poetry check --lock; then
+          echo "⚠️  poetry.lock is out of sync with pyproject.toml"
+          echo "This could cause dependency resolution issues"
+          echo "Consider running 'poetry lock' locally and committing the changes"
+          exit 1
+        else
+          echo "✅ poetry.lock is synchronized with pyproject.toml"
+        fi
+
     - name: Check for auto_merge.yaml files
       id: check-auto-merge
       run: |
@@ -75,21 +87,35 @@ jobs:
       id: validate
       run: |
         echo "Running warifuri validate..."
-        if poetry run warifuri validate --workspace workspace 2>&1 | tee validate_output.txt; then
+        echo "Current working directory: $(pwd)"
+        echo "Available directories:"
+        ls -la
+        echo "Testing warifuri command:"
+        poetry run warifuri --help | head -5
+        echo "Running validation:"
+        if poetry run warifuri validate 2>&1 | tee validate_output.txt; then
           echo "passed=true" >> $GITHUB_OUTPUT
           echo "✅ warifuri validation passed"
+          echo "Validation output file created:"
+          ls -la validate_output.txt
         else
           echo "passed=false" >> $GITHUB_OUTPUT
           echo "❌ warifuri validation failed"
           echo "Validation output:"
           cat validate_output.txt
+          echo "Validation output file info:"
+          ls -la validate_output.txt
           exit 1
         fi
 
     - name: Run tests
       run: |
         echo "Running test suite..."
-        poetry run pytest tests/ -v --tb=short
+        echo "Current working directory: $(pwd)"
+        poetry run pytest tests/ -v --tb=short | tee pytest.log
+        echo "Test execution completed. Checking pytest.log:"
+        ls -la pytest.log
+        echo "pytest.log size: $(stat -c%s pytest.log) bytes"
 
     - name: Check code quality
       run: |
@@ -97,14 +123,44 @@ jobs:
         poetry run ruff check .
         poetry run mypy warifuri
 
+    - name: Validate files for upload
+      run: |
+        echo "Validating files for upload..."
+        echo "Current working directory: $(pwd)"
+        echo "Contents of current directory:"
+        ls -la
+        echo "Checking specific files:"
+        ls -la validate_output.txt pytest.log || echo "Files not found"
+        [ -f validate_output.txt ] && echo "✓ validate_output.txt exists ($(stat -c%s validate_output.txt) bytes)"
+        [ -f pytest.log ] && echo "✓ pytest.log exists ($(stat -c%s pytest.log) bytes)"
+        if [ ! -f validate_output.txt ]; then
+          echo "❌ validate_output.txt is missing"
+          echo "Searching for validate_output.txt in subdirectories:"
+          find . -name "validate_output.txt" -type f 2>/dev/null || echo "No validate_output.txt found"
+        fi
+        if [ ! -f pytest.log ]; then
+          echo "❌ pytest.log is missing"
+          echo "Searching for pytest.log in subdirectories:"
+          find . -name "pytest.log" -type f 2>/dev/null || echo "No pytest.log found"
+          echo "Searching for any pytest output files:"
+          find . -name "*pytest*" -type f 2>/dev/null || echo "No pytest files found"
+        fi
+        if [ ! -f validate_output.txt ] || [ ! -f pytest.log ]; then
+          echo "Files are missing. Cannot proceed with upload."
+          exit 1
+        fi
+        echo "All files validated successfully for upload"
+
     - name: Upload validation results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: warifuri-validation-results
         path: |
           validate_output.txt
           pytest.log
+        if-no-files-found: warn
+        retention-days: 30
 
   auto-merge:
     name: Auto-merge if conditions are met

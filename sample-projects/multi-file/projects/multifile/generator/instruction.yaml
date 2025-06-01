@@ -1,0 +1,9 @@
+name: generator
+description: Generate multiple data files
+auto_merge: false
+dependencies: []
+inputs: []
+outputs:
+  - data1.txt
+  - data2.txt
+  - config.json

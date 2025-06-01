@@ -1,0 +1,172 @@
+# Dependency Chain Sample
+# 連鎖する依存関係のテストケース
+
+# Task 1: Foundation Setup
+id: "foundation-setup"
+title: "基盤環境の設定"
+description: "すべての後続タスクに必要な基盤環境を設定する"
+type: "machine"
+status: "todo"
+execution:
+  script: |
+    #!/bin/bash
+    mkdir -p workspace/{input,output,temp}
+    echo "Foundation setup completed" > workspace/.setup_marker
+validation:
+  output_files:
+    - "workspace/.setup_marker"
+tags: ["foundation", "setup"]
+
+---
+# Task 2: Data Preparation (depends on foundation-setup)
+id: "data-preparation"
+title: "データファイルの準備"
+description: "処理対象のデータファイルを準備する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "foundation-setup"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # 基盤設定が完了していることを確認
+    if [[ ! -f "workspace/.setup_marker" ]]; then
+      echo "ERROR: Foundation setup not completed"
+      exit 1
+    fi
+
+    # サンプルデータを作成
+    cat > workspace/input/sample_data.csv << EOF2
+    id,name,value
+    1,item1,100
+    2,item2,200
+    3,item3,300
+    EOF2
+
+    echo "Data preparation completed" > workspace/.data_ready
+validation:
+  output_files:
+    - "workspace/input/sample_data.csv"
+    - "workspace/.data_ready"
+tags: ["data", "preparation"]
+
+---
+# Task 3: Processing A (depends on data-preparation)
+id: "parallel-processing-a"
+title: "並列処理A：データ集約"
+description: "データを集約して統計情報を生成する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "data-preparation"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # データ準備が完了していることを確認
+    if [[ ! -f "workspace/.data_ready" ]]; then
+      echo "ERROR: Data preparation not completed"
+      exit 1
+    fi
+
+    # データ集約処理
+    awk -F, '
+    NR > 1 {
+      sum += $3
+      count++
+    }
+    END {
+      print "Total records: " count
+      print "Sum of values: " sum
+      print "Average: " sum/count
+    }' workspace/input/sample_data.csv > workspace/output/aggregation_result.txt
+
+    echo "Processing A completed" > workspace/.processing_a_done
+validation:
+  output_files:
+    - "workspace/output/aggregation_result.txt"
+    - "workspace/.processing_a_done"
+tags: ["processing", "aggregation", "parallel"]
+
+---
+# Task 4: Processing B (depends on data-preparation)
+id: "parallel-processing-b"
+title: "並列処理B：データ変換"
+description: "データを変換して新しい形式で出力する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "data-preparation"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # データ準備が完了していることを確認
+    if [[ ! -f "workspace/.data_ready" ]]; then
+      echo "ERROR: Data preparation not completed"
+      exit 1
+    fi
+
+    # データ変換処理
+    awk -F, '
+    NR == 1 {
+      print "ID,NAME,VALUE,CATEGORY"
+      next
+    }
+    {
+      category = ($3 < 150) ? "LOW" : ($3 < 250) ? "MEDIUM" : "HIGH"
+      print $1 "," $2 "," $3 "," category
+    }' workspace/input/sample_data.csv > workspace/output/transformed_data.csv
+
+    echo "Processing B completed" > workspace/.processing_b_done
+validation:
+  output_files:
+    - "workspace/output/transformed_data.csv"
+    - "workspace/.processing_b_done"
+tags: ["processing", "transformation", "parallel"]
+
+---
+# Task 5: Final Integration (depends on both parallel processes)
+id: "final-integration"
+title: "最終結果の統合"
+description: "並列処理の結果を統合して最終レポートを生成する"
+type: "machine"
+status: "todo"
+dependencies:
+  - id: "parallel-processing-a"
+    type: "strict"
+  - id: "parallel-processing-b"
+    type: "strict"
+execution:
+  script: |
+    #!/bin/bash
+    # 両方の処理が完了していることを確認
+    if [[ ! -f "workspace/.processing_a_done" ]]; then
+      echo "ERROR: Processing A not completed"
+      exit 1
+    fi
+    if [[ ! -f "workspace/.processing_b_done" ]]; then
+      echo "ERROR: Processing B not completed"
+      exit 1
+    fi
+
+    # 最終レポート生成
+    cat > workspace/output/final_report.txt << EOF2
+    === Final Processing Report ===
+
+    Aggregation Result:
+    $(cat workspace/output/aggregation_result.txt)
+
+    Transformation Result:
+    $(wc -l < workspace/output/transformed_data.csv) records transformed
+
+    Processing completed at: $(date)
+    EOF2
+
+    echo "Final integration completed" > workspace/.final_done
+validation:
+  output_files:
+    - "workspace/output/final_report.txt"
+    - "workspace/.final_done"
+tags: ["integration", "final", "report"]

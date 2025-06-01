@@ -1,0 +1,6 @@
+name: foundation
+description: Generate foundation file
+auto_merge: false
+dependencies: []
+inputs: []
+outputs: [base.txt]

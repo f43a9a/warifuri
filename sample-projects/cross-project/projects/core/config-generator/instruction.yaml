@@ -1,0 +1,8 @@
+name: config-generator
+description: Generate shared configuration files
+auto_merge: false
+dependencies: []
+inputs: []
+outputs:
+  - shared.conf
+  - version.txt

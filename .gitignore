@@ -73,3 +73,25 @@ docker/volumes/
 
 # Internal development docs - not for public release
 docs/internal/
+reports/bandit-report.json
+.hypothesis
+
+# Test and coverage artifacts (extended)
+.coverage
+htmlcov/
+coverage.xml
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.nox/
+mutants/
+
+# Development and debug artifacts
+debug/
+reports/
+test_*.md
+*.bandit
+
+# Sample and test workspace directories
+warifuri-test/

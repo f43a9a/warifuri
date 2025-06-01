@@ -1,12 +1,12 @@
 """Run command for executing tasks."""
 
-from typing import Optional
-
 import click
 
 from ..context import Context, pass_context
+from typing import Optional
 from ...core.discovery import discover_all_projects, find_ready_tasks, find_task_by_name
 from ...core.execution import execute_task
+from ...core.types import TaskType
 
 
 @click.command()
@@ -48,7 +48,7 @@ def run(
         else:
             # Project - find ready task
             project_name = task
-            ready_tasks = find_ready_tasks(projects)
+            ready_tasks = find_ready_tasks(projects, workspace_path)
             project_ready_tasks = [t for t in ready_tasks if t.project == project_name]
 
             if not project_ready_tasks:
@@ -58,7 +58,7 @@ def run(
             target_task = project_ready_tasks[0]
     else:
         # Auto-run ready task
-        ready_tasks = find_ready_tasks(projects)
+        ready_tasks = find_ready_tasks(projects, workspace_path)
 
         if not ready_tasks:
             click.echo("No ready tasks found.")
@@ -75,6 +75,14 @@ def run(
         if dry_run:
             click.echo("[DRY RUN] Task execution simulation completed.")
         else:
+            # Special handling for human tasks
+            if target_task.task_type == TaskType.HUMAN:
+                click.echo(f"Human task '{target_task.full_name}' requires manual intervention.")
+                click.echo(
+                    "Please complete the task manually and run 'warifuri mark-done' when finished."
+                )
+                return
+
             # Collect all tasks for dependency checking
             all_tasks = []
             for proj in projects:

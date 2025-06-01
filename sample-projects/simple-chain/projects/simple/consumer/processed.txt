@@ -1,0 +1,23 @@
+Processed Foundation Data
+=========================
+
+Processing timestamp: 2025-05-29T11:14:32.953213
+Original file size: 223 bytes
+
+--- Original Content ---
+Foundation File Generated
+========================
+
+Generated at: 2025-05-29T10:50:29.962035
+Content: This is the foundation data for the simple chain test.
+Status: SUCCESS
+
+This file serves as input for the consumer task.
+
+
+--- Processing Results ---
+- Line count: 8
+- Character count: 223
+- Contains 'SUCCESS': YES
+
+Processing Status: COMPLETED

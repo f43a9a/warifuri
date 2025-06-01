@@ -37,7 +37,8 @@ def list_templates(
         templates = [
             d.name for d in templates_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
         ]
-    except Exception:
+    except (OSError, FileNotFoundError) as e:
+        ctx.logger.warning("Could not read templates directory: %s", e)
         templates = []
 
     if not templates:

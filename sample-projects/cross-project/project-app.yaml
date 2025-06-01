@@ -1,0 +1,26 @@
+name: app
+description: Application project using core functionality
+
+tasks:
+  main-app:
+    command: python scripts/app_main.py
+    inputs:
+      - shared.conf
+      - core_lib.json
+    outputs:
+      - app_output.txt
+    depends:
+      - core/library-builder
+    description: Main application processing
+
+  validator:
+    command: python scripts/app_validator.py
+    inputs:
+      - app_output.txt
+      - version.txt
+    outputs:
+      - validation_report.txt
+    depends:
+      - main-app
+      - core/config-generator
+    description: Validate application output

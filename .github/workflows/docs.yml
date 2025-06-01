@@ -57,15 +57,34 @@ jobs:
         echo "Checking html directory:"
         ls -la docs/build/html/
 
+    # Setup Git configuration for deployment
+    - name: Setup Git Config
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # Check if origin exists before removing
+        if git remote | grep -q origin; then
+          git remote rm origin
+        fi
+        git remote add origin https://github.com/${{ github.repository }}.git
+
     # Traditional gh-pages deployment (more reliable)
     - name: Deploy to GitHub Pages (gh-pages branch)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: peaceiris/actions-gh-pages@v3
+      uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/build/html
         publish_branch: gh-pages
         force_orphan: true
+        enable_jekyll: false
+
+    - name: Verify Push Success
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "Verifying gh-pages branch exists..."
+        git ls-remote --heads https://github.com/${{ github.repository }} gh-pages || echo "gh-pages branch may still be creating..."
 
     # Modern Pages deployment (fallback)
     - name: Setup Pages

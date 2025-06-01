@@ -43,11 +43,20 @@ jobs:
         poetry run sphinx-build -b html source build/html
         touch build/html/.nojekyll
 
-    - name: Clear remote gh-pages branch
+    - name: Setup Git Config and Remote
       if: github.ref == 'refs/heads/main'
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        # Check if origin exists before removing
+        if git remote | grep -q origin; then
+          git remote rm origin
+        fi
+        git remote add origin https://github.com/${{ github.repository }}.git
+
+    - name: Clear remote gh-pages branch
+      if: github.ref == 'refs/heads/main'
+      run: |
         git push origin --delete gh-pages || echo "gh-pages branch does not exist, continuing..."
 
     - name: Deploy to GitHub Pages
@@ -56,9 +65,15 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/build/html
+        publish_branch: gh-pages
         force_orphan: true
         enable_jekyll: false
-        publish_branch: gh-pages
         allow_empty_commit: false
         keep_files: false
         exclude_assets: '.github'
+
+    - name: Verify Push Success
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Verifying gh-pages branch deployment..."
+        git ls-remote --heads https://github.com/${{ github.repository }} gh-pages || echo "gh-pages branch may still be creating..."

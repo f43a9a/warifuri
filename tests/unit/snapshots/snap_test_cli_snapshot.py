@@ -63,9 +63,9 @@ snapshots['TestCliSnapshotOutput::test_init_help_snapshot init_help_output'] = '
 
   Initialize project or task.
 
-  TARGET can be: - project_name: Create new project - project_name/task_name:
-  Create new task - Empty with --template: Expand template to current
-  workspace
+  TARGET can be: - project_name: Create new project -
+  project_name/task_name: Create new task - Empty with --template:
+  Expand template to current workspace
 
 Options:
   --template TEXT    Template to use for initialization

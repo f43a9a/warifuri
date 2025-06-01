@@ -16,8 +16,8 @@ import pytest
 from warifuri.utils import ensure_directory
 
 
-def _patch_snapshottest_for_python312():
-    """Patch snapshottest to work with Python 3.12+ by replacing imp with importlib."""
+def _apply_snapshottest_python312_patch():
+    """Apply Python 3.12 compatibility patch to snapshottest before it's imported."""
 
     def load_source_python312(module_name: str, filepath: str) -> types.ModuleType:
         """Replacement for imp.load_source using importlib."""
@@ -30,19 +30,36 @@ def _patch_snapshottest_for_python312():
         spec.loader.exec_module(module)
         return module
 
-    try:
-        import snapshottest.module
+    # Create a mock imp module with our implementation
+    mock_imp = types.SimpleNamespace()
+    mock_imp.load_source = load_source_python312
 
-        # Replace imp.load_source with our importlib implementation
-        snapshottest.module.imp = types.SimpleNamespace()
-        snapshottest.module.imp.load_source = load_source_python312
+    # Install the mock before snapshottest tries to import imp
+    sys.modules['imp'] = mock_imp
+
+    try:
+        # Now safely import snapshottest
+        import snapshottest.module
+        # Also patch the module directly in case it's already imported
+        snapshottest.module.imp = mock_imp
     except ImportError:
         # snapshottest not installed, skip patching
         pass
 
 
-# Apply the patch immediately after imports
-_patch_snapshottest_for_python312()
+def pytest_configure(config):
+    """Pytest configuration hook - called very early in pytest initialization."""
+    _apply_snapshottest_python312_patch()
+
+
+def pytest_sessionstart(session):
+    """Pytest session start hook - apply patch if not already applied."""
+    _apply_snapshottest_python312_patch()
+
+
+def pytest_sessionstart(session):
+    """Pytest session start hook - apply patch if not already applied."""
+    _apply_snapshottest_python312_patch()
 
 
 @pytest.fixture

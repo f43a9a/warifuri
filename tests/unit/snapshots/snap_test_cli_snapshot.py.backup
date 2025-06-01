@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+# snapshottest: v1 - https://goo.gl/zC4yUc
+from __future__ import unicode_literals
+
+from snapshottest import Snapshot
+
+
+snapshots = Snapshot()
+
+snapshots['TestCliSnapshotOutput::test_init_help_snapshot init_help_output'] = '''Usage: python -m warifuri init [OPTIONS] [TARGET]
+
+  Initialize project or task.
+
+  TARGET can be: - project_name: Create new project - project_name/task_name:
+  Create new task - Empty with --template: Expand template to current
+  workspace
+
+Options:
+  --template TEXT    Template to use for initialization
+  --force            Overwrite existing files
+  --dry-run          Show what would be created without creating
+  --non-interactive  Use default values without prompting
+  --help             Show this message and exit.
+'''

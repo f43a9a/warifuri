@@ -608,15 +608,22 @@ def test_graph_command_circular_dependency_detection():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task1, task2]
 
-    with (
-        patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
-        patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
-        patch("click.echo") as mock_echo,
-    ):
-        mock_discover.return_value = [mock_project]
-        mock_detect.side_effect = Exception("Circular dependency detected")
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
+            patch("click.echo") as mock_echo,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_detect.side_effect = Exception("Circular dependency detected")
+            mock_workspace.return_value = workspace_path
+
+            result = runner.invoke(graph)
 
         assert result.exit_code == 0
         mock_echo.assert_any_call(

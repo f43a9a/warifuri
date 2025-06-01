@@ -12,13 +12,22 @@ def test_graph_command_no_projects():
     """Test graph command when no projects are found."""
     runner = CliRunner()
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = []
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = []
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0  # Command succeeds even with no projects
-        assert "No tasks found." in result.output
+            result = runner.invoke(graph)
+
+            assert result.exit_code == 0  # Command succeeds even with no projects
+            assert "No tasks found." in result.output
 
 
 def test_graph_command_with_projects():
@@ -39,12 +48,21 @@ def test_graph_command_with_projects():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
+            result = runner.invoke(graph)
+
+            assert result.exit_code == 0
 
 
 def test_graph_command_dot_format():
@@ -65,13 +83,22 @@ def test_graph_command_dot_format():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph, ["--format", "mermaid"])
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "graph TD" in result.output
+            result = runner.invoke(graph, ["--format", "mermaid"])
+
+            assert result.exit_code == 0
+            assert "graph TD" in result.output
 
 
 def test_create_task_node():
@@ -124,17 +151,24 @@ def test_graph_command_circular_dependency():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task1, task2]
 
-    with (
-        patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
-        patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
-    ):
-        mock_discover.return_value = [mock_project]
-        mock_detect.return_value = ["task1", "task2"]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_detect.return_value = ["task1", "task2"]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "Warning: Circular dependency detected" in result.output
+            result = runner.invoke(graph)
+
+            assert result.exit_code == 0
+            assert "Warning: Circular dependency detected" in result.output
 
 
 def test_graph_command_html_format():
@@ -155,13 +189,22 @@ def test_graph_command_html_format():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph, ["--format", "html"])
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "HTML graph generated:" in result.output
+            result = runner.invoke(graph, ["--format", "html"])
+
+            assert result.exit_code == 0
+            assert "HTML graph generated:" in result.output
 
 
 def test_graph_command_html_format_with_browser():
@@ -182,16 +225,23 @@ def test_graph_command_html_format_with_browser():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with (
-        patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
-        patch("warifuri.cli.commands.graph._open_in_browser") as mock_open,
-    ):
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph, ["--format", "html", "--web"])
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.commands.graph._open_in_browser") as mock_open,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert mock_open.called
+            result = runner.invoke(graph, ["--format", "html", "--web"])
+
+            assert result.exit_code == 0
+            assert mock_open.called
 
 
 def test_graph_command_ready_tasks():
@@ -213,21 +263,34 @@ def test_graph_command_ready_tasks():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [ready_task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "🔄" in result.output  # Ready task icon
+            result = runner.invoke(graph)
+
+            assert result.exit_code == 0
+            assert "🔄" in result.output  # Ready task icon
 
 
 def test_graph_command_completed_tasks():
     """Test graph command with completed task status."""
     runner = CliRunner()
 
-    with TemporaryDirectory() as temp_dir:
-        task_path = Path(temp_dir) / "completed-task"
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
+
+        task_path = Path("completed-task")
         task_path.mkdir(parents=True, exist_ok=True)
         # Create done.md to mark task as completed
         (task_path / "done.md").write_text("Task completed")
@@ -251,8 +314,12 @@ def test_graph_command_completed_tasks():
         mock_project = Mock(spec=Project)
         mock_project.tasks = [completed_task]
 
-        with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
             mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
             result = runner.invoke(graph)
 
@@ -335,12 +402,21 @@ def test_graph_command_project_filter():
     mock_project.name = "specific-project"
     mock_project.tasks = [task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph, ["--project", "specific-project"])
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
+            result = runner.invoke(graph, ["--project", "specific-project"])
+
+            assert result.exit_code == 0
 
 
 def test_graph_command_error_in_circular_detection():
@@ -361,17 +437,24 @@ def test_graph_command_error_in_circular_detection():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with (
-        patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
-        patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
-    ):
-        mock_discover.return_value = [mock_project]
-        mock_detect.side_effect = Exception("Detection error")
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.utils.validation.detect_circular_dependencies") as mock_detect,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_detect.side_effect = Exception("Detection error")
+            mock_workspace.return_value = workspace_path
 
-        # Should handle error gracefully
-        assert result.exit_code == 0
+            result = runner.invoke(graph)
+
+            # Should handle error gracefully
+            assert result.exit_code == 0
 
 
 def test_open_in_browser_windows():
@@ -559,13 +642,22 @@ def test_graph_command_status_filter_ready():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [ready_task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph)
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "ready-task" in result.output
+            result = runner.invoke(graph)
+
+            assert result.exit_code == 0
+            assert "ready-task" in result.output
 
 
 def test_graph_command_mermaid_format():
@@ -586,10 +678,19 @@ def test_graph_command_mermaid_format():
     mock_project = Mock(spec=Project)
     mock_project.tasks = [task]
 
-    with patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover:
-        mock_discover.return_value = [mock_project]
+    with runner.isolated_filesystem():
+        # Create a workspace structure
+        Path("projects").mkdir()
+        workspace_path = Path.cwd()
 
-        result = runner.invoke(graph, ["--format", "mermaid"])
+        with (
+            patch("warifuri.core.discovery.discover_all_projects_safe") as mock_discover,
+            patch("warifuri.cli.context.Context.ensure_workspace_path") as mock_workspace,
+        ):
+            mock_discover.return_value = [mock_project]
+            mock_workspace.return_value = workspace_path
 
-        assert result.exit_code == 0
-        assert "graph TD" in result.output  # Mermaid syntax
+            result = runner.invoke(graph, ["--format", "mermaid"])
+
+            assert result.exit_code == 0
+            assert "graph TD" in result.output  # Mermaid syntax

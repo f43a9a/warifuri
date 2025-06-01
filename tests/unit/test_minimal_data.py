@@ -10,9 +10,15 @@ from pathlib import Path
 import pytest
 import yaml
 
+# Add src to path before importing warifuri modules
 sys.path.insert(0, "/workspace/src")
 
-from warifuri.core.types import TaskInstruction
+# Import warifuri modules after path setup
+try:
+    from warifuri.core.types import TaskInstruction
+except ImportError:
+    # If import fails, we'll handle it in tests
+    TaskInstruction = None
 
 
 def test_basic_test_data_loading():

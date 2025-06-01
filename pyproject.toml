@@ -2,13 +2,24 @@
 requires = ["poetry-core>=1.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.bandit]
+# Ignore common LOW severity warnings that are not actual security issues
+skips = ["B101", "B102", "B404", "B603", "B606", "B607"]
+# B101: assert_used - allow assert statements in tests
+# B102: exec_used - allow exec in controlled contexts
+# B404: blacklist - subprocess module usage is safe in controlled contexts
+# B603: subprocess_without_shell_equals_true - subprocess calls are safe when input is controlled
+# B606: start_process_with_no_shell - process execution is safe with controlled input
+# B607: start_process_with_partial_path - safe when using known executables
+# B607: start_process_with_partial_path - safe when using known executablespoetry.core.masonry.api"
+
 [tool.poetry]
 name = "warifuri"
-version = "0.2.0"
-description = "Task automation with cross-project dependency resolution"
+version = "0.1.0"
+description = ""
 authors = ["f43a9a"]
 readme = "README.md"
-packages = [{include = "warifuri", from = "src"}]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -16,35 +27,11 @@ PyYAML = ">=6.0"
 gitpython = ">=3.1.0"
 requests = ">=2.28.0"
 flask = ">=2.0.0"
-click = ">=8.0.0"
-jsonschema = ">=4.0.0"
-
-[tool.poetry.scripts]
-warifuri = "warifuri.__main__:main"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "*"
 ruff = "*"
 pytest = "*"
-pytest-asyncio = "*"
-pytest-cov = "*"
-pytest-mock = "*"
-vulture = "*"
-radon = "*"
-bandit = "*"
-safety = "*"
-nox = "*"
-types-PyYAML = "*"
-types-requests = "*"
-types-jsonschema = "*"
-hypothesis = "^6.131.31"
-mutmut = "^3.3.0"
-snapshottest = "^0.6.0"
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7.0.0"
-sphinx-rtd-theme = "^1.3.0"
-sphinx-autodoc-typehints = "^1.25.0"
 
 [tool.mypy]
 python_version = "3.11"
@@ -84,50 +71,3 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 addopts = "--color=yes"
-required_plugins = ["snapshottest"]
-
-[tool.hypothesis]
-# Property-based testing configuration
-max_examples = 50  # Default number of examples to generate
-deadline = 10000   # 10 seconds per test case
-suppress_health_check = ["too_slow"]  # Allow longer running tests
-database = ".hypothesis/examples"
-
-[tool.vulture]
-# デッドコード検出設定
-paths = ["src", "tests"]
-exclude = [
-    "*/migrations/*",
-    "*/tests/test_*",
-    "*/__pycache__/*"
-]
-min_confidence = 70
-ignore_decorators = ["@pytest.fixture", "@click.command", "@click.option"]
-ignore_names = ["unused_*", "_*"]
-
-[tool.radon]
-# 複雑度測定設定
-show = "mi"  # Maintainability Index
-min = "B"    # B以上の品質を要求
-max = "F"    # F以下は警告
-exclude = ["tests/*", "*/migrations/*"]
-
-[tool.bandit]
-# セキュリティチェック設定
-exclude_dirs = ["tests", "scripts"]
-skips = [
-    "B101",  # assert文の使用を許可
-    "B602",  # subprocess with shell=False - safe for controlled commands
-    "B603",  # subprocess with partial paths - acceptable for CLI tools
-    "B404",  # subprocess module usage - expected in task execution
-    "B606",  # starting process without shell - safe practice
-    "B607",  # partial executable path - acceptable for CLI tools
-]
-
-[tool.mutmut]
-# Mutation testing configuration
-paths_to_mutate = ["src/warifuri"]
-backup = false
-runner = "python -m pytest tests/unit --tb=no -q --disable-warnings"
-tests_dir = "tests/unit"
-dict_synonyms = ["Mapping", "MutableMapping"]

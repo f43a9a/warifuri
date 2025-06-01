@@ -9,6 +9,12 @@ import types
 from pathlib import Path
 from typing import Generator
 
+# Third-party imports
+import pytest
+
+# Local imports
+from warifuri.utils import ensure_directory
+
 
 def _apply_snapshottest_python312_patch():
     """Apply Python 3.12 compatibility patch to snapshottest before it's imported."""
@@ -50,12 +56,6 @@ def _apply_snapshottest_python312_patch():
 
 # Apply patch immediately when conftest.py is imported
 _apply_snapshottest_python312_patch()
-
-# Third-party imports
-import pytest
-
-# Local imports
-from warifuri.utils import ensure_directory
 
 
 def pytest_configure(config):

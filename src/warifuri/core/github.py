@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import subprocess
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .types import Project, Task

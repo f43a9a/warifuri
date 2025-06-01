@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import List, TYPE_CHECKING
 
 from ...utils.atomic import safe_rmtree
 from ...utils.filesystem import copy_directory_contents, create_temp_dir
@@ -181,7 +181,7 @@ def _handle_machine_task_success(task: "Task", temp_dir: Path, execution_log: Li
         return False
 
     # Save execution log
-    from .core import create_done_file, save_execution_log
+    from .core import save_execution_log, create_done_file
 
     save_execution_log(task, execution_log, success=True)
 

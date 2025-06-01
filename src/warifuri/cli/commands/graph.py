@@ -7,8 +7,8 @@ from typing import Any, List
 
 import click
 
-from ...core.types import Task
 from ..context import Context, pass_context
+from ...core.types import Task
 
 
 @click.command()

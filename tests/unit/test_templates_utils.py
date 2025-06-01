@@ -1,9 +1,8 @@
 """Unit tests for template utilities."""
 
-import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import patch
 from warifuri.utils.templates import (
     expand_template_placeholders,
     expand_template_file,

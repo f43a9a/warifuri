@@ -4,12 +4,10 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from typing import List
 import yaml
 
 from warifuri.core.discovery import discover_all_projects, find_ready_tasks
 from warifuri.core.execution import execute_task, validate_task_inputs
-from warifuri.core.types import Task, Project
 
 
 class TestCrossProjectBasic:

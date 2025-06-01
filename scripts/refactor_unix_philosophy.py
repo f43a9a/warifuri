@@ -10,7 +10,7 @@ Implements refactoring based on Unix philosophy analysis:
 import ast
 import sys
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 import json
 
 
@@ -175,19 +175,19 @@ def main():
         f.write("# Unix Philosophy Refactoring Suggestions\n\n")
         f.write("\n".join(suggestions))
 
-    print(f"📊 Refactoring Analysis Summary:")
+    print("📊 Refactoring Analysis Summary:")
     print(f"  High priority functions: {len(plan['high_priority'])}")
     print(f"  Medium priority functions: {len(plan['medium_priority'])}")
     print(f"  Low priority functions: {len(plan['low_priority'])}")
     print(f"  Files requiring splits: {len(plan['file_splits'])}")
 
-    print(f"\n💾 Detailed plan saved to:")
-    print(f"  - refactoring_plan.json")
-    print(f"  - REFACTORING_SUGGESTIONS.md")
+    print("\n💾 Detailed plan saved to:")
+    print("  - refactoring_plan.json")
+    print("  - REFACTORING_SUGGESTIONS.md")
 
     # Show top priority items
     if plan["high_priority"]:
-        print(f"\n🚨 Top priority refactoring:")
+        print("\n🚨 Top priority refactoring:")
         for violation in plan["high_priority"][:3]:
             print(f"  - {violation['function']}() in {Path(violation['file']).name} ({violation['lines']} lines)")
 

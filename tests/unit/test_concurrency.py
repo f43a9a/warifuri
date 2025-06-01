@@ -1,7 +1,5 @@
 """Tests for concurrency safety and atomic operations."""
 
-import os
-import tempfile
 import threading
 import time
 import pytest

@@ -2,12 +2,10 @@
 
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from click.testing import CliRunner
 
 from warifuri.cli.main import cli
-from warifuri.core.discovery import discover_all_projects, find_ready_tasks
-from warifuri.core.execution import execute_task
 from warifuri.core.types import TaskType, TaskStatus, Project, Task, TaskInstruction
 from warifuri.utils import safe_write_file, ensure_directory
 
@@ -96,7 +94,7 @@ auto_delete_branch: true
         assert len(machine_tasks) >= 2
 
         # Check automation ready tasks
-        automation_ready_tasks = [task for task in data if task["automation_ready"] == True]
+        automation_ready_tasks = [task for task in data if task["automation_ready"]]
         assert len(automation_ready_tasks) >= 2
 
         # Verify task structure

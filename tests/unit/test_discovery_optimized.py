@@ -4,12 +4,9 @@ Tests the optimized task discovery functions that provide performance enhancemen
 through caching, bulk processing, and optimized algorithms.
 """
 
-import pytest
-import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List, Set
+from unittest.mock import Mock, patch
 
 from src.warifuri.core.discovery_optimized import (
     TaskCache,
@@ -21,7 +18,6 @@ from src.warifuri.core.discovery_optimized import (
     monitor_performance,
     _cached_find_instruction_files,
 )
-from src.warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
 
 
 class TestTaskCache:

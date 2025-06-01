@@ -2,7 +2,7 @@
 
 import pytest
 from click.testing import CliRunner
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from pathlib import Path
 
 from warifuri.cli.commands.issue import issue
@@ -174,7 +174,7 @@ class TestIssueCommand:
         with patch("warifuri.cli.commands.issue.check_github_cli", return_value=True):
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
                 with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
-                    with patch("warifuri.cli.commands.issue.ensure_labels_exist") as mock_labels:
+                    with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
                         with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/123")) as mock_create:
                             with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):
                                 result = runner.invoke(
@@ -195,7 +195,7 @@ class TestIssueCommand:
             with patch("warifuri.cli.commands.issue.get_github_repo", return_value="owner/repo"):
                 with patch("warifuri.cli.commands.issue.discover_all_projects", return_value=sample_projects):
                     with patch("warifuri.cli.commands.issue.find_task_by_name", return_value=mock_task):
-                        with patch("warifuri.cli.commands.issue.ensure_labels_exist") as mock_labels:
+                        with patch("warifuri.cli.commands.issue.ensure_labels_exist"):
                             with patch("warifuri.cli.commands.issue.create_issue_safe", return_value=(True, "https://github.com/owner/repo/issues/124")) as mock_create:
                                 with patch("warifuri.cli.commands.issue.format_task_issue_body", return_value="Task body"):
                                     with patch("warifuri.cli.commands.issue.pass_context", return_value=lambda f: f):

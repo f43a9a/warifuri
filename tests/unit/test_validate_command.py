@@ -1,10 +1,9 @@
 """Unit tests for validate command functionality."""
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, Mock
 from click.testing import CliRunner
 from warifuri.cli.commands.validate import validate
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus, Project
+from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
 
 
 def test_validate_command_no_workspace():

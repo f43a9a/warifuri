@@ -3,7 +3,7 @@
 import pytest
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 from warifuri.core.execution.machine import (
     execute_machine_task,
     _build_execution_command,
@@ -104,7 +104,6 @@ def test_execute_machine_task_script_failure(
     mock_validate_inputs.return_value = True
 
     # Mock run.sh exists
-    run_script = temp_dir / "run.sh"
     with patch('pathlib.Path.exists') as mock_exists:
         mock_exists.side_effect = lambda path: str(path).endswith("run.sh")
 
@@ -234,8 +233,6 @@ def test_copy_input_files_exception_handling(mock_copy_inputs, sample_task):
     from warifuri.core.execution.machine import execute_machine_task
 
     temp_dir = Path("/tmp/temp_dir")
-    execution_log = []
-    workspace_path = Path("/workspace")
 
     # Mock copy_input_files to raise an exception
     mock_copy_inputs.side_effect = Exception("Copy failed")

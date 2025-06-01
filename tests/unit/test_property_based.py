@@ -11,7 +11,7 @@ from hypothesis import assume, given, strategies as st
 
 from warifuri.core.types import Task, TaskInstruction, TaskStatus, TaskType
 from warifuri.core.execution.validation import _resolve_input_path_safely
-from warifuri.utils.filesystem import find_workspace_root, list_projects, list_tasks
+from warifuri.utils.filesystem import find_workspace_root, list_projects
 from warifuri.utils.yaml_utils import load_yaml, save_yaml
 
 

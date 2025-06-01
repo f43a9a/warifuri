@@ -1,10 +1,6 @@
 """Integration tests for task execution pipeline and error handling."""
 
 import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
-import shutil
 
 from warifuri.core.discovery import discover_task, discover_project
 from warifuri.core.execution import execute_task
@@ -87,8 +83,6 @@ dependencies: []
 
     def test_task_discovery_and_execution_integration(self, execution_workspace):
         """Test integration between task discovery and execution."""
-        project_path = execution_workspace / "projects" / "execution-test"  # Changed from sample-projects to projects
-
         # Discover the project
         project = discover_project(execution_workspace, "execution-test")
         assert project is not None
@@ -222,7 +216,6 @@ dependencies: []
 
     def test_task_status_determination_integration(self, execution_workspace):
         """Test integration of task status determination with execution pipeline."""
-        project_path = execution_workspace / "projects" / "execution-test"
         project = discover_project(execution_workspace, "execution-test")
 
         assert project is not None
@@ -295,7 +288,7 @@ dependencies: []
         # Discovery should handle invalid tasks gracefully by raising exceptions
         # This is the expected behavior - invalid tasks should be rejected
         with pytest.raises(KeyError):
-            project = discover_project(workspace, "validation-test")
+            discover_project(workspace, "validation-test")
 
     def test_execution_subprocess_integration(self, execution_workspace):
         """Test integration with subprocess execution."""
@@ -358,7 +351,7 @@ description: "Corrupted YAML with syntax errors
         # Discovery should handle corrupted files by raising exceptions
         # This is the expected behavior - corrupted YAML should be rejected
         with pytest.raises(ValueError, match="Invalid YAML"):
-            task = discover_task("corrupted", task_dir)
+            discover_task("corrupted", task_dir)
 
     def test_network_dependent_task_integration(self, temp_workspace):
         """Test integration with tasks that have network dependencies."""

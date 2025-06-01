@@ -81,7 +81,7 @@ class MutationTestRunner:
             if result.returncode == 0:
                 return True, f"Mutation test cache found:\n{result.stdout.strip()}"
             else:
-                return False, f"No mutation test data found. Run 'python scripts/mutation_test.py run' first."
+                return False, "No mutation test data found. Run 'python scripts/mutation_test.py run' first."
 
         except Exception as e:
             return False, f"Error getting status: {e}"

@@ -3,7 +3,6 @@ Test Data Validation Tests
 テストデータの読み込みとバリデーションのテスト
 """
 
-import json
 import yaml
 from pathlib import Path
 import pytest

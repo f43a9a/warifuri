@@ -8,7 +8,4 @@ def test_simple():
 
 def test_basic_import():
     """Test that basic imports work"""
-    import yaml
-    import json
-    from pathlib import Path
     assert True

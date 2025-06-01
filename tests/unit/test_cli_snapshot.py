@@ -10,7 +10,6 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List
 
-import pytest
 from snapshottest import TestCase  # type: ignore
 
 

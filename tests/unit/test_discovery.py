@@ -2,8 +2,8 @@
 
 import pytest
 from pathlib import Path
-from typing import List, Dict, Optional
-from unittest.mock import Mock, patch, mock_open, MagicMock
+from typing import List
+from unittest.mock import Mock, patch
 
 from warifuri.core.discovery import (
     determine_task_type,

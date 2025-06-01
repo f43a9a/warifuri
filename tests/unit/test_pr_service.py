@@ -1,11 +1,9 @@
 """Unit tests for PR service module."""
 
 import subprocess
-import tempfile
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, List
+from unittest.mock import Mock, patch
 
 import click
 

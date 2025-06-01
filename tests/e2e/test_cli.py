@@ -261,7 +261,6 @@ outputs: [output_b.txt]
 
     def test_template_list_permission_error(self, runner, temp_workspace):
         """Test template list with permission error when reading directory."""
-        import os
         from unittest.mock import patch
 
         # Create templates directory

@@ -4,7 +4,6 @@ import json
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
-from typing import List, Dict, Any
 
 import click
 
@@ -382,7 +381,6 @@ class TestAutomationListService:
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     def test_list_automation_tasks_auto_merge_config_task_level(self, mock_discover: Mock) -> None:
         """Test list_automation_tasks with auto_merge config at task level."""
-        from unittest.mock import MagicMock
 
         # Create mock task with proper path handling
         task = MagicMock(spec=Task)
@@ -418,7 +416,6 @@ class TestAutomationListService:
     @patch("warifuri.cli.services.automation_service.discover_all_projects")
     def test_list_automation_tasks_auto_merge_config_project_level(self, mock_discover: Mock) -> None:
         """Test list_automation_tasks with auto_merge config at project level."""
-        from unittest.mock import MagicMock
 
         # Create mock task with proper path handling
         task = MagicMock(spec=Task)

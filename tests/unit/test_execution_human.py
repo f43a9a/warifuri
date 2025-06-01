@@ -1,6 +1,5 @@
 """Unit tests for human task execution module."""
 
-import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 

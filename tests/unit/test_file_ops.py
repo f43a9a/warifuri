@@ -1,9 +1,8 @@
 """Unit tests for file operations module."""
 
 import tempfile
-import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import patch
 from typing import List
 
 from warifuri.core.execution.file_ops import copy_input_files, _copy_file_or_directory

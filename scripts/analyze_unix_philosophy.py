@@ -134,7 +134,7 @@ def main():
     files_with_issues = len([r for r in results if r.get("issues")])
     total_issues = sum(len(r.get("issues", [])) for r in results)
 
-    print(f"\n📊 Summary")
+    print("\n📊 Summary")
     print(f"Files analyzed: {total_files}")
     print(f"Files with issues: {files_with_issues}")
     print(f"Total issues: {total_issues}")
@@ -143,10 +143,10 @@ def main():
     with open("unix_philosophy_analysis.json", "w") as f:
         json.dump(results, f, indent=2)
 
-    print(f"\n💾 Detailed results saved to unix_philosophy_analysis.json")
+    print("\n💾 Detailed results saved to unix_philosophy_analysis.json")
 
     # Unix philosophy specific checks
-    print(f"\n🔧 Unix Philosophy Specific Analysis")
+    print("\n🔧 Unix Philosophy Specific Analysis")
     print("-" * 40)
 
     # Check for single responsibility

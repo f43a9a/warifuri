@@ -4,7 +4,7 @@ import pytest
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 from warifuri.utils.atomic import (
     AtomicWriter,
     FileLock,

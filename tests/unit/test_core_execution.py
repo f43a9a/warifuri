@@ -2,16 +2,13 @@
 
 import pytest
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import Mock, patch
 from warifuri.core.execution.core import (
-    check_dependencies,
-    execute_task,
     copy_outputs_back,
     save_execution_log,
     log_failure,
     create_done_file
 )
-from warifuri.core.execution.errors import ExecutionError
 from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
 
 
@@ -26,6 +23,8 @@ def sample_task():
         instruction=TaskInstruction(
             name="test-task",
             description="Test task",
+            dependencies=[],
+            inputs=["input.txt"],
             outputs=["output.txt"]
         ),
         status=TaskStatus.PENDING
@@ -59,68 +58,7 @@ def test_copy_outputs_back_missing_output(mock_exists, mock_git_sha, sample_task
     copy_outputs_back(sample_task, temp_dir, execution_log)
 
     assert "WARNING: Expected output not found: output.txt" in execution_log
-    assert "No outputs to copy back" in execution_logt
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, mock_open
-from warifuri.core.execution.core import (
-    check_dependencies,
-    execute_task,
-    copy_outputs_back,
-    save_execution_log,
-    log_failure,
-    create_done_file,
-)
-from warifuri.core.execution.errors import ExecutionError
-from warifuri.core.types import Task, TaskInstruction, TaskType, TaskStatus
-
-
-@pytest.fixture
-def sample_task():
-    """Create a sample task for testing."""
-    return Task(
-        project="test-project",
-        name="test-task",
-        path=Path("/tmp/test-task"),
-        instruction=TaskInstruction(
-            name="test-task",
-            description="Test task",
-            dependencies=[],
-            inputs=["input.txt"],
-            outputs=["output.txt"]
-        ),
-        task_type=TaskType.MACHINE,
-        status=TaskStatus.PENDING
-    )
-
-
-@patch('warifuri.utils.filesystem.get_git_commit_sha', return_value="test123")
-def test_copy_outputs_back_no_outputs(mock_git_sha, sample_task):
-    """Test copy_outputs_back when task has no outputs."""
-    # Modify task to have no outputs
-    sample_task.instruction.outputs = []
-    temp_dir = Path("/tmp/temp")
-    execution_log = []
-
-    copy_outputs_back(sample_task, temp_dir, execution_log)
-
     assert "No outputs to copy back" in execution_log
-
-
-@patch('warifuri.core.execution.core.shutil.copy2')
-@patch('pathlib.Path.exists')
-def test_copy_outputs_back_missing_output(mock_exists, mock_copy, sample_task):
-    """Test copy_outputs_back when output file is missing."""
-    temp_dir = Path("/tmp/temp")
-    execution_log = []
-
-    # Mock output file doesn't exist
-    mock_exists.return_value = False
-
-    # Should not raise exception, just log warning
-    copy_outputs_back(sample_task, temp_dir, execution_log)
-
-    assert "WARNING: Expected output not found: output.txt" in execution_log
 
 
 @patch('warifuri.utils.filesystem.get_git_commit_sha', return_value="test123")

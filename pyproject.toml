@@ -41,7 +41,7 @@ black = ">=24.3.0"
 pre-commit = "^3.0.0"
 types-PyYAML = "*"
 types-jsonschema = "*"
-snapshottest = "^0.6.0"
+# snapshottest = "^0.6.0"  # Disabled due to Python 3.12 compatibility issues
 hypothesis = "^6.0.0"
 pytest-asyncio = "^0.21.0"
 

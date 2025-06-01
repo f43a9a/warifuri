@@ -57,7 +57,17 @@ jobs:
         echo "Checking html directory:"
         ls -la docs/build/html/
 
-    # Traditional gh-pages deployment (more reliable)
+    # Clean up any potential git reference locks
+    - name: Prepare for deployment
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        echo "🔧 Preparing clean deployment..."
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        # Clean any stale references
+        git gc --prune=now || true
+
+    # Deploy to GitHub Pages with proper branch handling
     - name: Deploy to GitHub Pages (gh-pages branch)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       uses: peaceiris/actions-gh-pages@v4
@@ -66,5 +76,8 @@ jobs:
         publish_dir: ./docs/build/html
         publish_branch: gh-pages
         enable_jekyll: false
-        force_orphan: true
-        allow_empty_commit: false
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Deploy documentation ${{ github.sha }}'
+        force_orphan: false
+        keep_files: false

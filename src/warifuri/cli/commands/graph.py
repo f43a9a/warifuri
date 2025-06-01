@@ -3,7 +3,7 @@
 import os
 import subprocess
 import tempfile
-from typing import List
+from typing import Any, List
 
 import click
 
@@ -135,7 +135,7 @@ def _create_html_graph(tasks: List[Task]) -> str:
     return html_content
 
 
-def _build_graph_data(tasks: List[Task]) -> tuple[list, list]:
+def _build_graph_data(tasks: List[Task]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Build nodes and edges data for vis.js graph."""
     nodes = []
     edges = []
@@ -151,7 +151,7 @@ def _build_graph_data(tasks: List[Task]) -> tuple[list, list]:
     return nodes, edges
 
 
-def _create_task_node(task: Task) -> dict:
+def _create_task_node(task: Task) -> dict[str, Any]:
     """Create a single task node with appropriate styling."""
     # Node styling based on status
     if task.is_completed:
@@ -173,7 +173,7 @@ def _create_task_node(task: Task) -> dict:
     }
 
 
-def _generate_html_template(nodes: list, edges: list) -> str:
+def _generate_html_template(nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> str:
     """Generate complete HTML template with embedded graph data."""
     nodes_json = str(nodes).replace("'", '"').replace("True", "true").replace("False", "false")
     edges_json = str(edges).replace("'", '"').replace("True", "true").replace("False", "false")

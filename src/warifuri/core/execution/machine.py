@@ -127,7 +127,7 @@ def _build_execution_command(run_script: Path, execution_log: List[str]) -> List
 
 def _execute_script(
     cmd: List[str], temp_dir: Path, task: "Task", execution_log: List[str]
-) -> subprocess.CompletedProcess:
+) -> subprocess.CompletedProcess[str]:
     """Execute the script and return the result."""
     env = setup_task_environment(task)
     execution_log.append(f"Environment variables: {list(env.keys())}")

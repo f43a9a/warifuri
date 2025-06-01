@@ -406,7 +406,7 @@ def format_task_issue_body(task: "Task", repo: str = "", parent_issue_url: str =
 
 
 def _add_parent_issue_section(
-    body_lines: list, task: "Task", repo: str, parent_issue_url: str
+    body_lines: list[str], task: "Task", repo: str, parent_issue_url: str
 ) -> None:
     """Add parent issue link section to task body."""
     if parent_issue_url:
@@ -417,7 +417,7 @@ def _add_parent_issue_section(
             body_lines.extend([f"**Parent Project**: {auto_parent}", ""])
 
 
-def _add_task_info_section(body_lines: list, task: "Task") -> None:
+def _add_task_info_section(body_lines: list[str], task: "Task") -> None:
     """Add basic task information section."""
     body_lines.extend(
         [
@@ -434,7 +434,7 @@ def _add_task_info_section(body_lines: list, task: "Task") -> None:
     )
 
 
-def _add_dependencies_section(body_lines: list, task: "Task") -> None:
+def _add_dependencies_section(body_lines: list[str], task: "Task") -> None:
     """Add dependencies section if task has dependencies."""
     if task.instruction.dependencies:
         body_lines.extend(["## Dependencies", ""])
@@ -443,7 +443,7 @@ def _add_dependencies_section(body_lines: list, task: "Task") -> None:
         body_lines.append("")
 
 
-def _add_files_sections(body_lines: list, task: "Task") -> None:
+def _add_files_sections(body_lines: list[str], task: "Task") -> None:
     """Add input and output files sections."""
     if task.instruction.inputs:
         body_lines.extend(["## Input Files", ""])
@@ -458,7 +458,7 @@ def _add_files_sections(body_lines: list, task: "Task") -> None:
         body_lines.append("")
 
 
-def _add_notes_and_execution_section(body_lines: list, task: "Task", full_name: str) -> None:
+def _add_notes_and_execution_section(body_lines: list[str], task: "Task", full_name: str) -> None:
     """Add notes and execution information sections."""
     if task.instruction.note:
         body_lines.extend(["## Notes", task.instruction.note, ""])

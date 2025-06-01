@@ -208,7 +208,7 @@ def detect_cycles_optimized(dependency_graph: Dict[str, Set[str]]) -> List[List[
 
 
 # Performance monitoring decorator
-def monitor_performance(func: Callable) -> Callable:
+def monitor_performance(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorator to monitor function performance."""
 
     def wrapper(*args: Any, **kwargs: Any) -> Any:

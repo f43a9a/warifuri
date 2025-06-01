@@ -15,11 +15,14 @@ skips = ["B101", "B102", "B404", "B603", "B606", "B607"]
 
 [tool.poetry]
 name = "warifuri"
-version = "0.1.0"
-description = ""
+version = "0.2.0"
+description = "Warifuri CLI - A task management and automation tool"
 authors = ["f43a9a"]
 readme = "README.md"
-package-mode = false
+packages = [{include = "warifuri", from = "src"}]
+
+[tool.poetry.scripts]
+warifuri = "warifuri.cli.main:cli"
 
 [tool.poetry.dependencies]
 python = "^3.11"
